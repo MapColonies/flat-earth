@@ -1,17 +1,15 @@
-import {area as turfArea} from "@turf/turf";
-import {distance as turfDistance} from "@turf/turf";
-import {bbox as turfBbox} from "@turf/turf";
-import {bboxPolygon as turfBboxPolygon} from "@turf/turf";
-import {Feature,point,BBox} from "@turf/helpers";
-import {Point} from "./interfaces";
+import {area as turfArea} from '@turf/turf';
+import {distance as turfDistance} from '@turf/turf';
+import {bbox as turfBbox} from '@turf/turf';
+import {bboxPolygon as turfBboxPolygon} from '@turf/turf';
+import {Feature, point, BBox} from '@turf/helpers';
+import {Point} from './interfaces';
 
-import {Geodesic} from "geographiclib-geodesic";
-// console.log(JSON.stringify(whatever, null, 2));
+import {Geodesic} from 'geographiclib-geodesic';
 const geod = Geodesic.WGS84;
-console.log(JSON.stringify(geod, null, 2));
 
-export function area(feature:Feature<any>) {
-    return turfArea(feature);
+export function area(feature: Feature<any>) {
+  return turfArea(feature);
 }
 
 /**
@@ -24,10 +22,10 @@ export function area(feature:Feature<any>) {
  */
 
 //TODO: add options
-export function distance(from:Point, to:Point) {
-    let turfForm = point([from.coordinates.lon,from.coordinates.lat]);
-    let turfTo = point([to.coordinates.lon,to.coordinates.lat]);
-    return turfDistance(turfForm, turfTo);
+export function distance(from: Point, to: Point) {
+  const turfForm = point([from.coordinates.lon, from.coordinates.lat]);
+  const turfTo = point([to.coordinates.lon, to.coordinates.lat]);
+  return turfDistance(turfForm, turfTo);
 }
 
 /**
@@ -37,17 +35,22 @@ export function distance(from:Point, to:Point) {
  * @param from
  * @param to
  */
-export function geodesicDistance(from:Point, to:Point) {
-    var r = geod.Inverse(from.coordinates.lat, from.coordinates.lon, to.coordinates.lat, to.coordinates.lon);
-    return r.s12;
+export function geodesicDistance(from: Point, to: Point) {
+  const r = geod.Inverse(
+    from.coordinates.lat,
+    from.coordinates.lon,
+    to.coordinates.lat,
+    to.coordinates.lon
+  );
+  return r.s12;
 }
 
 /**
  * Calculates the bounding box of a feature
  * @param feature
  */
-export function bbox(feature:Feature<any>) {
-    return turfBbox(feature);
+export function bbox(feature: Feature<any>) {
+  return turfBbox(feature);
 }
 
 /**
@@ -55,7 +58,5 @@ export function bbox(feature:Feature<any>) {
  * @param bbox
  */
 export function bboxPolygon(bbox: BBox) {
-    return turfBboxPolygon(bbox);
+  return turfBboxPolygon(bbox);
 }
-
-

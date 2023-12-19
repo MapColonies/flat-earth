@@ -1,10 +1,10 @@
-import {Latitude, Longitude} from "./types";
+import {Latitude, Longitude} from './types';
 
 export interface Point {
-    coordinates: LonLat;
+  coordinates: LonLat;
 }
 
 export interface LonLat {
-    lon: Longitude;
-    lat: Latitude;
+  lon: Longitude;
+  lat: Latitude;
 }
