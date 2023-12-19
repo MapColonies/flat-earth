@@ -20,8 +20,10 @@
     "posttest": "npm run lint"
   },
   "devDependencies": {
+    "@types/node": "20.8.2",
+    "geographiclib-geodesic": "^2.0.0",
     "gts": "^5.2.0",
-    "typescript": "~5.2.0",
-    "@types/node": "20.8.2"
+    "turf": "^3.0.14",
+    "typescript": "~5.2.0"
   }
 }
