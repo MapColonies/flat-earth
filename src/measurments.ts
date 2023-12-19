@@ -3,7 +3,7 @@ import {distance as turfDistance} from '@turf/turf';
 import {bbox as turfBbox} from '@turf/turf';
 import {bboxPolygon as turfBboxPolygon} from '@turf/turf';
 import {Feature, point, BBox} from '@turf/helpers';
-import {Point} from './interfaces';
+import {Point, BoundingBox} from './interfaces';
 
 import {Geodesic} from 'geographiclib-geodesic';
 const geod = Geodesic.WGS84;
@@ -13,7 +13,7 @@ export function area(feature: Feature<any>) {
 }
 
 /**
- * Calculates the distance between two {@link Point|points} in degrees, radians, miles, or kilometers
+ * Calculates the distance between two {@link Point|points} in meters
  * Using the haversine formula, using this formula you may get a slight difference in the distance between two points
  * up to 0.5% of the actual distance.
  * @param from
@@ -22,7 +22,7 @@ export function area(feature: Feature<any>) {
  */
 
 //TODO: add options
-export function distance(from: Point, to: Point) {
+export function distance(from: Point, to: Point): number {
   const turfForm = point([from.coordinates.lon, from.coordinates.lat]);
   const turfTo = point([to.coordinates.lon, to.coordinates.lat]);
   return turfDistance(turfForm, turfTo, {units: 'meters'});
@@ -36,7 +36,7 @@ export function distance(from: Point, to: Point) {
  * @param to
  * @returns {number} distance in meters
  */
-export function geodesicDistance(from: Point, to: Point) {
+export function geodesicDistance(from: Point, to: Point): number | undefined {
   const r = geod.Inverse(
     from.coordinates.lat,
     from.coordinates.lon,
@@ -56,8 +56,14 @@ export function bbox(feature: Feature<any>) {
 
 /**
  * Calculates the bounding box of a feature and returns a polygon
- * @param bbox
+ * @param boundingBox
  */
-export function bboxPolygon(bbox: BBox) {
+export function bboxPolygon(boundingBox: BoundingBox) {
+  const bbox: BBox = [
+    boundingBox.min.lon,
+    boundingBox.min.lat,
+    boundingBox.max.lon,
+    boundingBox.max.lat,
+  ];
   return turfBboxPolygon(bbox);
 }
