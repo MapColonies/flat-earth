@@ -34,16 +34,18 @@ export function doSomeStuff(
 
 import {area, bboxToPolygon, distance, geodesicDistance } from "./measurments";
 import * as turf from "@turf/turf";
-import {Point, BoundingBox} from "./interfaces";
+import {Point, BoundingBox} from './classes';
 
-var from: Point = {coordinates:{lon:-70.86830735206604, lat:42.24527777890384}};
-var to : Point = {coordinates:{lon:-71.076744, lat:42.40466}};
-console.log(distance(from,to));
+const from: Point = new Point(-70.86830735206604, 42.24527777890384);
+const to: Point = new Point(-71.076744, 42.40466);
+console.log(distance(from, to));
 
-console.log(geodesicDistance(from,to));
+console.log(geodesicDistance(from, to));
 
-const bbox: BoundingBox = {
-  min: {lon: -70.86830735206604, lat: 42.24527777890384},
-  max: {lon: -71.076744, lat: 42.40466},
-};
+const bbox: BoundingBox = new BoundingBox(
+  -70.86830735206604,
+  42.24527777890384,
+  -71.076744,
+  42.40466
+);
 console.log(bboxToPolygon(bbox));
