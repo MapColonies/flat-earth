@@ -18,14 +18,14 @@ export function area(feature: Feature<any>) {
  * up to 0.5% of the actual distance.
  * @param from
  * @param to
- * @param options
+ * @returns {number} distance in meters
  */
 
 //TODO: add options
 export function distance(from: Point, to: Point) {
   const turfForm = point([from.coordinates.lon, from.coordinates.lat]);
   const turfTo = point([to.coordinates.lon, to.coordinates.lat]);
-  return turfDistance(turfForm, turfTo);
+  return turfDistance(turfForm, turfTo, {units: 'meters'});
 }
 
 /**
@@ -34,6 +34,7 @@ export function distance(from: Point, to: Point) {
  * https://en.wikipedia.org/wiki/Vincenty%27s_formulae#:~:text=Vincenty's%20formulae%20are%20two%20related,by%20Thaddeus%20Vincenty%20(1975a).
  * @param from
  * @param to
+ * @returns {number} distance in meters
  */
 export function geodesicDistance(from: Point, to: Point) {
   const r = geod.Inverse(
