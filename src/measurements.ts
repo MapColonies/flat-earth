@@ -1,6 +1,6 @@
 import {area as turfArea} from '@turf/turf';
 import {distance as turfDistance} from '@turf/turf';
-import {bbox as turfBbox} from '@turf/turf';
+import bbox from '@turf/bbox';
 import {bboxPolygon} from '@turf/turf';
 import * as turf from '@turf/turf';
 import {
@@ -13,7 +13,7 @@ import {
 import {Point, Polygon, BoundingBox} from './classes';
 
 import {Geodesic} from 'geographiclib-geodesic';
-import { Geometry } from "./interfaces";
+import {Geometry} from './interfaces';
 const geod = Geodesic.WGS84;
 
 export function area(polygon: Polygon) {
@@ -64,15 +64,15 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * Calculates the bounding box of a geometry
  * @param geometry
  */
-export function bbox(geometry: Geometry): BoundingBox {
-  const turfBbox1: BBox = turfBbox(geometry);
-  return new BoundingBox(
-    turfBbox1[0],
-    turfBbox1[1],
-    turfBbox1[2],
-    turfBbox1[3]
-  );
-}
+// export function bbox(geometry: Geometry): BoundingBox {
+//   const turfBbox1: BBox = bbox(geometry);
+//   return new BoundingBox(
+//     turfBbox1[0],
+//     turfBbox1[1],
+//     turfBbox1[2],
+//     turfBbox1[3]
+//   );
+// }
 
 /**
  * Calculates the bounding box of a feature and returns a polygon

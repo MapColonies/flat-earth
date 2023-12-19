@@ -32,9 +32,9 @@ export function doSomeStuff(
 }
 // TODO: more examples
 
-import {area, bboxToPolygon, distance, geodesicDistance} from "./measurments";
+import {area, bboxToPolygon, distance, geodesicDistance} from './measurements';
 // import * as turf from "@turf/turf";
-import {Point, BoundingBox, Polygon } from "./classes";
+import {Point, BoundingBox, Polygon} from './classes';
 
 const from: Point = new Point(-70.86830735206604, 42.24527777890384);
 const to: Point = new Point(-71.076744, 42.40466);
