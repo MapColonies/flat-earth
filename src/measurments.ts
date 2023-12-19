@@ -2,9 +2,10 @@ import {area as turfArea} from '@turf/turf';
 import {distance as turfDistance} from '@turf/turf';
 import {bbox as turfBbox} from '@turf/turf';
 import {bboxPolygon} from '@turf/turf';
+import * as turf from '@turf/turf';
 import {
   Feature,
-  Polygon as TurfPolygon,
+  polygon as turfPolygon,
   point,
   BBox,
   Position,
@@ -16,17 +17,14 @@ import { Geometry } from "./interfaces";
 const geod = Geodesic.WGS84;
 
 export function area(polygon: Polygon) {
-  const feature = convertPolygonToTurfPolygon(polygon);
+  const feature = convertPolygonToFeature(polygon);
   return turfArea(feature);
 }
 
-function convertPolygonToTurfPolygon(polygon: Polygon): TurfPolygon {
-  return {
-    type: 'Polygon',
-    coordinates: polygon.points.map(point => [
-      [point.coordinates.lon, point.coordinates.lat],
-    ]),
-  };
+function convertPolygonToFeature(polygon: Polygon) {
+  return turfPolygon([
+    polygon.points.map(point => [point.coordinates.lon, point.coordinates.lat]),
+  ]);
 }
 /**
  * Calculates the distance between two {@link Point|points} in meters

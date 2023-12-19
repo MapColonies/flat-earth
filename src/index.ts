@@ -32,9 +32,9 @@ export function doSomeStuff(
 }
 // TODO: more examples
 
-import {area, bboxToPolygon, distance, geodesicDistance } from "./measurments";
-import * as turf from "@turf/turf";
-import {Point, BoundingBox} from './classes';
+import {area, bboxToPolygon, distance, geodesicDistance} from "./measurments";
+// import * as turf from "@turf/turf";
+import {Point, BoundingBox, Polygon } from "./classes";
 
 const from: Point = new Point(-70.86830735206604, 42.24527777890384);
 const to: Point = new Point(-71.076744, 42.40466);
@@ -49,3 +49,16 @@ const bbox: BoundingBox = new BoundingBox(
   42.40466
 );
 console.log(bboxToPolygon(bbox));
+// console.log(area(bboxToPolygon(bbox)));
+const points = new Array<Point>();
+points.push(new Point(125, -15));
+points.push(new Point(113, -22));
+points.push(new Point(154, -27));
+points.push(new Point(144, -15));
+points.push(new Point(125, -15));
+const polygon = new Polygon(points);
+console.log(area(polygon));
+
+// var polygon2 = turf.polygon([[[125, -15], [113, -22], [154, -27], [144, -15], [125, -15]]]);
+
+// console.log(turf.area(polygon2));
