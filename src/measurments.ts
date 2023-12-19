@@ -1,8 +1,8 @@
 import {area as turfArea} from '@turf/turf';
 import {distance as turfDistance} from '@turf/turf';
 import {bbox as turfBbox} from '@turf/turf';
-import {bboxPolygon as turfBboxPolygon} from '@turf/turf';
-import {Feature, point, BBox} from '@turf/helpers';
+import {bboxPolygon} from '@turf/turf';
+import {Feature, point, BBox, Position} from '@turf/helpers';
 import {Point, BoundingBox, Polygon} from './interfaces';
 
 import {Geodesic} from 'geographiclib-geodesic';
@@ -58,19 +58,18 @@ export function bbox(feature: Feature<any>) {
  * Calculates the bounding box of a feature and returns a polygon
  * @param boundingBox
  */
-export function bboxPolygon(boundingBox: BoundingBox): Polygon {
+export function bboxToPolygon(boundingBox: BoundingBox): Polygon {
   const bbox: BBox = [
     boundingBox.min.lon,
     boundingBox.min.lat,
     boundingBox.max.lon,
     boundingBox.max.lat,
   ];
-  let polygonResult:Polygon  = {
+  const polygonResult: Polygon = {
     points: [],
   };
-  }
-  let result = turfBboxPolygon(bbox);
-  result.geometry.coordinates[0].forEach((point) => {
+  const turfResult = bboxPolygon(bbox);
+  turfResult.geometry.coordinates[0].forEach((point: Position) => {
     polygonResult.points.push({
       coordinates: {
         lon: point[0],

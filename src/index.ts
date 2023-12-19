@@ -32,12 +32,18 @@ export function doSomeStuff(
 }
 // TODO: more examples
 
-import {area, distance, geodesicDistance} from "./measurments";
+import {area, bboxToPolygon, distance, geodesicDistance } from "./measurments";
 import * as turf from "@turf/turf";
-import {Point} from "./interfaces";
+import {Point, BoundingBox} from "./interfaces";
 
 var from: Point = {coordinates:{lon:-70.86830735206604, lat:42.24527777890384}};
 var to : Point = {coordinates:{lon:-71.076744, lat:42.40466}};
 console.log(distance(from,to));
 
 console.log(geodesicDistance(from,to));
+
+const bbox: BoundingBox = {
+  min: {lon: -70.86830735206604, lat: 42.24527777890384},
+  max: {lon: -71.076744, lat: 42.40466},
+};
+console.log(bboxToPolygon(bbox));
