@@ -1,5 +1,5 @@
-import { Geometry, LonLat } from "./interfaces";
-import { Latitude, Longitude } from "./types";
+import {Geometry, LonLat} from './interfaces';
+import {Latitude, Longitude} from './types';
 export class Polygon implements Geometry {
   type: string;
   constructor(public points: Array<Point> = []) {

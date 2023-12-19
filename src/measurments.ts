@@ -12,6 +12,7 @@ import {
 import {Point, Polygon, BoundingBox} from './classes';
 
 import {Geodesic} from 'geographiclib-geodesic';
+import { Geometry } from "./interfaces";
 const geod = Geodesic.WGS84;
 
 export function area(polygon: Polygon) {
@@ -62,11 +63,17 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
 }
 
 /**
- * Calculates the bounding box of a feature
- * @param feature
+ * Calculates the bounding box of a geometry
+ * @param geometry
  */
-export function bbox(feature: Feature<any>) {
-  return turfBbox(feature);
+export function bbox(geometry: Geometry): BoundingBox {
+  const turfBbox1: BBox = turfBbox(geometry);
+  return new BoundingBox(
+    turfBbox1[0],
+    turfBbox1[1],
+    turfBbox1[2],
+    turfBbox1[3]
+  );
 }
 
 /**
