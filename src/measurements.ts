@@ -109,17 +109,12 @@ function geometryToTurfBbox(geometry: Geometry) {
  * Calculates the bounding box of a feature and returns a polygon
  * @param boundingBox
  */
-// export function bboxToPolygon(boundingBox: BoundingBox): Polygon {
-//   const bbox: BBox = [
-//     boundingBox.min.lon,
-//     boundingBox.min.lat,
-//     boundingBox.max.lon,
-//     boundingBox.max.lat,
-//   ];
-//   const result = new Polygon();
-//   const turfPolygon = bboxPolygon(bbox);
-//   turfPolygon.geometry.coordinates[0].forEach((point: Position) => {
-//     result.addPoint(new Point(point[0], point[1]));
-//   });
-//   return result;
-// }
+export function bboxToPolygon(boundingBox: BoundingBox): Polygon {
+  const points = new Array<Point>();
+  points.push(new Point(boundingBox.min.lon, boundingBox.min.lat));
+  points.push(new Point(boundingBox.max.lon, boundingBox.min.lat));
+  points.push(new Point(boundingBox.max.lon, boundingBox.max.lat));
+  points.push(new Point(boundingBox.min.lon, boundingBox.max.lat));
+  points.push(new Point(boundingBox.min.lon, boundingBox.min.lat));
+  return new Polygon(points);
+}
