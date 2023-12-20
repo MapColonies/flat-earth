@@ -2,6 +2,7 @@ import {
   area as turfArea,
   distance as turfDistance,
   polygon as turfPolygon,
+  bbox as turfBbox,
   point,
 } from '@turf/turf';
 import {Point, Polygon, BoundingBox} from './classes';
@@ -11,15 +12,20 @@ import {Geometry} from './interfaces';
 const geod = Geodesic.WGS84;
 
 export function area(polygon: Polygon) {
-  const feature = convertPolygonToFeature(polygon);
+  const feature = convertPolygonToTurfPolygon(polygon);
   return turfArea(feature);
 }
 
-function convertPolygonToFeature(polygon: Polygon) {
+/**
+ * Converts a {@link Polygon} to a {@link turfPolygon}
+ * @param polygon
+ */
+function convertPolygonToTurfPolygon(polygon: Polygon) {
   return turfPolygon([
     polygon.points.map(point => [point.coordinates.lon, point.coordinates.lat]),
   ]);
 }
+
 /**
  * Calculates the distance between two {@link Point|points} in meters
  * Using the haversine formula, using this formula you may get a slight difference in the distance between two points
@@ -28,7 +34,6 @@ function convertPolygonToFeature(polygon: Polygon) {
  * @param to
  * @returns {number} distance in meters
  */
-
 //TODO: add options
 export function distance(from: Point, to: Point): number {
   const turfForm = point([from.coordinates.lon, from.coordinates.lat]);
@@ -59,6 +64,20 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * @param geometry
  */
 export function geometryToBoundingBox(geometry: Geometry): BoundingBox {
+  if (geometry.type === 'Point') {
+    const point = geometry as Point;
+    return new BoundingBox(point.lon, point.lat, point.lon, point.lat);
+  } else if (geometry.type === 'Polygon') {
+    const polygon = geometry as Polygon;
+    const turfPolygon = convertPolygonToTurfPolygon(polygon);
+    const bboxResult = turfBbox(turfPolygon);
+    return new BoundingBox(
+      bboxResult[0],
+      bboxResult[1],
+      bboxResult[2],
+      bboxResult[3]
+    );
+  }
   return new BoundingBox(0, 0, 0, 0);
 }
 
