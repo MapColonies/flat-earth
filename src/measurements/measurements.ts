@@ -6,7 +6,7 @@ import {
   bbox as turfBbox,
   point,
 } from '@turf/turf';
-import {Point, Polygon, BoundingBox, Line, Geometry} from './classes';
+import {Point, Polygon, BoundingBox, Line, Geometry} from '../classes';
 
 import {Geodesic} from 'geographiclib-geodesic';
 const geod = Geodesic.WGS84;

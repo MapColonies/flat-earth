@@ -1,4 +1,4 @@
-import * as measurements from '../src/measurements';
+import * as measurements from '../src/measurements/measurements';
 import {BoundingBox, Line, Point, Polygon} from '../src/classes';
 
 test('Haversine distance', () => {

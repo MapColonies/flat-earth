@@ -1,4 +1,3 @@
-import {LonLat} from './interfaces';
 import {Latitude, Longitude} from './types';
 export abstract class Geometry {
   type: string;
@@ -37,13 +36,20 @@ export class BoundingBox implements Geometry {
   min: LonLat;
   max: LonLat;
   constructor(
-    public minLon: Longitude,
-    public minLat: Latitude,
-    public maxLon: Longitude,
-    public maxLat: Latitude
+    minLon: Longitude,
+    minLat: Latitude,
+    maxLon: Longitude,
+    maxLat: Latitude
   ) {
     this.min = {lon: minLon, lat: minLat};
     this.max = {lon: maxLon, lat: maxLat};
     this.type = 'BoundingBox';
   }
+}
+
+export class LonLat {
+  constructor(
+    public lon: Longitude,
+    public lat: Latitude
+  ) {}
 }
