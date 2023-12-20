@@ -1,5 +1,5 @@
 import * as measurements from '../src/measurements';
-import { BoundingBox, Line, Point, Polygon } from "../src/classes";
+import {BoundingBox, Line, Point, Polygon} from '../src/classes';
 
 test('Haversine distance', () => {
   const from = new Point(0, 0);
