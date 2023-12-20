@@ -1,6 +1,6 @@
 import {
   boundingBoxToTiles,
-  // lonLatZoomToTile,
+  lonLatZoomToTile,
   // tileToBoundingBox,
   // zoomShift,
 } from '../src/tiles/tiles';
@@ -288,139 +288,139 @@ describe('#boundingBoxToTiles', () => {
 //   });
 // });
 
-// describe('#lonLatZoomToTile', () => {
-//   it('should return a tile for a given longtitude, latitude & zoom', () => {
-//     const lonLat: LonLat = {lon: 30, lat: 30};
-//     const zoom: Zoom = 2;
-//     const expected: Tile = {x: 4, y: 1, z: 2, metatile: 1};
-//
-//     const tile = lonLatZoomToTile(lonLat, zoom);
-//
-//     expect(tile).toEqual(expected);
-//   });
-//   it('should return a tile for a given negative longtitude, latitude & zoom', () => {
-//     const lonLat: LonLat = {lon: -30, lat: -30};
-//     const zoom: Zoom = 2;
-//     const expected: Tile = {x: 3, y: 2, z: 2, metatile: 1};
-//
-//     const tile = lonLatZoomToTile(lonLat, zoom);
-//
-//     expect(tile).toEqual(expected);
-//   });
-//   it('should return a tile for a given longtitude, latitude & zoom with non default metatile', () => {
-//     const lonLat: LonLat = {lon: 30, lat: 30};
-//     const zoom: Zoom = 2;
-//     const metatile = 3;
-//     const expected: Tile = {x: 1, y: 0, z: 2, metatile: 3};
-//
-//     const tile = lonLatZoomToTile(lonLat, zoom, metatile);
-//
-//     expect(tile).toEqual(expected);
-//   });
-//   it('should return a tile for a given longtitude, latitude & zoom with non default tile grid', () => {
-//     const lonLat: LonLat = {lon: 30, lat: 30};
-//     const zoom: Zoom = 2;
-//     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-//     const expected: Tile = {x: 2, y: 1, z: 2, metatile: 1};
-//
-//     const tile = lonLatZoomToTile(lonLat, zoom, undefined, tileGrid);
-//
-//     expect(tile).toEqual(expected);
-//   });
-//   it('should return a tile for a given longtitude, latitude & zoom with non default tile grid & non default metatile', () => {
-//     const lonLat: LonLat = {lon: 90, lat: 30};
-//     const zoom: Zoom = 2;
-//     const metatile = 3;
-//     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-//     const expected: Tile = {x: 1, y: 0, z: 2, metatile: 3};
-//
-//     const tile = lonLatZoomToTile(lonLat, zoom, metatile, tileGrid);
-//
-//     expect(tile).toEqual(expected);
-//   });
-//   it("should return a tile when logtitude is equal to tile grid's bounding box extent", () => {
-//     const lonLat: LonLat = {lon: 180, lat: 30};
-//     const zoom: Zoom = 2;
-//     const expected: Tile = {x: 7, y: 1, z: 2, metatile: 1};
-//
-//     const tile = lonLatZoomToTile(lonLat, zoom);
-//
-//     expect(tile).toEqual(expected);
-//   });
-//   it("should return a tile when latitude is equal to tile grid's bounding box extent", () => {
-//     const lonLat: LonLat = {lon: 30, lat: -90};
-//     const zoom: Zoom = 2;
-//     const expected: Tile = {x: 4, y: 3, z: 2, metatile: 1};
-//
-//     const tile = lonLatZoomToTile(lonLat, zoom);
-//
-//     expect(tile).toEqual(expected);
-//   });
-//   it("should throw an error when longtitude is outside of tile grid's bounding box", () => {
-//     const lonLat: LonLat = {lon: -190, lat: 30};
-//     const zoom: Zoom = 0;
-//
-//     const badLonLatZoomToTile = (): void => {
-//       lonLatZoomToTile(lonLat, zoom);
-//     };
-//
-//     expect(badLonLatZoomToTile).toThrow(
-//       RangeError("longtitude -190 is out of range of tile grid's bounding box")
-//     );
-//   });
-//   it("should throw an error when latitude is outside of tile grid's bounding box", () => {
-//     const lonLat: LonLat = {lon: 30, lat: 100};
-//     const zoom: Zoom = 0;
-//
-//     const badLonLatZoomToTile = (): void => {
-//       lonLatZoomToTile(lonLat, zoom);
-//     };
-//
-//     expect(badLonLatZoomToTile).toThrow(
-//       RangeError("latitude 100 is out of range of tile grid's bounding box")
-//     );
-//   });
-//   it("should throw an error when the zoom level is not part of zoom levels of tile grid's scale set", () => {
-//     const lonLat: LonLat = {lon: 30, lat: 30};
-//     const zoom: Zoom = 1.5;
-//
-//     const badLonLatZoomToTile = (): void => {
-//       lonLatZoomToTile(lonLat, zoom);
-//     };
-//
-//     expect(badLonLatZoomToTile).toThrow(
-//       Error('zoom level is not part of the given well known scale set')
-//     );
-//   });
-//   it('should throw an error when metatile is zero or less', () => {
-//     const lonLat: LonLat = {lon: 30, lat: 30};
-//     const zoom: Zoom = 0;
-//     const metatile = 0;
-//
-//     const badLonLatZoomToTile = (): void => {
-//       lonLatZoomToTile(lonLat, zoom, metatile);
-//     };
-//
-//     expect(badLonLatZoomToTile).toThrow(
-//       Error('metatile must be larger than 0')
-//     );
-//   });
-//   describe('Bad tile grid', () => {
-//     test.each(tileGridTests)(
-//       "should throw an error when the tile grid's $testCaseName",
-//       ({tileGrid, expected}) => {
-//         const badLonLatZoomToTile = (): void => {
-//           const lonLat: LonLat = {lon: 30, lat: 30};
-//           const zoom: Zoom = 0;
-//
-//           lonLatZoomToTile(lonLat, zoom, undefined, tileGrid);
-//         };
-//
-//         expect(badLonLatZoomToTile).toThrow(new Error(expected));
-//       }
-//     );
-//   });
-// });
+describe('#lonLatZoomToTile', () => {
+  it('should return a tile for a given longtitude, latitude & zoom', () => {
+    const lonLat: LonLat = {lon: 30, lat: 30};
+    const zoom: Zoom = 2;
+    const expected: Tile = {x: 4, y: 1, z: 2, metatile: 1};
+
+    const tile = lonLatZoomToTile(lonLat, zoom);
+
+    expect(tile).toEqual(expected);
+  });
+  it('should return a tile for a given negative longtitude, latitude & zoom', () => {
+    const lonLat: LonLat = {lon: -30, lat: -30};
+    const zoom: Zoom = 2;
+    const expected: Tile = {x: 3, y: 2, z: 2, metatile: 1};
+
+    const tile = lonLatZoomToTile(lonLat, zoom);
+
+    expect(tile).toEqual(expected);
+  });
+  it('should return a tile for a given longtitude, latitude & zoom with non default metatile', () => {
+    const lonLat: LonLat = {lon: 30, lat: 30};
+    const zoom: Zoom = 2;
+    const metatile = 3;
+    const expected: Tile = {x: 1, y: 0, z: 2, metatile: 3};
+
+    const tile = lonLatZoomToTile(lonLat, zoom, metatile);
+
+    expect(tile).toEqual(expected);
+  });
+  it('should return a tile for a given longtitude, latitude & zoom with non default tile grid', () => {
+    const lonLat: LonLat = {lon: 30, lat: 30};
+    const zoom: Zoom = 2;
+    const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
+    const expected: Tile = {x: 2, y: 1, z: 2, metatile: 1};
+
+    const tile = lonLatZoomToTile(lonLat, zoom, undefined, tileGrid);
+
+    expect(tile).toEqual(expected);
+  });
+  it('should return a tile for a given longtitude, latitude & zoom with non default tile grid & non default metatile', () => {
+    const lonLat: LonLat = {lon: 90, lat: 30};
+    const zoom: Zoom = 2;
+    const metatile = 3;
+    const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
+    const expected: Tile = {x: 1, y: 0, z: 2, metatile: 3};
+
+    const tile = lonLatZoomToTile(lonLat, zoom, metatile, tileGrid);
+
+    expect(tile).toEqual(expected);
+  });
+  it("should return a tile when logtitude is equal to tile grid's bounding box extent", () => {
+    const lonLat: LonLat = {lon: 180, lat: 30};
+    const zoom: Zoom = 2;
+    const expected: Tile = {x: 7, y: 1, z: 2, metatile: 1};
+
+    const tile = lonLatZoomToTile(lonLat, zoom);
+
+    expect(tile).toEqual(expected);
+  });
+  it("should return a tile when latitude is equal to tile grid's bounding box extent", () => {
+    const lonLat: LonLat = {lon: 30, lat: -90};
+    const zoom: Zoom = 2;
+    const expected: Tile = {x: 4, y: 3, z: 2, metatile: 1};
+
+    const tile = lonLatZoomToTile(lonLat, zoom);
+
+    expect(tile).toEqual(expected);
+  });
+  it("should throw an error when longtitude is outside of tile grid's bounding box", () => {
+    const lonLat: LonLat = {lon: -190, lat: 30};
+    const zoom: Zoom = 0;
+
+    const badLonLatZoomToTile = (): void => {
+      lonLatZoomToTile(lonLat, zoom);
+    };
+
+    expect(badLonLatZoomToTile).toThrow(
+      RangeError("longtitude -190 is out of range of tile grid's bounding box")
+    );
+  });
+  it("should throw an error when latitude is outside of tile grid's bounding box", () => {
+    const lonLat: LonLat = {lon: 30, lat: 100};
+    const zoom: Zoom = 0;
+
+    const badLonLatZoomToTile = (): void => {
+      lonLatZoomToTile(lonLat, zoom);
+    };
+
+    expect(badLonLatZoomToTile).toThrow(
+      RangeError("latitude 100 is out of range of tile grid's bounding box")
+    );
+  });
+  it("should throw an error when the zoom level is not part of zoom levels of tile grid's scale set", () => {
+    const lonLat: LonLat = {lon: 30, lat: 30};
+    const zoom: Zoom = 1.5;
+
+    const badLonLatZoomToTile = (): void => {
+      lonLatZoomToTile(lonLat, zoom);
+    };
+
+    expect(badLonLatZoomToTile).toThrow(
+      Error('zoom level is not part of the given well known scale set')
+    );
+  });
+  it('should throw an error when metatile is zero or less', () => {
+    const lonLat: LonLat = {lon: 30, lat: 30};
+    const zoom: Zoom = 0;
+    const metatile = 0;
+
+    const badLonLatZoomToTile = (): void => {
+      lonLatZoomToTile(lonLat, zoom, metatile);
+    };
+
+    expect(badLonLatZoomToTile).toThrow(
+      Error('metatile must be larger than 0')
+    );
+  });
+  describe('Bad tile grid', () => {
+    test.each(tileGridTests)(
+      "should throw an error when the tile grid's $testCaseName",
+      ({tileGrid, expected}) => {
+        const badLonLatZoomToTile = (): void => {
+          const lonLat: LonLat = {lon: 30, lat: 30};
+          const zoom: Zoom = 0;
+
+          lonLatZoomToTile(lonLat, zoom, undefined, tileGrid);
+        };
+
+        expect(badLonLatZoomToTile).toThrow(new Error(expected));
+      }
+    );
+  });
+});
 
 // describe('#tileToBoundingBox', () => {
 //   it('should return a bounding box for a given tile', () => {

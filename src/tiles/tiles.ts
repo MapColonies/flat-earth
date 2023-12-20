@@ -5,7 +5,6 @@ import {Zoom} from '../types';
 import {
   validateLonlat,
   validateMetatile,
-  validateTile,
   validateTileGrid,
   validateTileGridBoundingBox,
   validateZoomLevel,
@@ -185,14 +184,19 @@ export function boundingBoxToTiles(
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  * @returns tile within the tile grid by the input values of `lonlat` and `zoom`
  */
-// export function lonLatZoomToTile(lonlat: LonLat, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile {
-//   validateMetatile(metatile);
-//   validateTileGrid(referenceTileGrid);
-//   validateZoomLevel(zoom, referenceTileGrid);
-//   validateLonlat(lonlat, referenceTileGrid);
-//
-//   return geoCoordsToTile(lonlat, zoom, metatile, referenceTileGrid);
-// }
+export function lonLatZoomToTile(
+  lonlat: LonLat,
+  zoom: Zoom,
+  metatile = 1,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): Tile {
+  validateMetatile(metatile);
+  validateTileGrid(referenceTileGrid);
+  validateZoomLevel(zoom, referenceTileGrid);
+  validateLonlat(lonlat, referenceTileGrid);
+
+  return geoCoordsToTile(lonlat, zoom, metatile, referenceTileGrid);
+}
 
 /**
  * Calculates a bounding box of a tile
