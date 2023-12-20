@@ -29,6 +29,7 @@
     "typescript": "~5.2.0"
   },
   "dependencies": {
+    "@turf/boolean-concave": "^6.5.0",
     "@turf/turf": "^7.0.0-alpha.2"
   }
 }

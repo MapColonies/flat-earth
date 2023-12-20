@@ -1,26 +1,34 @@
-import {Geometry, LonLat} from './interfaces';
+import {LonLat} from './interfaces';
 import {Latitude, Longitude} from './types';
-export class Polygon implements Geometry {
+export abstract class Geometry {
   type: string;
-  constructor(public points: Array<Point> = []) {
-    this.points = points;
-    this.type = 'Polygon';
-  }
-
-  addPoint(point: Point) {
-    this.points.push(point);
+  protected constructor(type: string) {
+    this.type = type;
   }
 }
 
-export class Point implements Geometry {
-  type: string;
+export class Polygon extends Geometry {
+  constructor(public points: Array<Point> = []) {
+    super('Polygon');
+    this.points = points;
+  }
+}
+
+export class Line extends Geometry {
+  constructor(public points: Array<Point> = []) {
+    super('Line');
+    this.points = points;
+  }
+}
+
+export class Point extends Geometry {
   coordinates: LonLat;
   constructor(
     public lon: number,
     public lat: number
   ) {
+    super('Point');
     this.coordinates = {lon, lat};
-    this.type = 'Point';
   }
 }
 
