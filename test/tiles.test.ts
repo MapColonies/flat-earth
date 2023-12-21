@@ -2,6 +2,7 @@ import {
   boundingBoxToTiles,
   lonLatZoomToTile,
   tileToBoundingBox,
+  zoomShift,
   // tileToBoundingBox,
   // zoomShift,
 } from '../src/tiles/tiles';
@@ -255,39 +256,39 @@ describe('#boundingBoxToTiles', () => {
   });
 });
 
-// describe('#zoomShift', () => {
-//   it('should return a shifted zoom level given a zoom level, reference tile grid & target tile grid', () => {
-//     const zoom: Zoom = 3;
-//     const referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84;
-//     const targetTileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-//     const expected = 3;
-//
-//     const shiftedZoom = zoomShift(zoom, referenceTileGrid, targetTileGrid);
-//
-//     expect(shiftedZoom).toEqual(expected);
-//   });
-//   it('should throw an error given a zoom level, reference tile grid & target tile grid when no match for scale denominator', () => {
-//     const zoom: Zoom = 3;
-//     const referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84;
-//     const targetTileGrid: TileGrid = {
-//       ...TILEGRID_WEB_MERCATOR,
-//       ...{
-//         wellKnownScaleSet: {
-//           identifier: 'badScaleSet',
-//           scaleDenominators: new Map([[0, 5000]]),
-//         },
-//       },
-//     };
-//
-//     const badShiftedZoom = (): void => {
-//       zoomShift(zoom, referenceTileGrid, targetTileGrid);
-//     };
-//
-//     expect(badShiftedZoom).toThrow(
-//       new Error('no matching target scale found for the given zoom level')
-//     );
-//   });
-// });
+describe('#zoomShift', () => {
+  it('should return a shifted zoom level given a zoom level, reference tile grid & target tile grid', () => {
+    const zoom: Zoom = 3;
+    const referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84;
+    const targetTileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
+    const expected = 3;
+
+    const shiftedZoom = zoomShift(zoom, referenceTileGrid, targetTileGrid);
+
+    expect(shiftedZoom).toEqual(expected);
+  });
+  it('should throw an error given a zoom level, reference tile grid & target tile grid when no match for scale denominator', () => {
+    const zoom: Zoom = 3;
+    const referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84;
+    const targetTileGrid: TileGrid = {
+      ...TILEGRID_WEB_MERCATOR,
+      ...{
+        wellKnownScaleSet: {
+          identifier: 'badScaleSet',
+          scaleDenominators: new Map([[0, 5000]]),
+        },
+      },
+    };
+
+    const badShiftedZoom = (): void => {
+      zoomShift(zoom, referenceTileGrid, targetTileGrid);
+    };
+
+    expect(badShiftedZoom).toThrow(
+      new Error('no matching target scale found for the given zoom level')
+    );
+  });
+});
 
 describe('#lonLatZoomToTile', () => {
   it('should return a tile for a given longtitude, latitude & zoom', () => {

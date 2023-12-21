@@ -151,31 +151,36 @@ export function boundingBoxToTiles(
  * @throws Error when there is no matching scales for equivalent zooms
  * @returns a matching zoom level
  */
-// export function zoomShift(zoom: Zoom, referenceTileGrid: TileGrid, targetTileGrid: TileGrid): Zoom {
-//   validateTileGrid(referenceTileGrid);
-//   validateTileGrid(targetTileGrid);
-//   validateZoomLevel(zoom, referenceTileGrid);
-//
-//   const scale = referenceTileGrid.wellKnownScaleSet.scaleDenominators.get(zoom);
-//   if (scale === undefined) {
-//     // the value is validated before so this should be unreachable
-//     throw new Error('zoom level is not part of the given well known scale set');
-//   }
-//
-//   let matchingZoom: Zoom | undefined;
-//   for (const [targetZoom, targetScaleDenominator] of targetTileGrid.wellKnownScaleSet.scaleDenominators) {
-//     if (targetScaleDenominator === scale) {
-//       matchingZoom = targetZoom;
-//       break;
-//     }
-//   }
-//
-//   if (matchingZoom === undefined) {
-//     throw new Error('no matching target scale found for the given zoom level');
-//   }
-//
-//   return matchingZoom;
-// }
+export function zoomShift(
+  zoom: Zoom,
+  referenceTileGrid: TileGrid,
+  targetTileGrid: TileGrid
+): Zoom {
+  validateTileGrid(referenceTileGrid);
+  validateTileGrid(targetTileGrid);
+  validateZoomLevel(zoom, referenceTileGrid);
+
+  const scale = referenceTileGrid.wellKnownScaleSet.scaleDenominators.get(zoom);
+  if (scale === undefined) {
+    // the value is validated before so this should be unreachable
+    throw new Error('zoom level is not part of the given well known scale set');
+  }
+
+  let matchingZoom: Zoom | undefined;
+  for (const [targetZoom, targetScaleDenominator] of targetTileGrid
+    .wellKnownScaleSet.scaleDenominators) {
+    if (targetScaleDenominator === scale) {
+      matchingZoom = targetZoom;
+      break;
+    }
+  }
+
+  if (matchingZoom === undefined) {
+    throw new Error('no matching target scale found for the given zoom level');
+  }
+
+  return matchingZoom;
+}
 
 /**
  * Calculates a tile for a longtitude, latitude and zoom
