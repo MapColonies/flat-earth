@@ -1,5 +1,9 @@
 import * as measurements from '../src/measurements/measurements';
 import {BoundingBox, Line, Point, Polygon} from '../src/classes';
+import {
+  boundingBoxToPolygon,
+  geometryToBoundingBox,
+} from '../src/converters/geometry_converters';
 
 test('Haversine distance', () => {
   const from = new Point(0, 0);
@@ -38,7 +42,7 @@ test('Polygon geometry to bounding box', () => {
   points.push(new Point(144, -15));
   points.push(new Point(125, -15));
   const polygon = new Polygon(points);
-  const bbox = measurements.geometryToBoundingBox(polygon);
+  const bbox = geometryToBoundingBox(polygon);
   expect(bbox.min.lon).toBe(113);
   expect(bbox.min.lat).toBe(-39);
   expect(bbox.max.lon).toBe(154);
@@ -47,7 +51,7 @@ test('Polygon geometry to bounding box', () => {
 
 test('Point geometry to bounding box', () => {
   const point = new Point(125, -15);
-  const bbox = measurements.geometryToBoundingBox(point);
+  const bbox = geometryToBoundingBox(point);
   expect(bbox.min.lon).toBe(125);
   expect(bbox.min.lat).toBe(-15);
   expect(bbox.max.lon).toBe(125);
@@ -59,7 +63,7 @@ test('Line geometry to bounding box', () => {
   points.push(new Point(125, -15));
   points.push(new Point(113, -22));
   const polygon = new Line(points);
-  const bbox = measurements.geometryToBoundingBox(polygon);
+  const bbox = geometryToBoundingBox(polygon);
   expect(bbox.min.lon).toBe(113);
   expect(bbox.min.lat).toBe(-22);
   expect(bbox.max.lon).toBe(125);
@@ -68,7 +72,7 @@ test('Line geometry to bounding box', () => {
 
 test('Bounding box to polygon', () => {
   const bbox = new BoundingBox(113, -39, 154, -15);
-  const polygon = measurements.bboxToPolygon(bbox);
+  const polygon = boundingBoxToPolygon(bbox);
   expect(polygon.points.length).toBe(5);
   expect(polygon.points[0]).toStrictEqual(new Point(113, -39));
   expect(polygon.points[1]).toStrictEqual(new Point(154, -39));

@@ -6,6 +6,11 @@ export abstract class Geometry {
   }
 }
 
+/**
+ * A polygon is an area defined by a closed ring of points.
+ * The first and last points of a ring must be the same.
+ * points must be ordered counterclockwise.
+ */
 export class Polygon extends Geometry {
   constructor(public points: Array<Point> = []) {
     super('Polygon');
@@ -31,8 +36,7 @@ export class Point extends Geometry {
   }
 }
 
-export class BoundingBox implements Geometry {
-  type: string;
+export class BoundingBox extends Geometry {
   min: LonLat;
   max: LonLat;
   constructor(
@@ -41,9 +45,9 @@ export class BoundingBox implements Geometry {
     maxLon: Longitude,
     maxLat: Latitude
   ) {
+    super('BoundingBox');
     this.min = {lon: minLon, lat: minLat};
     this.max = {lon: maxLon, lat: maxLat};
-    this.type = 'BoundingBox';
   }
 }
 

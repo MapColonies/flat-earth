@@ -1,46 +1,20 @@
 import {
-  area as turfArea,
+  area as turfArea, bbox,
+  booleanEqual,
   distance as turfDistance,
-  polygon as turfPolygon,
-  lineString as turfLineString,
-  bbox as turfBbox,
-  point,
-} from '@turf/turf';
-import {Point, Polygon, BoundingBox, Line, Geometry} from '../classes';
+  point
+} from "@turf/turf";
+import {Geometry, Point, Polygon} from '../classes';
 
 import {Geodesic} from 'geographiclib-geodesic';
+import {convertGeometryToTurfGeometry} from '../converters/turf/turf_converters';
+import { geometryToBoundingBox } from "../converters/geometry_converters";
+
 const geod = Geodesic.WGS84;
 
 export function area(polygon: Polygon) {
   const feature = convertGeometryToTurfGeometry(polygon);
   return turfArea(feature);
-}
-
-/**
- * Converts a {@link Polygon} to a {@link turfPolygon}
- * @param geometry
- */
-function convertGeometryToTurfGeometry(geometry: Geometry) {
-  switch (geometry.type) {
-    case 'Polygon':
-      return turfPolygon([
-        (geometry as Polygon).points.map(point => [
-          point.coordinates.lon,
-          point.coordinates.lat,
-        ]),
-      ]);
-    case 'Line':
-      return turfLineString(
-        (geometry as Line).points.map(point => [
-          point.coordinates.lon,
-          point.coordinates.lat,
-        ])
-      );
-    default:
-      throw new Error(
-        'Cant convert geometry to turf geometry, geometry not supported'
-      );
-  }
 }
 
 /**
@@ -77,44 +51,21 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
 }
 
 /**
- * Calculates the bounding box of a geometry
- * @param geometry
+ * Check if two geometries are equal
+ * @param geometry1
+ * @param geometry2
  */
-export function geometryToBoundingBox(geometry: Geometry): BoundingBox {
-  switch (geometry.type) {
-    case 'Point': {
-      const point = geometry as Point;
-      return new BoundingBox(point.lon, point.lat, point.lon, point.lat);
-    }
-    case 'Polygon':
-    case 'Line': {
-      const bboxResult = geometryToTurfBbox(geometry);
-      return new BoundingBox(
-        bboxResult[0],
-        bboxResult[1],
-        bboxResult[2],
-        bboxResult[3]
-      );
-    }
-    default:
-      throw new Error('Geometry not supported');
-  }
+export function geometriesEqual(geometry1: Geometry, geometry2: Geometry) {
+  const turfGeometry1 = convertGeometryToTurfGeometry(geometry1);
+  const turfGeometry2 = convertGeometryToTurfGeometry(geometry2);
+  return booleanEqual(turfGeometry1, turfGeometry2);
 }
 
-function geometryToTurfBbox(geometry: Geometry) {
-  const turfGeometry = convertGeometryToTurfGeometry(geometry);
-  return turfBbox(turfGeometry);
-}
 /**
- * Calculates the bounding box of a feature and returns a polygon
- * @param boundingBox
+ * Check if a geometry covers it's bounding box
+ * @param geometry
  */
-export function bboxToPolygon(boundingBox: BoundingBox): Polygon {
-  const points = new Array<Point>();
-  points.push(new Point(boundingBox.min.lon, boundingBox.min.lat));
-  points.push(new Point(boundingBox.max.lon, boundingBox.min.lat));
-  points.push(new Point(boundingBox.max.lon, boundingBox.max.lat));
-  points.push(new Point(boundingBox.min.lon, boundingBox.max.lat));
-  points.push(new Point(boundingBox.min.lon, boundingBox.min.lat));
-  return new Polygon(points);
+export function geometryCoversBoundingBox(geometry: Geometry) {
+  const boundingBox = geometryToBoundingBox(geometry);
+  return geometriesEqual(geometry, boundingBox);
 }
