@@ -5,6 +5,7 @@ import {Zoom} from '../types';
 import {
   validateLonlat,
   validateMetatile,
+  validateTile,
   validateTileGrid,
   validateTileGridBoundingBox,
   validateZoomLevel,
@@ -205,31 +206,51 @@ export function lonLatZoomToTile(
  * @param clamp a boolean whether to clamp the calculated bounding box to the tile grid's bounding box
  * @returns bounding box of the input `tile`
  */
-// export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84, clamp = false): BoundingBox {
-//   validateTileGrid(referenceTileGrid);
-//   validateTile(tile, referenceTileGrid);
-//   const metatile = tile.metatile ?? 1;
-//
-//   const width = tileProjectedWidth(tile.z, referenceTileGrid) * metatile;
-//   const height = tileProjectedHeight(tile.z, referenceTileGrid) * metatile;
-//
-//   let bbox: BoundingBox = {
-//     west: referenceTileGrid.boundingBox.west + tile.x * width,
-//     south: referenceTileGrid.boundingBox.north - (tile.y + 1) * height,
-//     east: referenceTileGrid.boundingBox.west + (tile.x + 1) * width,
-//     north: referenceTileGrid.boundingBox.north - tile.y * height,
-//   };
-//
-//   if (clamp) {
-//     // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
-//     // of the tile grid
-//     bbox = {
-//       west: clampValues(bbox.west, referenceTileGrid.boundingBox.west, referenceTileGrid.boundingBox.east),
-//       south: clampValues(bbox.south, referenceTileGrid.boundingBox.south, referenceTileGrid.boundingBox.north),
-//       east: clampValues(bbox.east, referenceTileGrid.boundingBox.west, referenceTileGrid.boundingBox.east),
-//       north: clampValues(bbox.north, referenceTileGrid.boundingBox.south, referenceTileGrid.boundingBox.north),
-//     };
-//   }
-//
-//   return bbox;
-// }
+export function tileToBoundingBox(
+  tile: Tile,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84,
+  clamp = false
+): BoundingBox {
+  validateTileGrid(referenceTileGrid);
+  validateTile(tile, referenceTileGrid);
+  const metatile = tile.metatile ?? 1;
+
+  const width = tileProjectedWidth(tile.z, referenceTileGrid) * metatile;
+  const height = tileProjectedHeight(tile.z, referenceTileGrid) * metatile;
+
+  let bbox: BoundingBox = new BoundingBox(
+    referenceTileGrid.boundingBox.min.lon + tile.x * width,
+    referenceTileGrid.boundingBox.max.lat - (tile.y + 1) * height,
+    referenceTileGrid.boundingBox.min.lon + (tile.x + 1) * width,
+    referenceTileGrid.boundingBox.max.lat - tile.y * height
+  );
+
+  if (clamp) {
+    // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
+    // of the tile grid
+    bbox = new BoundingBox(
+      clampValues(
+        bbox.min.lon,
+        referenceTileGrid.boundingBox.min.lon,
+        referenceTileGrid.boundingBox.max.lon
+      ),
+      clampValues(
+        bbox.min.lat,
+        referenceTileGrid.boundingBox.min.lat,
+        referenceTileGrid.boundingBox.max.lat
+      ),
+      clampValues(
+        bbox.max.lon,
+        referenceTileGrid.boundingBox.min.lon,
+        referenceTileGrid.boundingBox.max.lon
+      ),
+      clampValues(
+        bbox.max.lat,
+        referenceTileGrid.boundingBox.min.lat,
+        referenceTileGrid.boundingBox.max.lat
+      )
+    );
+  }
+
+  return bbox;
+}

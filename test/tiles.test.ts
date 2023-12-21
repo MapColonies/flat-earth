@@ -1,6 +1,7 @@
 import {
   boundingBoxToTiles,
   lonLatZoomToTile,
+  tileToBoundingBox,
   // tileToBoundingBox,
   // zoomShift,
 } from '../src/tiles/tiles';
@@ -422,151 +423,151 @@ describe('#lonLatZoomToTile', () => {
   });
 });
 
-// describe('#tileToBoundingBox', () => {
-//   it('should return a bounding box for a given tile', () => {
-//     const tile: Tile = {x: 1, y: 1, z: 1};
-//     const expected: BoundingBox = {min.lon: -90, min.lat: -90, max.lon: 0, max.lat: 0};
-//
-//     const boundingBox = tileToBoundingBox(tile);
-//
-//     expect(boundingBox).toEqual(expected);
-//   });
-//   it('should return a bounding box for a given tile which contains a metatile size that overrides the default', () => {
-//     const tile: Tile = {x: 1, y: 0, z: 1, metatile: 3};
-//     const expected: BoundingBox = {min.lon: 90, min.lat: -180, max.lon: 360, max.lat: 90};
-//
-//     const boundingBox = tileToBoundingBox(tile);
-//
-//     expect(boundingBox).toEqual(expected);
-//   });
-//   it('should return a bounding box for a given tile which contains a metatile size that overrides the default with clamping used', () => {
-//     const tile: Tile = {x: 1, y: 0, z: 1, metatile: 3};
-//     const expected: BoundingBox = {min.lon: 90, min.lat: -90, max.lon: 180, max.lat: 90};
-//
-//     const boundingBox = tileToBoundingBox(tile, undefined, true);
-//
-//     expect(boundingBox).toEqual(expected);
-//   });
-//   it('should return a bounding box for a given tile with non default tile grid', () => {
-//     const tile: Tile = {x: 0, y: 0, z: 0};
-//     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-//     const expected: BoundingBox = {
-//       min.lon: TILEGRID_WEB_MERCATOR.boundingBox.min.lon,
-//       min.lat: TILEGRID_WEB_MERCATOR.boundingBox.min.lat,
-//       max.lon: TILEGRID_WEB_MERCATOR.boundingBox.max.lon,
-//       max.lat: TILEGRID_WEB_MERCATOR.boundingBox.max.lat,
-//     };
-//
-//     const boundingBox = tileToBoundingBox(tile, tileGrid);
-//
-//     expect(boundingBox).toEqual(expected);
-//   });
-//   it('should return a bounding box for a given tile with non default tile grid & non default metatile', () => {
-//     const tile: Tile = {x: 1, y: 0, z: 2, metatile: 3};
-//     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-//     const expected: BoundingBox = {
-//       min.lon: 90,
-//       min.lat: -42.525564389903295,
-//       max.lon: 360,
-//       max.lat: 85.05112877980659,
-//     };
-//
-//     const boundingBox = tileToBoundingBox(tile, tileGrid);
-//
-//     expect(boundingBox).toEqual(expected);
-//   });
-//   it('should return a bounding box for a given tile with non default tile grid & non default metatile & clamping used', () => {
-//     const tile: Tile = {x: 1, y: 0, z: 2, metatile: 3};
-//     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-//     const expected: BoundingBox = {
-//       min.lon: 90,
-//       min.lat: -42.525564389903295,
-//       max.lon: 180,
-//       max.lat: 85.05112877980659,
-//     };
-//
-//     const boundingBox = tileToBoundingBox(tile, tileGrid, true);
-//
-//     expect(boundingBox).toEqual(expected);
-//   });
-//   it("should throw an error when the tile's x index is outside of tile grid", () => {
-//     const tile: Tile = {x: 2, y: 1, z: 0};
-//
-//     const badTileToBoundingBox = (): void => {
-//       tileToBoundingBox(tile);
-//     };
-//
-//     expect(badTileToBoundingBox).toThrow(
-//       RangeError('x index out of range of tile grid')
-//     );
-//   });
-//   it("should throw an error when the tile's y index is outside of tile grid", () => {
-//     const tile: Tile = {x: 1, y: 1, z: 0};
-//
-//     const badTileToBoundingBox = (): void => {
-//       tileToBoundingBox(tile);
-//     };
-//
-//     expect(badTileToBoundingBox).toThrow(
-//       RangeError('y index out of range of tile grid')
-//     );
-//   });
-//   it("should throw an error when the tile's z index is not part of zoom levels of tile grid's scale set", () => {
-//     const tile: Tile = {x: 2, y: 1, z: 1.5};
-//
-//     const badTileToBoundingBox = (): void => {
-//       tileToBoundingBox(tile);
-//     };
-//
-//     expect(badTileToBoundingBox).toThrow(
-//       Error('zoom level is not part of the given well known scale set')
-//     );
-//   });
-//   it("should throw an error when the tile's x index is outside of tile grid because of large enough metatile", () => {
-//     const tile: Tile = {x: 1, y: 0, z: 0, metatile: 2};
-//
-//     const badTileToBoundingBox = (): void => {
-//       tileToBoundingBox(tile);
-//     };
-//
-//     expect(badTileToBoundingBox).toThrow(
-//       RangeError('x index out of range of tile grid')
-//     );
-//   });
-//   it("should throw an error when the tile's y index is outside of tile grid because of large enough metatile", () => {
-//     const tile: Tile = {x: 0, y: 1, z: 0, metatile: 2};
-//
-//     const badTileToBoundingBox = (): void => {
-//       tileToBoundingBox(tile);
-//     };
-//
-//     expect(badTileToBoundingBox).toThrow(
-//       RangeError('y index out of range of tile grid')
-//     );
-//   });
-//   it('should throw an error when metatile is zero or less', () => {
-//     const tile: Tile = {x: 0, y: 0, z: 0, metatile: 0};
-//
-//     const badTileToBoundingBox = (): void => {
-//       tileToBoundingBox(tile);
-//     };
-//
-//     expect(badTileToBoundingBox).toThrow(
-//       new Error('metatile must be larger than 0')
-//     );
-//   });
-//   describe('Bad tile grid', () => {
-//     test.each(tileGridTests)(
-//       "should throw an error when the tile grid's $testCaseName",
-//       ({tileGrid, expected}) => {
-//         const badTileToBoundingBox = (): void => {
-//           const tile = {x: 0, y: 0, z: 0};
-//
-//           tileToBoundingBox(tile, tileGrid);
-//         };
-//
-//         expect(badTileToBoundingBox).toThrow(new Error(expected));
-//       }
-//     );
-//   });
-// });
+describe('#tileToBoundingBox', () => {
+  it('should return a bounding box for a given tile', () => {
+    const tile: Tile = {x: 1, y: 1, z: 1};
+    const expected: BoundingBox = new BoundingBox(-90, -90, 0, 0);
+
+    const boundingBox = tileToBoundingBox(tile);
+
+    expect(boundingBox).toEqual(expected);
+  });
+  it('should return a bounding box for a given tile which contains a metatile size that overrides the default', () => {
+    const tile: Tile = {x: 1, y: 0, z: 1, metatile: 3};
+    const expected: BoundingBox = new BoundingBox(90, -180, 360, 90);
+
+    const boundingBox = tileToBoundingBox(tile);
+
+    expect(boundingBox).toEqual(expected);
+  });
+  it('should return a bounding box for a given tile which contains a metatile size that overrides the default with clamping used', () => {
+    const tile: Tile = {x: 1, y: 0, z: 1, metatile: 3};
+    const expected: BoundingBox = new BoundingBox(90, -90, 180, 90);
+
+    const boundingBox = tileToBoundingBox(tile, undefined, true);
+
+    expect(boundingBox).toEqual(expected);
+  });
+  it('should return a bounding box for a given tile with non default tile grid', () => {
+    const tile: Tile = {x: 0, y: 0, z: 0};
+    const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
+    const expected: BoundingBox = new BoundingBox(
+      TILEGRID_WEB_MERCATOR.boundingBox.min.lon,
+      TILEGRID_WEB_MERCATOR.boundingBox.min.lat,
+      TILEGRID_WEB_MERCATOR.boundingBox.max.lon,
+      TILEGRID_WEB_MERCATOR.boundingBox.max.lat
+    );
+
+    const boundingBox = tileToBoundingBox(tile, tileGrid);
+
+    expect(boundingBox).toEqual(expected);
+  });
+  it('should return a bounding box for a given tile with non default tile grid & non default metatile', () => {
+    const tile: Tile = {x: 1, y: 0, z: 2, metatile: 3};
+    const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
+    const expected: BoundingBox = new BoundingBox(
+      90,
+      -42.525564389903295,
+      360,
+      85.05112877980659
+    );
+
+    const boundingBox = tileToBoundingBox(tile, tileGrid);
+
+    expect(boundingBox).toEqual(expected);
+  });
+  it('should return a bounding box for a given tile with non default tile grid & non default metatile & clamping used', () => {
+    const tile: Tile = {x: 1, y: 0, z: 2, metatile: 3};
+    const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
+    const expected: BoundingBox = new BoundingBox(
+      90,
+      -42.525564389903295,
+      180,
+      85.05112877980659
+    );
+
+    const boundingBox = tileToBoundingBox(tile, tileGrid, true);
+
+    expect(boundingBox).toEqual(expected);
+  });
+  it("should throw an error when the tile's x index is outside of tile grid", () => {
+    const tile: Tile = {x: 2, y: 1, z: 0};
+
+    const badTileToBoundingBox = (): void => {
+      tileToBoundingBox(tile);
+    };
+
+    expect(badTileToBoundingBox).toThrow(
+      RangeError('x index out of range of tile grid')
+    );
+  });
+  it("should throw an error when the tile's y index is outside of tile grid", () => {
+    const tile: Tile = {x: 1, y: 1, z: 0};
+
+    const badTileToBoundingBox = (): void => {
+      tileToBoundingBox(tile);
+    };
+
+    expect(badTileToBoundingBox).toThrow(
+      RangeError('y index out of range of tile grid')
+    );
+  });
+  it("should throw an error when the tile's z index is not part of zoom levels of tile grid's scale set", () => {
+    const tile: Tile = {x: 2, y: 1, z: 1.5};
+
+    const badTileToBoundingBox = (): void => {
+      tileToBoundingBox(tile);
+    };
+
+    expect(badTileToBoundingBox).toThrow(
+      Error('zoom level is not part of the given well known scale set')
+    );
+  });
+  it("should throw an error when the tile's x index is outside of tile grid because of large enough metatile", () => {
+    const tile: Tile = {x: 1, y: 0, z: 0, metatile: 2};
+
+    const badTileToBoundingBox = (): void => {
+      tileToBoundingBox(tile);
+    };
+
+    expect(badTileToBoundingBox).toThrow(
+      RangeError('x index out of range of tile grid')
+    );
+  });
+  it("should throw an error when the tile's y index is outside of tile grid because of large enough metatile", () => {
+    const tile: Tile = {x: 0, y: 1, z: 0, metatile: 2};
+
+    const badTileToBoundingBox = (): void => {
+      tileToBoundingBox(tile);
+    };
+
+    expect(badTileToBoundingBox).toThrow(
+      RangeError('y index out of range of tile grid')
+    );
+  });
+  it('should throw an error when metatile is zero or less', () => {
+    const tile: Tile = {x: 0, y: 0, z: 0, metatile: 0};
+
+    const badTileToBoundingBox = (): void => {
+      tileToBoundingBox(tile);
+    };
+
+    expect(badTileToBoundingBox).toThrow(
+      new Error('metatile must be larger than 0')
+    );
+  });
+  describe('Bad tile grid', () => {
+    test.each(tileGridTests)(
+      "should throw an error when the tile grid's $testCaseName",
+      ({tileGrid, expected}) => {
+        const badTileToBoundingBox = (): void => {
+          const tile = {x: 0, y: 0, z: 0};
+
+          tileToBoundingBox(tile, tileGrid);
+        };
+
+        expect(badTileToBoundingBox).toThrow(new Error(expected));
+      }
+    );
+  });
+});
