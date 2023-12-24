@@ -1,6 +1,6 @@
 import {SCALE_FACTOR, TILEGRID_WORLD_CRS84} from './tiles_constants';
 import {BoundingBox, LonLat} from '../classes';
-import {Tile, TileGrid} from './tiles_classes';
+import { Tile, TileGrid, TileRange } from "./tiles_classes";
 import {Zoom} from '../types';
 import {
   validateLonlat,
@@ -27,7 +27,10 @@ function clampValues(
   return value;
 }
 
-function tileProjectedHeight(zoom: Zoom, referenceTileGrid: TileGrid): number {
+export function tileProjectedHeight(
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): number {
   return (
     (referenceTileGrid.boundingBox.max.lat -
       referenceTileGrid.boundingBox.min.lat) /
@@ -75,28 +78,28 @@ function geoCoordsToTile(
 
   // clamp the values in cases when lon is 180 which is calculated as beyond
   // the range of tile index for a given zoom level
-  return {
-    x: clampValues(
-      x,
-      0,
-      Math.ceil(
-        (referenceTileGrid.numberOfMinLevelTilesX / metatile) *
-          SCALE_FACTOR ** zoom -
-          1
-      )
-    ),
-    y: clampValues(
-      y,
-      0,
-      Math.ceil(
-        (referenceTileGrid.numberOfMinLevelTilesY / metatile) *
-          SCALE_FACTOR ** zoom -
-          1
-      )
-    ),
-    z: zoom,
-    metatile: metatile,
-  };
+
+  const xClamped = clampValues(
+    x,
+    0,
+    Math.ceil(
+      (referenceTileGrid.numberOfMinLevelTilesX / metatile) *
+        SCALE_FACTOR ** zoom -
+        1
+    )
+  );
+
+  const yClamped = clampValues(
+    y,
+    0,
+    Math.ceil(
+      (referenceTileGrid.numberOfMinLevelTilesY / metatile) *
+        SCALE_FACTOR ** zoom -
+        1
+    )
+  );
+
+  return new Tile(xClamped, yClamped, zoom, metatile);
 }
 
 /**
@@ -258,4 +261,39 @@ export function tileToBoundingBox(
   }
 
   return bbox;
+}
+
+/**
+ * converts tile to tile range of specified zoom level
+ * This method will help finding what tiles are needed to cover a given tile at a different zoom level
+ * @param tile
+ * @param zoom target tile range zoom
+ * @returns the first tile of the tile range and the last tile of the tile range
+ */
+export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
+  let minX: number, minY: number, maxX: number, maxY: number;
+  minX = tile.x;
+  maxX = tile.x + 1;
+  minY = tile.y;
+  maxY = tile.y + 1;
+  if (tile.z < zoom) {
+    const dz = zoom - tile.z;
+    minX = minX << dz;
+    maxX = maxX << dz;
+    minY = minY << dz;
+    maxY = maxY << dz;
+  } else if (tile.z > zoom) {
+    const dz = tile.z - zoom;
+    minX = minX >> dz;
+    minY = minY >> dz;
+    maxX = minX + 1;
+    maxY = minY + 1;
+  }
+  return {
+    minX,
+    minY,
+    maxX,
+    maxY,
+    zoom,
+  };
 }

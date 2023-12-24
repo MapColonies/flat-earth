@@ -97,3 +97,24 @@ export class TileGrid {
     this.keywords = keywords;
   }
 }
+
+export class TileRange {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  zoom: number;
+  constructor(
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    zoom: number
+  ) {
+    this.minX = minX;
+    this.minY = minY;
+    this.maxX = maxX;
+    this.maxY = maxY;
+    this.zoom = zoom;
+  }
+}
