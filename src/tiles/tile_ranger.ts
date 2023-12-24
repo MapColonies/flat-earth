@@ -1,6 +1,7 @@
 import {Zoom} from '../types';
-import {Polygon} from '../classes';
+import {BoundingBox, Geometry, Polygon} from '../classes';
 import {Tile, TileRange} from './tiles_classes';
+import {boundingBoxToTiles} from './tiles';
 // import {Tile} from './tiles_classes';
 // import {area, bboxPolygon, booleanEqual, Feature, intersect} from '@turf/turf';
 // import {ITile, ITileRange} from '../models/interfaces/geo/iTile';
@@ -30,8 +31,6 @@ import {Tile, TileRange} from './tiles_classes';
  * class for generating and decoding tile hashes
  */
 export class TileRanger {
-
-
   /**
    * generate tile hashes
    * @param footprint footprint to cover with generated tile hashes
@@ -83,7 +82,6 @@ export class TileRanger {
   //     );
   //   }
   // }
-
   /**
    * generate tile
    * @param bbox bbox to cover with generated tiles
@@ -92,26 +90,10 @@ export class TileRanger {
   // public generateTiles(bbox: BBox2d, zoom: number): Generator<ITile>;
   /**
    * generate tile
-   * @param footprint footprint to cover with generated tiles
+   * @param area
    * @param zoom target tiles zoom level
    */
-  // public generateTiles(
-  //   footprint: Polygon | Feature<Polygon | MultiPolygon>,
-  //   zoom: number
-  // ): Generator<ITile>;
-  // public generateTiles(
-  //   area: BBox2d | Polygon | Feature<Polygon | MultiPolygon>,
-  //   zoom: number
-  // ): Generator<ITile> {
-  //   let gen: Iterable<ITileRange>;
-  //   if (Array.isArray(area)) {
-  //     gen = [bboxToTileRange(area, zoom)];
-  //   } else {
-  //     gen = this.encodeFootprint(area, zoom);
-  //   }
-  //   return tilesGenerator(gen);
-  // }
-
+  // public generateTiles(footprint: Polygon, zoom: Zoom): Generator<Tile>;
   // private *generateRanges<T>(
   //   bbox: BBox2d,
   //   zoom: number,
@@ -289,4 +271,18 @@ export class TileRanger {
   //   }
   //   return TileIntersectionState.PARTIAL;
   // };
+}
+
+export function generateTiles(
+  area: Geometry,
+  zoom: Zoom
+): Generator<Tile, undefined, undefined> {
+  switch (area.type) {
+    // case 'Polygon':
+    //   return encodeFootprint(area, zoom);
+    case 'BoundingBox':
+      return boundingBoxToTiles(area as BoundingBox, zoom);
+    default:
+      throw new Error(`Unsupported area type: ${area.type}`);
+  }
 }

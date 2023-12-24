@@ -1,6 +1,6 @@
 import {SCALE_FACTOR, TILEGRID_WORLD_CRS84} from './tiles_constants';
 import {BoundingBox, LonLat} from '../classes';
-import { Tile, TileGrid, TileRange } from "./tiles_classes";
+import {Tile, TileGrid, TileRange} from './tiles_classes';
 import {Zoom} from '../types';
 import {
   validateLonlat,
@@ -47,13 +47,16 @@ function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
 }
 
 function* tilesGenerator(
-  limits: BoundingBox,
-  zoom: Zoom,
+  tileRange: TileRange,
   metatile: number
 ): Generator<Tile, undefined, undefined> {
-  for (let y = limits.min.lat; y <= limits.max.lat; y++) {
-    for (let x = limits.min.lon; x <= limits.max.lon; x++) {
-      yield {x, y, z: zoom, metatile};
+  if (tileRange.minX === tileRange.maxX && tileRange.minY === tileRange.maxY) {
+    yield new Tile(tileRange.minX, tileRange.minY, tileRange.zoom, metatile);
+    return;
+  }
+  for (let y = tileRange.minY; y < tileRange.maxY; y++) {
+    for (let x = tileRange.minX; x < tileRange.maxX; x++) {
+      yield new Tile(x, y, tileRange.zoom, metatile);
     }
   }
 
@@ -135,13 +138,13 @@ export function boundingBoxToTiles(
   );
 
   return tilesGenerator(
-    new BoundingBox(
+    new TileRange(
       upperLeftTile.x,
-      lowerRightTile.y,
+      upperLeftTile.y,
       lowerRightTile.x,
-      upperLeftTile.y
+      lowerRightTile.y,
+      zoom
     ),
-    zoom,
     metatile
   );
 }

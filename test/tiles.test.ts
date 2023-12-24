@@ -2,6 +2,7 @@ import {
   boundingBoxToTiles,
   lonLatZoomToTile,
   tileToBoundingBox,
+  tileToTileRange,
   zoomShift,
   // tileToBoundingBox,
   // zoomShift,
@@ -13,7 +14,7 @@ import {
   TILEGRID_WORLD_CRS84,
 } from '../src/tiles/tiles_constants';
 import {BoundingBox, LonLat} from '../src/classes';
-import {Tile, TileGrid} from '../src/tiles/tiles_classes';
+import {Tile, TileGrid, TileRange} from '../src/tiles/tiles_classes';
 import {Zoom} from '../src/types';
 
 const tileGridTests = [
@@ -111,61 +112,51 @@ describe('#boundingBoxToTiles', () => {
   it('should return a generator function which yields tiles inside the bounding box', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
-    const expected = {value: {x: 9, y: 2, z: 3, metatile: 1}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(9, 2, 3, 1)];
 
     const tilesGenerator = boundingBoxToTiles(bbox, zoom);
+    const tiles = convertToTileArray(tilesGenerator);
 
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    expect(tiles).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with negative coordinates', () => {
     const bbox: BoundingBox = new BoundingBox(-40, -40, -30, -30);
     const zoom: Zoom = 3;
-    const expected = {value: {x: 6, y: 5, z: 3, metatile: 1}, done: false};
-    const expectedNext = {value: undefined, done: true};
-
+    const expected = [new Tile(6, 5, 3, 1)];
     const tilesGenerator = boundingBoxToTiles(bbox, zoom);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tiles = convertToTileArray(tilesGenerator);
+    expect(tiles).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with non default metatile', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
     const metatile = 3;
-    const expected = {value: {x: 3, y: 0, z: 3, metatile: 3}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(3, 0, 3, 3)];
 
     const tilesGenerator = boundingBoxToTiles(bbox, zoom, metatile);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tiles = convertToTileArray(tilesGenerator);
+    expect(tiles).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with non default tile grid', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-    const expected = {value: {x: 4, y: 2, z: 3, metatile: 1}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(4, 2, 3, 1)];
 
     const tilesGenerator = boundingBoxToTiles(bbox, zoom, undefined, tileGrid);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tiles = convertToTileArray(tilesGenerator);
+    expect(tiles).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with non default tile grid & non default metatile', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
     const metatile = 3;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-    const expected = {value: {x: 1, y: 0, z: 3, metatile: 3}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(1, 0, 3, 3)];
 
     const tilesGenerator = boundingBoxToTiles(bbox, zoom, metatile, tileGrid);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tiles = convertToTileArray(tilesGenerator);
+    expect(tiles).toEqual(expected);
   });
   it("should throw an error when the given bounding box's max.lon value is more or equal to the min.lon value", () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 30, 40);
@@ -572,3 +563,49 @@ describe('#tileToBoundingBox', () => {
     );
   });
 });
+describe('tileToRange', () => {
+  it('create range with same zoom', () => {
+    const tile = new Tile(1, 1, 2);
+
+    const range = tileToTileRange(tile, 2);
+    const expectedRange = new TileRange(1, 1, 2, 2, 2);
+    expect(range).toEqual(expectedRange);
+  });
+
+  it('create range with higher zoom', () => {
+    const tile = new Tile(1, 1, 2);
+    const range = tileToTileRange(tile, 3);
+
+    const expectedRange = {
+      minX: 2,
+      minY: 2,
+      maxX: 4,
+      maxY: 4,
+      zoom: 3,
+    };
+    expect(range).toEqual(expectedRange);
+  });
+
+  it('create range with lower zoom', () => {
+    const tile = new Tile(1, 1, 2);
+
+    const range = tileToTileRange(tile, 1);
+
+    const expectedRange = {
+      minX: 0,
+      minY: 0,
+      maxX: 1,
+      maxY: 1,
+      zoom: 1,
+    };
+    expect(range).toEqual(expectedRange);
+  });
+});
+
+function convertToTileArray(tilesGenerator: Generator<Tile>): Tile[] {
+  const tiles = [];
+  for (const tile of tilesGenerator) {
+    tiles.push(tile);
+  }
+  return tiles;
+}
