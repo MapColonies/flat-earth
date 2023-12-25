@@ -1,6 +1,7 @@
 import {
   boundingBoxToTiles,
   lonLatZoomToTile,
+  snapBBoxToTileGrid,
   tileToBoundingBox,
   tileToTileRange,
   zoomShift,
@@ -602,6 +603,23 @@ describe('tileToRange', () => {
   });
 });
 
+describe('Snap a bounding box to tile grid', () => {
+  it('should get a bounding box smaller than the grid tiles and enlarge it to the grid', () => {
+    const boundingBox = new BoundingBox(-110, -35, -50, 35);
+    const snappedBoundingBox = snapBBoxToTileGrid(boundingBox, 2);
+
+    const expectedBoundingBox = new BoundingBox(-135, -45, -45, 45);
+    expect(snappedBoundingBox).toEqual(expectedBoundingBox);
+  });
+
+  // it('rounded bbox contains original bbox', () => {
+  //   const roundedBbox = snapBBoxToTileGrid([1, 2, 3, 4], 20);
+  //   expect(roundedBbox[0]).toBeLessThanOrEqual(1);
+  //   expect(roundedBbox[1]).toBeLessThanOrEqual(2);
+  //   expect(roundedBbox[2]).toBeGreaterThanOrEqual(3);
+  //   expect(roundedBbox[3]).toBeGreaterThanOrEqual(4);
+  // });
+});
 function convertToTileArray(tilesGenerator: Generator<Tile>): Tile[] {
   const tiles = [];
   for (const tile of tilesGenerator) {

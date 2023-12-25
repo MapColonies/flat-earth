@@ -300,3 +300,33 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
     zoom,
   };
 }
+
+/**
+ * rounds bbox to grid
+ * @param boundingBox
+ * @param zoom target tiles grid zoom level
+ * @param referenceTileGrid
+ * @returns bbox that contains the original bbox and match tile grid lines
+ */
+export function snapBBoxToTileGrid(
+  boundingBox: BoundingBox,
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): BoundingBox {
+  const minTile = lonLatZoomToTile(boundingBox.min, zoom, 1, referenceTileGrid);
+  const minTilBoundingBox = tileToBoundingBox(minTile, referenceTileGrid, true);
+
+  const maxTile = lonLatZoomToTile(boundingBox.max, zoom, 1, referenceTileGrid);
+  const maxTileBoundingBox = tileToBoundingBox(
+    maxTile,
+    referenceTileGrid,
+    true
+  );
+
+  return new BoundingBox(
+    minTilBoundingBox.min.lon,
+    minTilBoundingBox.min.lat,
+    maxTileBoundingBox.max.lon,
+    maxTileBoundingBox.max.lat
+  );
+}
