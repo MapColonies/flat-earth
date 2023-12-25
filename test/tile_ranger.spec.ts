@@ -82,35 +82,22 @@ import {generateTiles} from '../src/tiles/tile_ranger';
 describe('generateTiles', () => {
   it('generates expected tiles from bbox', () => {
     const boundingBox = new BoundingBox(-45, -45, 0, 0);
-    const tilesGen = boundingBoxToTiles(boundingBox, 2);
-    const tiles = [];
-    for (const tile of tilesGen) {
-      tiles.push(tile);
-    }
+    const tilesGen = generateTiles(boundingBox, 2);
+    const tiles = convertToTileArray(tilesGen);
 
     const expectedTiles = [new Tile(3, 2, 2, 1)];
     expect(tiles).toEqual(expectedTiles);
   });
 
-  // it('generates expected tiles from bbox polygon', () => {
-  //   const bbox = [-45, -45, 0, 0] as BBox2d;
-  //   const poly = bboxPolygon(bbox);
-  //
-  //   const tiles = [];
-  //   const gen = ranger.generateTiles(poly, 2);
-  //   for (const tile of gen) {
-  //     tiles.push(tile);
-  //   }
-  //
-  //   const expectedTiles = [
-  //     {
-  //       x: 3,
-  //       y: 1,
-  //       zoom: 2,
-  //     },
-  //   ];
-  //   expect(tiles).toEqual(expectedTiles);
-  // });
+  it('generates expected tiles from bbox polygon', () => {
+    const boundingBox = new BoundingBox(-45, -45, 0, 0);
+    const polygon = boundingBoxToPolygon(boundingBox);
+    const tilesGen = generateTiles(polygon, 2);
+    const tiles = convertToTileArray(tilesGen);
+
+    const expectedTiles = [new Tile(3, 2, 2, 1)];
+    expect(tiles).toEqual(expectedTiles);
+  });
 
   // it('generates expected tiles from none bbox polygon', () => {
   //   const poly = polygon([
@@ -143,4 +130,14 @@ describe('generateTiles', () => {
   //   expect(tiles).toEqual(expectedTiles);
   // });
   // });
+
+  // TODO: test tile when counting based on the lower left corner
 });
+
+function convertToTileArray(tilesGenerator: Generator<Tile>): Tile[] {
+  const tiles = [];
+  for (const tile of tilesGenerator) {
+    tiles.push(tile);
+  }
+  return tiles;
+}

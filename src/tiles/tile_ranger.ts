@@ -2,6 +2,8 @@ import {Zoom} from '../types';
 import {BoundingBox, Geometry, Polygon} from '../classes';
 import {Tile, TileRange} from './tiles_classes';
 import {boundingBoxToTiles} from './tiles';
+import {geometryCoversBoundingBox} from '../measurements/measurements';
+import {geometryToBoundingBox} from '../converters/geometry_converters';
 // import {Tile} from './tiles_classes';
 // import {area, bboxPolygon, booleanEqual, Feature, intersect} from '@turf/turf';
 // import {ITile, ITileRange} from '../models/interfaces/geo/iTile';
@@ -37,51 +39,6 @@ export class TileRanger {
    * @param zoom max hash zoom
    * @returns
    */
-  // public *encodeFootprint(
-  //   footprint: Polygon,
-  //   zoom: Zoom
-  // ): Generator<ITileRange> {
-  //   ////////////////////////////////
-  //   /// Step 1: check if the footprint is identical to its boundingBox
-  //   ////////////////////////////////
-  //   console.debug('Starting to encode footprint');
-  //   ////////////////////////////////
-  //   /// Step 2: convert footprint to BBOX
-  //   ////////////////////////////////
-  //   if (geometryCoversBoundingBox(footprint)) {
-  //     console.debug('footprint covers bounding box');
-  //     // if it is a bounding box convert it directly to a tile range and return it
-  //     // (boundingBox to tiles conversion is fast and direct mathematical conversion)
-  //     const boundingBox = geometryToBoundingBox(footprint);
-  //     return boundingBoxToTiles(boundingBox,zoom);
-  //
-  //     //TODO: add debug values
-  //     // console.debug(
-  //     //     `footprint is identical to its bbox -
-  //     //     return BBOX tile range zoom: ${tileRange.zoom} :
-  //     //     X ${tileRange.minX} - ${tileRange.maxX} :
-  //     //     Y ${tileRange.minY} - ${tileRange.maxY}`
-  //     //   );
-  //
-  //   } else {
-  //     const intersectionParams: IFootprintIntersectionParams = {
-  //       footprint,
-  //       maxZoom: zoom,
-  //     };
-  //     if (verbose) {
-  //       console.log(
-  //         'footprint is different from its boundingBox - generateRanges'
-  //       );
-  //     }
-  //     yield* this.generateRanges(
-  //       boundingBox,
-  //       zoom,
-  //       intersectionParams,
-  //       this.tileFootprintIntersection,
-  //       verbose
-  //     );
-  //   }
-  // }
   /**
    * generate tile
    * @param bbox bbox to cover with generated tiles
@@ -273,13 +230,53 @@ export class TileRanger {
   // };
 }
 
+function encodeFootprint(footprint: Polygon, zoom: Zoom): Generator<Tile> {
+  console.debug('Starting to encode footprint');
+  if (geometryCoversBoundingBox(footprint)) {
+    console.debug('footprint covers bounding box');
+    // if it is a bounding box convert it directly to a tile range and return it
+    // (boundingBox to tiles conversion is fast and direct mathematical conversion)
+    const boundingBox = geometryToBoundingBox(footprint);
+    return boundingBoxToTiles(boundingBox, zoom);
+
+    //TODO: add debug values
+    // console.debug(
+    //     `footprint is identical to its bbox -
+    //     return BBOX tile range zoom: ${tileRange.zoom} :
+    //     X ${tileRange.minX} - ${tileRange.maxX} :
+    //     Y ${tileRange.minY} - ${tileRange.maxY}`
+    //   );
+
+    // } else {
+    //   const intersectionParams: IFootprintIntersectionParams = {
+    //     footprint,
+    //     maxZoom: zoom,
+    //   };
+    //   if (verbose) {
+    //     console.log(
+    //       'footprint is different from its boundingBox - generateRanges'
+    //     );
+    //   }
+    //   yield* this.generateRanges(
+    //     boundingBox,
+    //     zoom,
+    //     intersectionParams,
+    //     this.tileFootprintIntersection,
+    //     verbose
+    //   );
+    // }
+  } else {
+    throw new Error('footprint does not cover bounding box');
+  }
+}
+
 export function generateTiles(
   area: Geometry,
   zoom: Zoom
 ): Generator<Tile, undefined, undefined> {
   switch (area.type) {
-    // case 'Polygon':
-    //   return encodeFootprint(area, zoom);
+    case 'Polygon':
+      return encodeFootprint(area as Polygon, zoom);
     case 'BoundingBox':
       return boundingBoxToTiles(area as BoundingBox, zoom);
     default:
