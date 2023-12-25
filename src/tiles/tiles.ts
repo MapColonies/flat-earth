@@ -308,25 +308,50 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
  * @param referenceTileGrid
  * @returns bbox that contains the original bbox and match tile grid lines
  */
-export function snapBBoxToTileGrid(
+export function expandBBoxToTileGrid(
   boundingBox: BoundingBox,
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): BoundingBox {
-  const minTile = lonLatZoomToTile(boundingBox.min, zoom, 1, referenceTileGrid);
-  const minTilBoundingBox = tileToBoundingBox(minTile, referenceTileGrid, true);
-
-  const maxTile = lonLatZoomToTile(boundingBox.max, zoom, 1, referenceTileGrid);
-  const maxTileBoundingBox = tileToBoundingBox(
-    maxTile,
-    referenceTileGrid,
-    true
-  );
+  const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
+  const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
 
   return new BoundingBox(
-    minTilBoundingBox.min.lon,
-    minTilBoundingBox.min.lat,
-    maxTileBoundingBox.max.lon,
-    maxTileBoundingBox.max.lat
+    minPoint.lon,
+    minPoint.lat,
+    maxPoint.lon,
+    maxPoint.lat
   );
+}
+
+function snapMinPointToGrid(
+  point: LonLat,
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): LonLat {
+  const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const minLon = Math.floor(point.lon / width) * width;
+  const height = tileProjectedHeight(zoom, referenceTileGrid);
+  const minLat = Math.floor(point.lat / height) * height;
+  return new LonLat(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
+}
+
+function snapMaxPointToGrid(
+  point: LonLat,
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): LonLat {
+  const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const maxLon = Math.ceil(point.lon / width) * width;
+  const height = tileProjectedHeight(zoom, referenceTileGrid);
+  const maxLat = Math.ceil(point.lat / height) * height;
+  return new LonLat(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
+}
+
+function avoidNegativeZero(value: number): number {
+  if (value === 0) {
+    return 0;
+  }
+
+  return value;
 }
