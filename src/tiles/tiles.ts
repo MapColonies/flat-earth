@@ -54,8 +54,8 @@ function* tilesGenerator(
     yield new Tile(tileRange.minX, tileRange.minY, tileRange.zoom, metatile);
     return;
   }
-  for (let y = tileRange.minY; y < tileRange.maxY; y++) {
-    for (let x = tileRange.minX; x < tileRange.maxX; x++) {
+  for (let y = tileRange.minY; y <= tileRange.maxY; y++) {
+    for (let x = tileRange.minX; x <= tileRange.maxX; x++) {
       yield new Tile(x, y, tileRange.zoom, metatile);
     }
   }
@@ -63,46 +63,49 @@ function* tilesGenerator(
   return;
 }
 
+/**
+ * Transforms a longitude and latitude to a tile coordinates
+ * @param lonlat the longitude and latitude
+ * @param zoom the zoom level
+ * @param metatile the size of a metatile
+ * @param reverseIntersectionPolicy a boolean whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
+ * @param referenceTileGrid a tile grid which the calculated tile belongs to
+ */
 function geoCoordsToTile(
   lonlat: LonLat,
   zoom: Zoom,
   metatile = 1,
+  reverseIntersectionPolicy: boolean,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): Tile {
   const width = tileProjectedWidth(zoom, referenceTileGrid) * metatile;
   const height = tileProjectedHeight(zoom, referenceTileGrid) * metatile;
 
-  const x = Math.floor(
-    (lonlat.lon - referenceTileGrid.boundingBox.min.lon) / width
-  );
-  const y = Math.floor(
-    (referenceTileGrid.boundingBox.max.lat - lonlat.lat) / height
-  );
+  const tileX = (lonlat.lon - referenceTileGrid.boundingBox.min.lon) / width;
+  const tileY = (referenceTileGrid.boundingBox.max.lat - lonlat.lat) / height;
 
-  // clamp the values in cases when lon is 180 which is calculated as beyond
-  // the range of tile index for a given zoom level
+  // clamp the values in cases when lon is 180 which is calculated as beyond the grid
+  if (reverseIntersectionPolicy || edgeOfMap(lonlat, referenceTileGrid)) {
+    const x = Math.ceil(tileX) - 1;
+    const y = Math.ceil(tileY) - 1;
+    return new Tile(x, y, zoom, metatile);
+  } else {
+    const x = Math.floor(tileX);
+    const y = Math.floor(tileY);
+    return new Tile(x, y, zoom, metatile);
+  }
+}
 
-  const xClamped = clampValues(
-    x,
-    0,
-    Math.ceil(
-      (referenceTileGrid.numberOfMinLevelTilesX / metatile) *
-        SCALE_FACTOR ** zoom -
-        1
-    )
+/**
+ * Check if the given location is on the edge of the tile grid
+ * @param lonlat
+ * @param referenceTileGrid
+ */
+function edgeOfMap(lonlat: LonLat, referenceTileGrid: TileGrid): boolean {
+  return (
+    lonlat.lon === referenceTileGrid.boundingBox.max.lon ||
+    lonlat.lat === referenceTileGrid.boundingBox.min.lat
   );
-
-  const yClamped = clampValues(
-    y,
-    0,
-    Math.ceil(
-      (referenceTileGrid.numberOfMinLevelTilesY / metatile) *
-        SCALE_FACTOR ** zoom -
-        1
-    )
-  );
-
-  return new Tile(xClamped, yClamped, zoom, metatile);
 }
 
 /**
@@ -124,27 +127,23 @@ export function boundingBoxToTiles(
   validateTileGridBoundingBox(bbox, referenceTileGrid);
   validateZoomLevel(zoom, referenceTileGrid);
 
-  const upperLeftTile = geoCoordsToTile(
+  const firstTile = geoCoordsToTile(
     new LonLat(bbox.min.lon, bbox.max.lat),
     zoom,
     metatile,
+    false,
     referenceTileGrid
   );
-  const lowerRightTile = geoCoordsToTile(
+  const lastTile = geoCoordsToTile(
     new LonLat(bbox.max.lon, bbox.min.lat),
     zoom,
     metatile,
+    true,
     referenceTileGrid
   );
 
   return tilesGenerator(
-    new TileRange(
-      upperLeftTile.x,
-      upperLeftTile.y,
-      lowerRightTile.x,
-      lowerRightTile.y,
-      zoom
-    ),
+    new TileRange(firstTile.x, firstTile.y, lastTile.x, lastTile.y, zoom),
     metatile
   );
 }
@@ -207,7 +206,7 @@ export function lonLatZoomToTile(
   validateZoomLevel(zoom, referenceTileGrid);
   validateLonlat(lonlat, referenceTileGrid);
 
-  return geoCoordsToTile(lonlat, zoom, metatile, referenceTileGrid);
+  return geoCoordsToTile(lonlat, zoom, metatile, false, referenceTileGrid);
 }
 
 /**
@@ -354,4 +353,66 @@ function avoidNegativeZero(value: number): number {
   }
 
   return value;
+}
+
+export function boundingBoxToTileRange(boundingBox: BoundingBox, zoom: Zoom) {
+  const tilesGen = boundingBoxToTiles(boundingBox, zoom);
+  const tiles = convertToTileArray(tilesGen);
+  const minTile = tiles[0];
+  const maxTile = tiles[tiles.length - 1];
+  return new TileRange(minTile.x, minTile.y, maxTile.x, maxTile.y, zoom);
+}
+
+/**
+ * Find the minimal zoom where a bounding box can be contained in one tile
+ * @param boundingBox
+ * @param referenceTileGrid
+ */
+export function findMinimalZoom(
+  boundingBox: BoundingBox,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): Zoom {
+  const dx = boundingBox.max.lon - boundingBox.min.lon;
+  const dy = boundingBox.max.lat - boundingBox.min.lat;
+
+  const minimalXZoom = Math.floor(
+    Math.log2(
+      (referenceTileGrid.boundingBox.max.lon -
+        referenceTileGrid.boundingBox.min.lon) /
+        (referenceTileGrid.numberOfMinLevelTilesX * dx)
+    )
+  );
+
+  const minimalYZoom = Math.floor(
+    Math.log2(
+      (referenceTileGrid.boundingBox.max.lat -
+        referenceTileGrid.boundingBox.min.lat) /
+        (referenceTileGrid.numberOfMinLevelTilesY * dy)
+    )
+  );
+
+  const minimalZoom = Math.min(minimalXZoom, minimalYZoom);
+  // Sometimes zoom can be negative, which is not valid
+  let resultZoom = 0;
+  // in cases the tile is not exactly fitting in the tile grid we need to check concrete cases
+  for (let zoom = minimalZoom; zoom > 0; zoom--) {
+    const tileRange = boundingBoxToTileRange(boundingBox, zoom);
+    if (
+      tileRange.maxX === tileRange.minX &&
+      tileRange.maxY === tileRange.minY
+    ) {
+      resultZoom = zoom;
+      break;
+    }
+  }
+
+  return resultZoom;
+}
+
+export function convertToTileArray(tilesGenerator: Generator<Tile>): Tile[] {
+  const tiles = [];
+  for (const tile of tilesGenerator) {
+    tiles.push(tile);
+  }
+  return tiles;
 }

@@ -1,12 +1,13 @@
 import {
+  boundingBoxToTileRange,
   boundingBoxToTiles,
-  lonLatZoomToTile,
+  convertToTileArray,
   expandBBoxToTileGrid,
+  findMinimalZoom,
+  lonLatZoomToTile,
   tileToBoundingBox,
   tileToTileRange,
   zoomShift,
-  // tileToBoundingBox,
-  // zoomShift,
 } from '../src/tiles/tiles';
 import {
   CRS_CRS84,
@@ -623,15 +624,40 @@ describe('Snap a bounding box to tile grid', () => {
   it('Bounding boxes is the same before and after snapping', () => {
     const boundingBox = new BoundingBox(-135, -45, -45, 45);
     const snappedBoundingBox = expandBBoxToTileGrid(boundingBox, 2);
-
+    const s = 1 << 2;
     const expectedBoundingBox = new BoundingBox(-135, -45, -45, 45);
     expect(snappedBoundingBox).toEqual(expectedBoundingBox);
   });
 });
-function convertToTileArray(tilesGenerator: Generator<Tile>): Tile[] {
-  const tiles = [];
-  for (const tile of tilesGenerator) {
-    tiles.push(tile);
-  }
-  return tiles;
-}
+
+describe('Bounding box to TileRange', () => {
+  it('should return the correct TileRange', () => {
+    const boundingBox = new BoundingBox(-135, -45, -45, 45);
+    const tileRange = boundingBoxToTileRange(boundingBox, 2);
+    const expectedTileRange = new TileRange(1, 1, 2, 2, 2);
+    expect(tileRange).toEqual(expectedTileRange);
+  });
+});
+
+describe('Find minimal zoom that can contain bounding box in one tile', () => {
+  it('should return correct zoom starting at zoom 2 and moving to 0', () => {
+    const boundingBox = new BoundingBox(-135, -45, -45, 45);
+    const minimalZoom = findMinimalZoom(boundingBox);
+    const expectedZoom = 0;
+    expect(minimalZoom).toEqual(expectedZoom);
+  });
+
+  it('should return correct zoom', () => {
+    const boundingBox = new BoundingBox(10, 10, 30, 30);
+    const minimalZoom = findMinimalZoom(boundingBox);
+    const expectedZoom = 2;
+    expect(minimalZoom).toEqual(expectedZoom);
+  });
+
+  it('Small bounding box located on the edge of minimal tiles should go one level up', () => {
+    const boundingBox = new BoundingBox(-100, -60, -45, -5);
+    const minimalZoom = findMinimalZoom(boundingBox);
+    const expectedZoom = 0;
+    expect(minimalZoom).toEqual(expectedZoom);
+  });
+});
