@@ -1,6 +1,6 @@
 import {SCALE_FACTOR, TILEGRID_WORLD_CRS84} from './tiles_constants';
-import {BoundingBox, LonLat} from '../classes';
-import {Tile, TileGrid, TileRange} from './tiles_classes';
+import {BoundingBox, Geometry, LonLat, Polygon} from '../classes';
+import {Tile, TileGrid, TileIntersectionType, TileRange} from './tiles_classes';
 import {Zoom} from '../types';
 import {
   validateLonlat,
@@ -10,6 +10,12 @@ import {
   validateTileGridBoundingBox,
   validateZoomLevel,
 } from './validations';
+import {geometryToBoundingBox} from '../converters/geometry_converters';
+import {
+  boundingBoxToTurfBbox,
+  polygonToTurfPolygon,
+} from '../converters/turf/turf_converters';
+import {area as turfArea, featureCollection, intersect} from '@turf/turf';
 
 function clampValues(
   value: number,
@@ -46,23 +52,6 @@ function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
   );
 }
 
-function* tilesGenerator(
-  tileRange: TileRange,
-  metatile: number
-): Generator<Tile, undefined, undefined> {
-  if (tileRange.minX === tileRange.maxX && tileRange.minY === tileRange.maxY) {
-    yield new Tile(tileRange.minX, tileRange.minY, tileRange.zoom, metatile);
-    return;
-  }
-  for (let y = tileRange.minY; y <= tileRange.maxY; y++) {
-    for (let x = tileRange.minX; x <= tileRange.maxX; x++) {
-      yield new Tile(x, y, tileRange.zoom, metatile);
-    }
-  }
-
-  return;
-}
-
 /**
  * Transforms a longitude and latitude to a tile coordinates
  * @param lonlat the longitude and latitude
@@ -84,7 +73,8 @@ function geoCoordsToTile(
   const tileX = (lonlat.lon - referenceTileGrid.boundingBox.min.lon) / width;
   const tileY = (referenceTileGrid.boundingBox.max.lat - lonlat.lat) / height;
 
-  // clamp the values in cases when lon is 180 which is calculated as beyond the grid
+  // When explicitly asked to reverse the intersection policy, (location on the edge of the tile)
+  // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
   if (reverseIntersectionPolicy || edgeOfMap(lonlat, referenceTileGrid)) {
     const x = Math.ceil(tileX) - 1;
     const y = Math.ceil(tileY) - 1;
@@ -116,12 +106,12 @@ function edgeOfMap(lonlat: LonLat, referenceTileGrid: TileGrid): boolean {
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  * @returns generator function which calculates tiles within the `bbox`
  */
-export function boundingBoxToTiles(
+export function boundingBoxToTileRange(
   bbox: BoundingBox,
   zoom: Zoom,
   metatile = 1,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): Generator<Tile, undefined, undefined> {
+): TileRange {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
   validateTileGridBoundingBox(bbox, referenceTileGrid);
@@ -142,8 +132,12 @@ export function boundingBoxToTiles(
     referenceTileGrid
   );
 
-  return tilesGenerator(
-    new TileRange(firstTile.x, firstTile.y, lastTile.x, lastTile.y, zoom),
+  return new TileRange(
+    firstTile.x,
+    firstTile.y,
+    lastTile.x,
+    lastTile.y,
+    zoom,
     metatile
   );
 }
@@ -266,38 +260,25 @@ export function tileToBoundingBox(
 }
 
 /**
- * converts tile to tile range of specified zoom level
+ * converts tile to tile range in a higher zoom level
  * This method will help finding what tiles are needed to cover a given tile at a different zoom level
  * @param tile
  * @param zoom target tile range zoom
  * @returns the first tile of the tile range and the last tile of the tile range
  */
 export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
-  let minX: number, minY: number, maxX: number, maxY: number;
-  minX = tile.x;
-  maxX = tile.x + 1;
-  minY = tile.y;
-  maxY = tile.y + 1;
-  if (tile.z < zoom) {
-    const dz = zoom - tile.z;
-    minX = minX << dz;
-    maxX = maxX << dz;
-    minY = minY << dz;
-    maxY = maxY << dz;
-  } else if (tile.z > zoom) {
-    const dz = tile.z - zoom;
-    minX = minX >> dz;
-    minY = minY >> dz;
-    maxX = minX + 1;
-    maxY = minY + 1;
+  if (zoom < tile.z) {
+    throw new Error(
+      `Target zoom level ${zoom} must be higher or equal to the tile's zoom level ${tile.z}`
+    );
   }
-  return {
-    minX,
-    minY,
-    maxX,
-    maxY,
-    zoom,
-  };
+  const dz = zoom - tile.z;
+  const scaleFactor = Math.pow(2, dz);
+  const minX = tile.x * scaleFactor;
+  const minY = tile.y * scaleFactor;
+  const maxX = (tile.x + 1) * scaleFactor - 1;
+  const maxY = (tile.y + 1) * scaleFactor - 1;
+  return new TileRange(minX, minY, maxX, maxY, zoom);
 }
 
 /**
@@ -355,14 +336,6 @@ function avoidNegativeZero(value: number): number {
   return value;
 }
 
-export function boundingBoxToTileRange(boundingBox: BoundingBox, zoom: Zoom) {
-  const tilesGen = boundingBoxToTiles(boundingBox, zoom);
-  const tiles = convertToTileArray(tilesGen);
-  const minTile = tiles[0];
-  const maxTile = tiles[tiles.length - 1];
-  return new TileRange(minTile.x, minTile.y, maxTile.x, maxTile.y, zoom);
-}
-
 /**
  * Find the minimal zoom where a bounding box can be contained in one tile
  * @param boundingBox
@@ -409,10 +382,100 @@ export function findMinimalZoom(
   return resultZoom;
 }
 
-export function convertToTileArray(tilesGenerator: Generator<Tile>): Tile[] {
-  const tiles = [];
-  for (const tile of tilesGenerator) {
-    tiles.push(tile);
+export function geometryToTiles(
+  geometry: Geometry,
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): Tile[] {
+  switch (geometry.type) {
+    case 'Polygon':
+      return polygonToTiles(geometry as Polygon, zoom, referenceTileGrid);
+    case 'BoundingBox':
+      return boundingBoxToTileRange(
+        geometry as BoundingBox,
+        zoom,
+        1,
+        referenceTileGrid
+      ).tiles();
+    default:
+      throw new Error(`Unsupported area type: ${geometry.type}`);
   }
-  return tiles;
+}
+
+export function polygonTileIntersection(
+  geometry: Polygon,
+  tile: Tile,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): TileIntersectionType {
+  const turfGeometry = polygonToTurfPolygon(geometry);
+  const turfBoundingBox = boundingBoxToTurfBbox(
+    tileToBoundingBox(tile, referenceTileGrid)
+  );
+  const features = featureCollection([turfGeometry, turfBoundingBox]);
+  const intersectionResult = intersect(features);
+  if (intersectionResult === null) {
+    return TileIntersectionType.NONE;
+  } else {
+    const intArea = turfArea(intersectionResult);
+    const hashArea = turfArea(turfBoundingBox);
+    if (intArea === hashArea) {
+      return TileIntersectionType.FULL;
+    }
+    return TileIntersectionType.PARTIAL;
+  }
+}
+function polygonToTiles(
+  polygon: Polygon,
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): Tile[] {
+  const boundingBox = geometryToBoundingBox(polygon);
+  const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
+  const tileRange = boundingBoxToTileRange(
+    boundingBox,
+    minimalZoom,
+    1,
+    referenceTileGrid
+  );
+  const tileRanges: TileRange[] = polygonToTileRanges(
+    polygon,
+    tileRange,
+    zoom,
+    referenceTileGrid
+  );
+  return tileRanges.flatMap(tileRange => tileRange.tiles());
+}
+
+function polygonToTileRanges(
+  polygon: Polygon,
+  tileRange: TileRange,
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): TileRange[] {
+  const tileRanges: TileRange[] = [];
+  const partialTiles: Tile[] = [];
+  for (const tile of tileRange.tileGenerator()) {
+    const tileIntersectionType = polygonTileIntersection(polygon, tile);
+    if (tileIntersectionType === TileIntersectionType.FULL) {
+      tileRanges.push(tileToTileRange(tile, zoom));
+    } else if (tileIntersectionType === TileIntersectionType.PARTIAL) {
+      if (tile.z === zoom) {
+        tileRanges.push(tileToTileRange(tile, zoom));
+      } else {
+        partialTiles.push(tile);
+      }
+    }
+  }
+
+  for (const tile of partialTiles) {
+    tileRanges.push(
+      ...polygonToTileRanges(
+        polygon,
+        tileToTileRange(tile, tile.z + 1),
+        zoom,
+        referenceTileGrid
+      )
+    );
+  }
+  return tileRanges;
 }

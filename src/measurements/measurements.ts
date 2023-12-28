@@ -3,6 +3,7 @@ import {
   bbox,
   booleanEqual,
   distance as turfDistance,
+  intersect,
   point,
 } from '@turf/turf';
 import {Geometry, Point, Polygon} from '../classes';

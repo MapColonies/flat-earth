@@ -97,7 +97,7 @@ export function validateLonlat(
     lonlat.lon > referenceTileGrid.boundingBox.max.lon
   ) {
     throw new RangeError(
-      `longtitude ${lonlat.lon} is out of range of tile grid's bounding box`
+      `longitude ${lonlat.lon} is out of range of tile grid's bounding box`
     );
   }
 
