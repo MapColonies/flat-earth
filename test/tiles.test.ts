@@ -773,6 +773,25 @@ describe('#geometryToTiles', () => {
     expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
   });
 
+  it("should take minimal zoom even if the polygon is small", () => {
+
+    const polygon = new Polygon([
+      new Point(34.80117503043931, 31.72186022095839),
+      new Point(34.72650598377592, 31.687080518522365),
+      new Point(34.73943749465019, 31.660099528252445),
+      new Point(34.75654046064636, 31.660454592172286),
+      new Point(34.77239199010512, 31.679626028688716),
+      new Point(34.75278615103656, 31.685305694287223),
+      new Point(34.77197484459302, 31.690630065179775),
+      new Point(34.77239199010512, 31.69985825112292),
+      new Point(34.80117503043931, 31.72186022095839),
+    ]);
+    // Polygon bounding box is smaller than the minimal zoom (in this example this bounding box
+    // size match zoom 11,but we ask here to parse in zoom 10, so we need to make sure to take the smallest of the two.
+    const tileRanges = geometryToTiles(polygon, 10);
+    expect(tileRanges.length).toEqual(1);
+  });
+
   it('Should return a list of tiles for polygon in a specific zoom', () => {
     // Polygon looks like a house
     const polygon = new Polygon([

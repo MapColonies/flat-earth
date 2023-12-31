@@ -426,7 +426,7 @@ function polygonToTiles(
   const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
   const tileRange = boundingBoxToTileRange(
     boundingBox,
-    minimalZoom,
+    Math.min(minimalZoom, zoom),
     1,
     referenceTileGrid
   );
