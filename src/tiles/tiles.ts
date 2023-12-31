@@ -382,6 +382,12 @@ export function findMinimalZoom(
   return resultZoom;
 }
 
+/**
+ * Convert a geometry to a set of tile ranges in the requested zoom level
+ * @param geometry
+ * @param zoom
+ * @param referenceTileGrid
+ */
 export function geometryToTiles(
   geometry: Geometry,
   zoom: Zoom,
