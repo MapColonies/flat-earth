@@ -1,7 +1,7 @@
 {
-  "name": "mc-geo",
-  "version": "0.0.0",
-  "description": "",
+  "name": "flat-earth",
+  "version": "1.0.0",
+  "description": "This project is meant to help  doing geodetic measurements and splitting to tiles",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",
   "files": [
@@ -31,5 +31,17 @@
   "dependencies": {
     "@turf/boolean-concave": "^6.5.0",
     "@turf/turf": "^7.0.0-alpha.2"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MapColonies/flat-earth.git"
+  },
+  "author": "superDoss",
+  "bugs": {
+    "url": "https://github.com/MapColonies/flat-earth/issues"
+  },
+  "homepage": "https://github.com/MapColonies/flat-earth#readme"
 }
