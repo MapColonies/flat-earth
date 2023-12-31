@@ -364,22 +364,7 @@ export function findMinimalZoom(
     )
   );
 
-  const minimalZoom = Math.min(minimalXZoom, minimalYZoom);
-  // Sometimes zoom can be negative, which is not valid
-  let resultZoom = 0;
-  // in cases the tile is not exactly fitting in the tile grid we need to check concrete cases
-  for (let zoom = minimalZoom; zoom > 0; zoom--) {
-    const tileRange = boundingBoxToTileRange(boundingBox, zoom);
-    if (
-      tileRange.maxX === tileRange.minX &&
-      tileRange.maxY === tileRange.minY
-    ) {
-      resultZoom = zoom;
-      break;
-    }
-  }
-
-  return resultZoom;
+  return Math.min(minimalXZoom, minimalYZoom);
 }
 
 /**

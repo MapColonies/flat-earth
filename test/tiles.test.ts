@@ -628,24 +628,24 @@ describe('Snap a bounding box to tile grid', () => {
 });
 
 describe('Find minimal zoom that can contain bounding box in one tile', () => {
-  it('should return correct zoom starting at zoom 2 and moving to 0', () => {
+  it('should return correct zoom starting at zoom 2 and moving to 1', () => {
     const boundingBox = new BoundingBox(-135, -45, -45, 45);
     const minimalZoom = findMinimalZoom(boundingBox);
-    const expectedZoom = 0;
+    const expectedZoom = 1;
     expect(minimalZoom).toEqual(expectedZoom);
   });
 
   it('should return correct zoom', () => {
     const boundingBox = new BoundingBox(10, 10, 30, 30);
     const minimalZoom = findMinimalZoom(boundingBox);
-    const expectedZoom = 2;
+    const expectedZoom = 3;
     expect(minimalZoom).toEqual(expectedZoom);
   });
 
   it('Small bounding box located on the edge of minimal tiles should go one level up', () => {
     const boundingBox = new BoundingBox(-100, -60, -45, -5);
     const minimalZoom = findMinimalZoom(boundingBox);
-    const expectedZoom = 0;
+    const expectedZoom = 1;
     expect(minimalZoom).toEqual(expectedZoom);
   });
 });
