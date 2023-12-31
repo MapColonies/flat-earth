@@ -772,4 +772,22 @@ describe('#geometryToTiles', () => {
     const tiles = tileRanges.flatMap(tileRange => tileRange.tiles());
     expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
   });
+
+  it('Should return a list of tiles for polygon in a specific zoom', () => {
+    // Polygon looks like a house
+    const polygon = new Polygon([
+      new Point(34.80117503043931, 31.72186022095839),
+      new Point(34.72650598377592, 31.687080518522365),
+      new Point(34.73943749465019, 31.660099528252445),
+      new Point(34.75654046064636, 31.660454592172286),
+      new Point(34.77239199010512, 31.679626028688716),
+      new Point(34.75278615103656, 31.685305694287223),
+      new Point(34.77197484459302, 31.690630065179775),
+      new Point(34.77239199010512, 31.69985825112292),
+      new Point(34.80117503043931, 31.72186022095839),
+    ]);
+    const tileRanges = geometryToTiles(polygon, 18);
+
+    expect(tileRanges.length).toEqual(807);
+  });
 });
