@@ -479,5 +479,7 @@ function polygonToTileRanges(
       )
     );
   }
+
+  console.log(`Number of tileRanges: ${tileRanges.length} in zoom: ${zoom}`);
   return tileRanges;
 }
