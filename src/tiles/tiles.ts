@@ -386,19 +386,21 @@ export function geometryToTiles(
   geometry: Geometry,
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): Tile[] {
+): TileRange[] {
   switch (geometry.type) {
     case 'Polygon':
       return polygonToTiles(geometry as Polygon, zoom, referenceTileGrid);
     case 'BoundingBox':
-      return boundingBoxToTileRange(
-        geometry as BoundingBox,
-        zoom,
-        1,
-        referenceTileGrid
-      ).tiles();
+      return [
+        boundingBoxToTileRange(
+          geometry as BoundingBox,
+          zoom,
+          1,
+          referenceTileGrid
+        ),
+      ];
     default:
-      throw new Error(`Unsupported area type: ${geometry.type}`);
+      throw new Error(`Unsupported geometry type: ${geometry.type}`);
   }
 }
 
@@ -428,7 +430,7 @@ function polygonToTiles(
   polygon: Polygon,
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): Tile[] {
+): TileRange[] {
   const boundingBox = geometryToBoundingBox(polygon);
   const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
   const tileRange = boundingBoxToTileRange(
@@ -437,13 +439,7 @@ function polygonToTiles(
     1,
     referenceTileGrid
   );
-  const tileRanges: TileRange[] = polygonToTileRanges(
-    polygon,
-    tileRange,
-    zoom,
-    referenceTileGrid
-  );
-  return tileRanges.flatMap(tileRange => tileRange.tiles());
+  return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
 }
 
 function polygonToTileRanges(

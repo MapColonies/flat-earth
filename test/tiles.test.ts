@@ -121,7 +121,7 @@ describe('#boundingBoxToTiles', () => {
   it('should return a generator function which yields tiles inside the bounding box with negative coordinates', () => {
     const bbox: BoundingBox = new BoundingBox(-40, -40, -30, -30);
     const zoom: Zoom = 3;
-    const expected = [new Tile(6, 5, 3,1)];
+    const expected = [new Tile(6, 5, 3, 1)];
     const tileRange = boundingBoxToTileRange(bbox, zoom);
     expect(tileRange.tiles()).toEqual(expected);
   });
@@ -225,21 +225,29 @@ describe('#boundingBoxToTiles', () => {
       RangeError("latitude 100 is out of range of tile grid's bounding box")
     );
   });
-  describe('Bad tile grid', () => {
-    test.each(tileGridTests)(
-      "should throw an error when the tile grid's $testCaseName",
-      ({tileGrid, expected}) => {
-        const badTilesGenerator = (): void => {
-          const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
-          const zoom: Zoom = 3;
 
-          boundingBoxToTileRange(bbox, zoom, undefined, tileGrid);
-        };
-
-        expect(badTilesGenerator).toThrow(new Error(expected));
-      }
-    );
+  it('should return the correct TileRange', () => {
+    const boundingBox = new BoundingBox(-135, -45, -45, 45);
+    const tileRange = boundingBoxToTileRange(boundingBox, 2);
+    const expectedTileRange = new TileRange(1, 1, 2, 2, 2);
+    expect(tileRange).toEqual(expectedTileRange);
   });
+});
+
+describe('Bad tile grid', () => {
+  test.each(tileGridTests)(
+    "should throw an error when the tile grid's $testCaseName",
+    ({tileGrid, expected}) => {
+      const badTilesGenerator = (): void => {
+        const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
+        const zoom: Zoom = 3;
+
+        boundingBoxToTileRange(bbox, zoom, undefined, tileGrid);
+      };
+
+      expect(badTilesGenerator).toThrow(new Error(expected));
+    }
+  );
 });
 
 describe('#zoomShift', () => {
@@ -586,10 +594,10 @@ describe('tileToRange', () => {
   });
 
   it('create range with higher zoom in more than one level', () => {
-    const tile = new Tile(0, 0, 0,1);
+    const tile = new Tile(0, 0, 0, 1);
     const range = tileToTileRange(tile, 2);
 
-    const expectedRange = new TileRange(0,0,3,3,2);
+    const expectedRange = new TileRange(0, 0, 3, 3, 2);
     expect(range).toEqual(expectedRange);
   });
 });
@@ -619,15 +627,6 @@ describe('Snap a bounding box to tile grid', () => {
   });
 });
 
-describe('Bounding box to TileRange', () => {
-  it('should return the correct TileRange', () => {
-    const boundingBox = new BoundingBox(-135, -45, -45, 45);
-    const tileRange = boundingBoxToTileRange(boundingBox, 2);
-    const expectedTileRange = new TileRange(1, 1, 2, 2, 2);
-    expect(tileRange).toEqual(expectedTileRange);
-  });
-});
-
 describe('Find minimal zoom that can contain bounding box in one tile', () => {
   it('should return correct zoom starting at zoom 2 and moving to 0', () => {
     const boundingBox = new BoundingBox(-135, -45, -45, 45);
@@ -651,8 +650,101 @@ describe('Find minimal zoom that can contain bounding box in one tile', () => {
   });
 });
 
-describe('Polygon to tiles', () => {
+describe('#geometryToTiles', () => {
+  it('generates expected tiles from bbox', () => {
+    const boundingBox = new BoundingBox(-45, -45, 0, 0);
+    const tileRanges = geometryToTiles(boundingBox, 2);
+    const expectedTiles = [new Tile(3, 2, 2, 1)];
+    const tiles = tileRanges.flatMap(tileRange => tileRange.tiles());
+    expect(tiles).toEqual(expectedTiles);
+  });
+
+  it('generates expected tiles from none bbox polygon', () => {
+    // this is a polygon of a triangle
+    const polygon = new Polygon([
+      new Point(-45, 0),
+      new Point(0, 45),
+      new Point(45, 0),
+      new Point(-45, 0),
+    ]);
+
+    const tileRanges = geometryToTiles(polygon, 2);
+    const tiles = tileRanges.flatMap(tileRange => tileRange.tiles());
+    const expectedTiles = [new Tile(3, 1, 2, 1), new Tile(4, 1, 2, 1)];
+
+    expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
+  });
+
+  it('generates expected tiles from none bbox polygon in higher zoom', () => {
+    // this is a polygon of a triangle
+    const polygon = new Polygon([
+      new Point(-45, 0),
+      new Point(0, 45),
+      new Point(45, 0),
+      new Point(-45, 0),
+    ]);
+
+    const tileRanges = geometryToTiles(polygon, 3);
+    const expectedTileRanges = [
+      new TileRange(7, 2, 7, 2, 3),
+      new TileRange(7, 3, 7, 3, 3),
+      new TileRange(8, 2, 8, 2, 3),
+      new TileRange(8, 3, 8, 3, 3),
+      new TileRange(6, 3, 6, 3, 3),
+      new TileRange(9, 3, 9, 3, 3),
+    ];
+
+    expect(tileRanges).toEqual(expect.arrayContaining(expectedTileRanges));
+  });
+
+  // it('generates expected tiles from none bbox polygon in higher zoom', () => {
+  //   // this is a polygon of a triangle
+  //   const polygon = new Polygon([
+  //     new Point(-45, 0),
+  //     new Point(0, 45),
+  //     new Point(45, 0),
+  //     new Point(-45, 0),
+  //   ]);
+  //
+  //   const tileRanges = geometryToTiles(polygon, 5);
+  //   const expectedTileRanges = [
+  //     new TileRange(24, 16, 25, 17, 5),
+  //     new TileRange(25, 16, 26, 17, 5),
+  //     new TileRange(25, 17, 26, 18, 5),
+  //     new TileRange(26, 16, 28, 18, 5),
+  //     new TileRange(26, 18, 27, 19, 5),
+  //     new TileRange(27, 18, 28, 19, 5),
+  //     new TileRange(27, 19, 28, 20, 5),
+  //     new TileRange(28, 16, 32, 20, 5),
+  //     new TileRange(28, 20, 29, 21, 5),
+  //     new TileRange(29, 20, 30, 21, 5),
+  //     new TileRange(29, 21, 30, 22, 5),
+  //     new TileRange(30, 20, 32, 22, 5),
+  //     new TileRange(30, 22, 31, 23, 5),
+  //     new TileRange(31, 22, 32, 23, 5),
+  //     new TileRange(31, 23, 32, 24, 5),
+  //     new TileRange(32, 16, 36, 20, 5),
+  //     new TileRange(32, 20, 34, 22, 5),
+  //     new TileRange(32, 22, 33, 23, 5),
+  //     new TileRange(32, 23, 33, 24, 5),
+  //     new TileRange(33, 22, 34, 23, 5),
+  //     new TileRange(34, 20, 35, 21, 5),
+  //     new TileRange(34, 21, 35, 22, 5),
+  //     new TileRange(35, 20, 36, 21, 5),
+  //     new TileRange(36, 16, 38, 18, 5),
+  //     new TileRange(36, 19, 37, 20, 5),
+  //     new TileRange(36, 18, 37, 19, 5),
+  //     new TileRange(37, 18, 38, 19, 5),
+  //     new TileRange(38, 16, 39, 17, 5),
+  //     new TileRange(38, 17, 39, 18, 5),
+  //     new TileRange(39, 16, 40, 17, 5),
+  //   ];
+  //
+  //   expect(tileRanges).toEqual(expect.arrayContaining(expectedTileRanges));
+  // });
+
   it('Should return a list of tiles for polygon in a specific zoom', () => {
+    // Polygon looks like a house
     const polygon = new Polygon([
       new Point(-90, -90),
       new Point(90, -90),
@@ -661,22 +753,23 @@ describe('Polygon to tiles', () => {
       new Point(-90, 0),
       new Point(-90, -90),
     ]);
-    const tiles = geometryToTiles(polygon, 2);
+    const tileRanges = geometryToTiles(polygon, 2);
     const expectedTiles = [
-      new Tile(2, 1, 2,1),
-      new Tile(3, 1, 2,1),
-      new Tile(4, 1, 2,1),
-      new Tile(5, 1, 2,1),
-      new Tile(2, 2, 2,1),
-      new Tile(3, 2, 2,1),
-      new Tile(4, 2, 2,1),
-      new Tile(5, 2, 2,1),
-      new Tile(2, 3, 2,1),
-      new Tile(3, 3, 2,1),
-      new Tile(4, 3, 2,1),
-      new Tile(5, 3, 2,1),
+      new Tile(2, 1, 2, 1),
+      new Tile(3, 1, 2, 1),
+      new Tile(4, 1, 2, 1),
+      new Tile(5, 1, 2, 1),
+      new Tile(2, 2, 2, 1),
+      new Tile(3, 2, 2, 1),
+      new Tile(4, 2, 2, 1),
+      new Tile(5, 2, 2, 1),
+      new Tile(2, 3, 2, 1),
+      new Tile(3, 3, 2, 1),
+      new Tile(4, 3, 2, 1),
+      new Tile(5, 3, 2, 1),
     ];
 
+    const tiles = tileRanges.flatMap(tileRange => tileRange.tiles());
     expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
   });
 });

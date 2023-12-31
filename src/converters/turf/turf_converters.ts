@@ -10,7 +10,6 @@ import {
   LineString,
   GeoJsonProperties,
   Polygon as TurfPolygon,
-  MultiPolygon,
 } from 'geojson';
 import {boundingBoxToPolygon} from '../geometry_converters';
 
