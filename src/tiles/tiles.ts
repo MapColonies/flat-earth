@@ -53,7 +53,7 @@ function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
 }
 
 /**
- * Transforms a longitude and latitude to a tile coordinates
+ * Transforms a longitude and latitude to a tile coordinate
  * @param lonlat the longitude and latitude
  * @param zoom the zoom level
  * @param metatile the size of a metatile
@@ -73,7 +73,7 @@ function geoCoordsToTile(
   const tileX = (lonlat.lon - referenceTileGrid.boundingBox.min.lon) / width;
   const tileY = (referenceTileGrid.boundingBox.max.lat - lonlat.lat) / height;
 
-  // When explicitly asked to reverse the intersection policy, (location on the edge of the tile)
+  // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
   // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
   if (reverseIntersectionPolicy || edgeOfMap(lonlat, referenceTileGrid)) {
     const x = Math.ceil(tileX) - 1;
@@ -260,8 +260,8 @@ export function tileToBoundingBox(
 }
 
 /**
- * converts tile to tile range in a higher zoom level
- * This method will help finding what tiles are needed to cover a given tile at a different zoom level
+ * Converts tile to tile range in a higher zoom level
+ * This method will help find what tiles are needed to cover a given tile at a different zoom level
  * @param tile
  * @param zoom target tile range zoom
  * @returns the first tile of the tile range and the last tile of the tile range
@@ -293,8 +293,18 @@ export function expandBBoxToTileGrid(
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): BoundingBox {
-  const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
-  const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
+  const minPoint = snapPointToGrid(
+    boundingBox.min,
+    zoom,
+    false,
+    referenceTileGrid
+  );
+  const maxPoint = snapPointToGrid(
+    boundingBox.max,
+    zoom,
+    true,
+    referenceTileGrid
+  );
 
   return new BoundingBox(
     minPoint.lon,
@@ -304,28 +314,25 @@ export function expandBBoxToTileGrid(
   );
 }
 
-function snapMinPointToGrid(
+function snapPointToGrid(
   point: LonLat,
   zoom: Zoom,
+  isMax: boolean,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): LonLat {
   const width = tileProjectedWidth(zoom, referenceTileGrid);
-  const minLon = Math.floor(point.lon / width) * width;
   const height = tileProjectedHeight(zoom, referenceTileGrid);
-  const minLat = Math.floor(point.lat / height) * height;
-  return new LonLat(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
-}
+  let lon, lat;
 
-function snapMaxPointToGrid(
-  point: LonLat,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): LonLat {
-  const width = tileProjectedWidth(zoom, referenceTileGrid);
-  const maxLon = Math.ceil(point.lon / width) * width;
-  const height = tileProjectedHeight(zoom, referenceTileGrid);
-  const maxLat = Math.ceil(point.lat / height) * height;
-  return new LonLat(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
+  if (isMax) {
+    lon = Math.ceil(point.lon / width) * width;
+    lat = Math.ceil(point.lat / height) * height;
+  } else {
+    lon = Math.floor(point.lon / width) * width;
+    lat = Math.floor(point.lat / height) * height;
+  }
+
+  return new LonLat(avoidNegativeZero(lon), avoidNegativeZero(lat));
 }
 
 function avoidNegativeZero(value: number): number {
