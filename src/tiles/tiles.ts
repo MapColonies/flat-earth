@@ -75,7 +75,7 @@ function geoCoordsToTile(
 
   // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
   // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  if (reverseIntersectionPolicy || edgeOfMap(lonlat, referenceTileGrid)) {
+  if (reverseIntersectionPolicy || isEdgeOfMap(lonlat, referenceTileGrid)) {
     const x = Math.ceil(tileX) - 1;
     const y = Math.ceil(tileY) - 1;
     return new Tile(x, y, zoom, metatile);
@@ -91,7 +91,7 @@ function geoCoordsToTile(
  * @param lonlat
  * @param referenceTileGrid
  */
-function edgeOfMap(lonlat: GeoPoint, referenceTileGrid: TileGrid): boolean {
+function isEdgeOfMap(lonlat: GeoPoint, referenceTileGrid: TileGrid): boolean {
   return (
     lonlat.lon === referenceTileGrid.boundingBox.max.lon ||
     lonlat.lat === referenceTileGrid.boundingBox.min.lat
