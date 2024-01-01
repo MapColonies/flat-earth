@@ -3,11 +3,11 @@ import {BoundingBox, Geometry, GeoPoint, Polygon} from '../classes';
 import {Tile, TileGrid, TileIntersectionType, TileRange} from './tiles_classes';
 import {Zoom} from '../types';
 import {
+  validateBboxByGrid,
   validateGeoPoint,
   validateMetatile,
   validateTileByGrid,
   validateTileGrid,
-  validateBboxByGrid,
   validateZoomByGrid,
 } from './validations';
 import {geometryToBoundingBox} from '../converters/geometry_converters';
@@ -16,6 +16,7 @@ import {
   polygonToTurfPolygon,
 } from '../converters/turf/turf_converters';
 import {area as turfArea, featureCollection, intersect} from '@turf/turf';
+import {isEdgeOfMap} from './tile_grids';
 
 function clampValues(
   value: number,
@@ -84,18 +85,6 @@ function geoCoordsToTile(
     const y = Math.floor(tileY);
     return new Tile(x, y, zoom, metatile);
   }
-}
-
-/**
- * Check if the given location is on the edge of the tile grid
- * @param lonlat
- * @param referenceTileGrid
- */
-function isEdgeOfMap(lonlat: GeoPoint, referenceTileGrid: TileGrid): boolean {
-  return (
-    lonlat.lon === referenceTileGrid.boundingBox.max.lon ||
-    lonlat.lat === referenceTileGrid.boundingBox.min.lat
-  );
 }
 
 /**
