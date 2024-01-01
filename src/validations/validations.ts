@@ -167,6 +167,4 @@ export function validateMetatile(metatile: number): void {
   }
 }
 
-export function validateGeoJson(geojson: string): boolean {
-  return booleanValid(JSON.parse(geojson));
-}
+
