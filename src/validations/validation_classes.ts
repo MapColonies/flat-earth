@@ -9,26 +9,24 @@ export class ValidationResult {
 }
 
 export class ValidationIssue {
-  message: string;
-  severity: ValidationSeverity;
-  from: number;
-  to: number;
-
   constructor(
-    message: string,
-    severity: ValidationSeverity,
-    from: number,
-    to: number
-  ) {
-    this.message = message;
-    this.severity = severity;
-    this.from = from;
-    this.to = to;
-  }
+    public message: string,
+    public severity: ValidationSeverity,
+    public from: number,
+    public to: number,
+    public validationIssueType: ValidationIssueType
+  ) {}
 }
 
 export enum ValidationSeverity {
   Error,
   Warning,
   Info,
+}
+
+export enum ValidationIssueType {
+  GeoJsonInvalid,
+  GeoJsonNotEnoughCoordinates,
+  GeoJsonSelfIntersect,
+  GeoJsonNotClosed,
 }

@@ -1,11 +1,5 @@
-import {
-  validateGeoJson,
-  validateGeoJsonSelfIntersect,
-} from '../src/validations/geojson_validations';
-import {
-  ValidationResult,
-  ValidationSeverity,
-} from '../src/validations/validation_classes';
+import { validateGeoJson, validateGeoJsonSelfIntersect } from "../src/validations/geojson_validations";
+import { ValidationIssueType, ValidationResult, ValidationSeverity } from "../src/validations/validation_classes";
 
 describe('Validations', () => {
   it('Should validate a geojson point is ok', () => {
@@ -31,6 +25,29 @@ describe('Validations', () => {
     const expected = new ValidationResult(true);
     expect(result).toStrictEqual(expected);
   });
+  it('Should validate a geojson polygon is not ok due to missing minimum number of points', () => {
+    const geojson = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [125.6, 10.1],
+          [125.7, 10.1],
+          [125.6, 10.1],
+        ],
+      ],
+    };
+    const result = validateGeoJson(JSON.stringify(geojson));
+    const expected = new ValidationResult(false, [
+      {
+        message: 'Expected to find four or more positions here.',
+        severity: ValidationSeverity.Error,
+        from: 33,
+        to: 73,
+        validationIssueType: ValidationIssueType.GeoJsonNotEnoughCoordinates,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
   it('Should validate a geojson polygon is not ok due to missing last point', () => {
     const geojson = {
       type: 'Polygon',
@@ -51,6 +68,7 @@ describe('Validations', () => {
         severity: ValidationSeverity.Error,
         from: 34,
         to: 46,
+        validationIssueType: ValidationIssueType.GeoJsonNotClosed,
       },
       {
         message:
@@ -58,6 +76,7 @@ describe('Validations', () => {
         severity: ValidationSeverity.Error,
         from: 73,
         to: 85,
+        validationIssueType: ValidationIssueType.GeoJsonNotClosed,
       },
     ]);
     expect(result).toEqual(expected);
@@ -82,6 +101,7 @@ describe('Validations', () => {
         severity: ValidationSeverity.Warning,
         from: 0,
         to: 0,
+        validationIssueType: ValidationIssueType.GeoJsonSelfIntersect,
       },
     ]);
     expect(result).toEqual(expected);

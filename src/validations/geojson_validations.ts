@@ -1,8 +1,8 @@
 import {
-  ValidationIssue,
+  ValidationIssue, ValidationIssueType,
   ValidationResult,
-  ValidationSeverity,
-} from './validation_classes';
+  ValidationSeverity
+} from "./validation_classes";
 import {check, HintError, HintIssue} from '@placemarkio/check-geojson';
 import {kinks} from '@turf/turf';
 
@@ -37,7 +37,8 @@ export function validateGeoJsonSelfIntersect(
         'The polygon is self intersecting',
         ValidationSeverity.Warning,
         0,
-        0
+        0,
+        ValidationIssueType.GeoJsonSelfIntersect
       ),
     ]);
   } else {
@@ -56,6 +57,22 @@ function convertHintIssueToValidationIssue(
     hintIssue.message,
     severity,
     hintIssue.from,
-    hintIssue.to
+    hintIssue.to,
+    convertHintIssueMessageToValidationIssueType(hintIssue.message)
   );
+}
+
+function convertHintIssueMessageToValidationIssueType(
+  hintIssueMessage: string
+): ValidationIssueType {
+  switch (hintIssueMessage) {
+    case 'Expected to find four or more positions here.':
+      return ValidationIssueType.GeoJsonNotEnoughCoordinates;
+    case 'The polygon is self intersecting':
+      return ValidationIssueType.GeoJsonSelfIntersect;
+    case 'First and last positions of a Polygon or MultiPolygon’s ring should be the same.':
+      return ValidationIssueType.GeoJsonNotClosed;
+    default:
+      return ValidationIssueType.GeoJsonInvalid;
+  }
 }
