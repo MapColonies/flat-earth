@@ -109,10 +109,6 @@ export class TileRange {
   ) {}
 
   *tileGenerator() {
-    if (this.minX === this.maxX && this.minY === this.maxY) {
-      yield new Tile(this.minX, this.minY, this.zoom, this.metatile);
-      return;
-    }
     for (let y = this.minY; y <= this.maxY; y++) {
       for (let x = this.minX; x <= this.maxX; x++) {
         yield new Tile(x, y, this.zoom, this.metatile);
