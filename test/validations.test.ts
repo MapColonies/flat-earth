@@ -1,5 +1,6 @@
 import {
   validateGeoJson,
+  validateGeoJsonInGrid,
   validateGeoJsonSelfIntersect,
   validateGeoJsonTypes,
 } from '../src/validations/geojson_validations';
@@ -196,6 +197,74 @@ describe('Validations', () => {
         from: 0,
         to: 0,
         validationIssueType: ValidationIssueType.GeoJsonInvalidType,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson inside the grid', () => {
+    const geojson = {
+      type: 'Point',
+      coordinates: [-12.034835, 8.901183],
+    };
+    const result = validateGeoJsonInGrid(JSON.stringify(geojson));
+    const expected = new ValidationResult(true);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson is not inside the grid (lon)', () => {
+    const geojson = {
+      type: 'Point',
+      coordinates: [-185.0, 8.901183],
+    };
+    const result = validateGeoJsonInGrid(JSON.stringify(geojson));
+    const expected = new ValidationResult(false, [
+      {
+        message: 'Point lon: -185 lat: 8.901183 is not inside the grid',
+        severity: ValidationSeverity.Error,
+        from: 0,
+        to: 0,
+        validationIssueType: ValidationIssueType.GeoJsonNotInGrid,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson is not inside the grid (lat)', () => {
+    const geojson = {
+      type: 'Point',
+      coordinates: [-110.0, 95.0],
+    };
+    const result = validateGeoJsonInGrid(JSON.stringify(geojson));
+    const expected = new ValidationResult(false, [
+      {
+        message: 'Point lon: -110 lat: 95 is not inside the grid',
+        severity: ValidationSeverity.Error,
+        from: 0,
+        to: 0,
+        validationIssueType: ValidationIssueType.GeoJsonNotInGrid,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson polygon is not inside the grid', () => {
+    const geojson = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [185.6, 10.1],
+          [125.7, 10.1],
+          [125.7, 10.2],
+          [125.6, 10.2],
+          [185.6, 10.1],
+        ],
+      ],
+    };
+    const result = validateGeoJsonInGrid(JSON.stringify(geojson));
+    const expected = new ValidationResult(false, [
+      {
+        message: 'Point lon: 185.6 lat: 10.1 is not inside the grid',
+        severity: ValidationSeverity.Error,
+        from: 0,
+        to: 0,
+        validationIssueType: ValidationIssueType.GeoJsonNotInGrid,
       },
     ]);
     expect(result).toEqual(expected);

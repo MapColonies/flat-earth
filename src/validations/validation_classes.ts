@@ -30,4 +30,5 @@ export enum ValidationIssueType {
   GeoJsonSelfIntersect,
   GeoJsonNotClosed,
   GeoJsonInvalidType,
+  GeoJsonNotInGrid,
 }
