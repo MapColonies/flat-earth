@@ -773,8 +773,7 @@ describe('#geometryToTiles', () => {
     expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
   });
 
-  it("should take minimal zoom even if the polygon is small", () => {
-
+  it('should take minimal zoom even if the polygon is small', () => {
     const polygon = new Polygon([
       new Point(34.80117503043931, 31.72186022095839),
       new Point(34.72650598377592, 31.687080518522365),

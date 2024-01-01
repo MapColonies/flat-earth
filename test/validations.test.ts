@@ -1,5 +1,11 @@
-import { validateGeoJson, validateGeoJsonSelfIntersect } from "../src/validations/geojson_validations";
-import { ValidationResult, ValidationSeverity } from "../src/validations/validation_classes";
+import {
+  validateGeoJson,
+  validateGeoJsonSelfIntersect,
+} from '../src/validations/geojson_validations';
+import {
+  ValidationResult,
+  ValidationSeverity,
+} from '../src/validations/validation_classes';
 
 describe('Validations', () => {
   it('Should validate a geojson point is ok', () => {

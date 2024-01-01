@@ -1,5 +1,9 @@
-import { ValidationIssue, ValidationResult, ValidationSeverity } from "./validation_classes";
-import { check, HintError, HintIssue } from "@placemarkio/check-geojson";
+import {
+  ValidationIssue,
+  ValidationResult,
+  ValidationSeverity,
+} from './validation_classes';
+import {check, HintError, HintIssue} from '@placemarkio/check-geojson';
 import {kinks} from '@turf/turf';
 
 /**
@@ -20,6 +24,10 @@ export function validateGeoJson(geojson: string): ValidationResult {
   }
 }
 
+/**
+ * Validates that the input `geojson` does not self intersect
+ * @param geojson
+ */
 export function validateGeoJsonSelfIntersect(
   geojson: string
 ): ValidationResult {

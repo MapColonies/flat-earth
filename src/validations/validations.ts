@@ -4,8 +4,6 @@ import {Zoom} from '../types';
 import {ScaleSet, Tile, TileGrid} from '../tiles/tiles_classes';
 import {BoundingBox, LonLat} from '../classes';
 
-import booleanValid from '@turf/boolean-valid';
-
 /**
  * Validates that the input `scaleSet` is valid
  * @param scaleSet the scale set to validate
