@@ -5,7 +5,6 @@ import {
   point,
 } from '@turf/turf';
 import {Geometry, Point, Polygon} from '../classes';
-
 import {Geodesic} from 'geographiclib-geodesic';
 import {convertGeometryToTurfGeometry} from '../converters/turf/turf_converters';
 import {geometryToBoundingBox} from '../converters/geometry_converters';

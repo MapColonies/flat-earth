@@ -1,4 +1,4 @@
-import { validateGeoJson } from "../src/validations/geojson_validations";
+import { validateGeoJson, validateGeoJsonSelfIntersect } from "../src/validations/geojson_validations";
 import { ValidationResult, ValidationSeverity } from "../src/validations/validation_classes";
 
 describe('Validations', () => {
@@ -52,6 +52,30 @@ describe('Validations', () => {
         severity: ValidationSeverity.Error,
         from: 73,
         to: 85,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson self intersect', () => {
+    const geojson = {
+      type: 'Polygon',
+      coordinates: [
+        [
+          [-12.034835, 8.901183],
+          [-12.060413, 8.899826],
+          [-12.03638, 8.873199],
+          [-12.059383, 8.871418],
+          [-12.034835, 8.901183],
+        ],
+      ],
+    };
+    const result = validateGeoJsonSelfIntersect(JSON.stringify(geojson));
+    const expected = new ValidationResult(false, [
+      {
+        message: 'The polygon is self intersecting',
+        severity: ValidationSeverity.Warning,
+        from: 0,
+        to: 0,
       },
     ]);
     expect(result).toEqual(expected);

@@ -166,5 +166,3 @@ export function validateMetatile(metatile: number): void {
     throw new Error('metatile must be larger than 0');
   }
 }
-
-
