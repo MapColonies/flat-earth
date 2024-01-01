@@ -1,6 +1,5 @@
 import {BoundingBox} from '../classes';
 import {Zoom} from '../types';
-import {SCALE_FACTOR} from './tiles_constants';
 
 /**
  * An interface for a well known scale set. {link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#56|OGC spec}
@@ -100,27 +99,14 @@ export class TileGrid {
 }
 
 export class TileRange {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  zoom: number;
-  metatile: number;
   constructor(
-    minX: number,
-    minY: number,
-    maxX: number,
-    maxY: number,
-    zoom: number,
-    metatile = 1
-  ) {
-    this.minX = minX;
-    this.minY = minY;
-    this.maxX = maxX;
-    this.maxY = maxY;
-    this.zoom = zoom;
-    this.metatile = metatile;
-  }
+    public minX: number,
+    public minY: number,
+    public maxX: number,
+    public maxY: number,
+    public zoom: number,
+    public metatile = 1
+  ) {}
 
   *tileGenerator() {
     if (this.minX === this.maxX && this.minY === this.maxY) {
