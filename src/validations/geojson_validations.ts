@@ -1,10 +1,12 @@
 import {
-  ValidationIssue, ValidationIssueType,
+  ValidationIssue,
+  ValidationIssueType,
   ValidationResult,
-  ValidationSeverity
-} from "./validation_classes";
+  ValidationSeverity,
+} from './validation_classes';
 import {check, HintError, HintIssue} from '@placemarkio/check-geojson';
 import {kinks} from '@turf/turf';
+import {Geometry} from 'geojson';
 
 /**
  * Validates that the input `geojson` is valid based on the RFC 7946 GeoJSON specification
@@ -39,6 +41,51 @@ export function validateGeoJsonSelfIntersect(
         0,
         0,
         ValidationIssueType.GeoJsonSelfIntersect
+      ),
+    ]);
+  } else {
+    return new ValidationResult(true);
+  }
+}
+
+/**
+ * Validates that the input `geojson` is on of the `types`
+ * @param geojson
+ * @param types
+ */
+export function validateGeoJsonTypes(
+  geojson: string,
+  types: string[]
+): ValidationResult {
+  const geoJsonObject = JSON.parse(geojson);
+  if (geoJsonObject.type === 'FeatureCollection') {
+    for (const feature of geoJsonObject.features) {
+      const validationResult = innerValidateGeoJsonTypes(
+        feature.geometry,
+        types
+      );
+      if (!validationResult.isValid) {
+        return validationResult;
+      }
+    }
+  } else {
+    return innerValidateGeoJsonTypes(geoJsonObject, types);
+  }
+  return new ValidationResult(true);
+}
+
+function innerValidateGeoJsonTypes(
+  geojson: Geometry,
+  types: string[]
+): ValidationResult {
+  if (!types.includes(geojson.type)) {
+    return new ValidationResult(false, [
+      new ValidationIssue(
+        `Type ${geojson.type} was not specified in the allowed types`,
+        ValidationSeverity.Warning,
+        0,
+        0,
+        ValidationIssueType.GeoJsonInvalidType
       ),
     ]);
   } else {

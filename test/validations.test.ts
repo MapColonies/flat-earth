@@ -1,5 +1,13 @@
-import { validateGeoJson, validateGeoJsonSelfIntersect } from "../src/validations/geojson_validations";
-import { ValidationIssueType, ValidationResult, ValidationSeverity } from "../src/validations/validation_classes";
+import {
+  validateGeoJson,
+  validateGeoJsonSelfIntersect,
+  validateGeoJsonTypes,
+} from '../src/validations/geojson_validations';
+import {
+  ValidationIssueType,
+  ValidationResult,
+  ValidationSeverity,
+} from '../src/validations/validation_classes';
 
 describe('Validations', () => {
   it('Should validate a geojson point is ok', () => {
@@ -102,6 +110,92 @@ describe('Validations', () => {
         from: 0,
         to: 0,
         validationIssueType: ValidationIssueType.GeoJsonSelfIntersect,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson is one of the specified types', () => {
+    const geojson = {
+      type: 'Point',
+      coordinates: [[-12.034835, 8.901183]],
+    };
+    const result = validateGeoJsonTypes(JSON.stringify(geojson), ['Point']);
+    const expected = new ValidationResult(true);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson is not one of the specified types', () => {
+    const geojson = {
+      type: 'Point',
+      coordinates: [[-12.034835, 8.901183]],
+    };
+    const result = validateGeoJsonTypes(JSON.stringify(geojson), ['Polygon']);
+    const expected = new ValidationResult(false, [
+      {
+        message: 'Type Point was not specified in the allowed types',
+        severity: ValidationSeverity.Warning,
+        from: 0,
+        to: 0,
+        validationIssueType: ValidationIssueType.GeoJsonInvalidType,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a collection of geojson is according to the specified types', () => {
+    const geojson = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [-0.703125, 24.84656534821976],
+                [11.25, 24.84656534821976],
+                [11.25, 31.353636941500987],
+                [-0.703125, 31.353636941500987],
+                [-0.703125, 24.84656534821976],
+              ],
+            ],
+          },
+        },
+      ],
+    };
+    const result = validateGeoJsonTypes(JSON.stringify(geojson), ['Polygon']);
+    const expected = new ValidationResult(true);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a collection of geojson is according to the specified types', () => {
+    const geojson = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'Polygon',
+            coordinates: [
+              [
+                [-0.703125, 24.84656534821976],
+                [11.25, 24.84656534821976],
+                [11.25, 31.353636941500987],
+                [-0.703125, 31.353636941500987],
+                [-0.703125, 24.84656534821976],
+              ],
+            ],
+          },
+        },
+      ],
+    };
+    const result = validateGeoJsonTypes(JSON.stringify(geojson), ['Point']);
+    const expected = new ValidationResult(false, [
+      {
+        message: 'Type Polygon was not specified in the allowed types',
+        severity: ValidationSeverity.Warning,
+        from: 0,
+        to: 0,
+        validationIssueType: ValidationIssueType.GeoJsonInvalidType,
       },
     ]);
     expect(result).toEqual(expected);

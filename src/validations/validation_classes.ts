@@ -29,4 +29,5 @@ export enum ValidationIssueType {
   GeoJsonNotEnoughCoordinates,
   GeoJsonSelfIntersect,
   GeoJsonNotClosed,
+  GeoJsonInvalidType,
 }
