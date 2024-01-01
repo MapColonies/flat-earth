@@ -1,14 +1,14 @@
 import {SCALE_FACTOR, TILEGRID_WORLD_CRS84} from './tiles_constants';
-import {BoundingBox, Geometry, LonLat, Polygon} from '../classes';
+import {BoundingBox, Geometry, GeoPoint, Polygon} from '../classes';
 import {Tile, TileGrid, TileIntersectionType, TileRange} from './tiles_classes';
 import {Zoom} from '../types';
 import {
-  validateLonlat,
+  validateGeoPoint,
   validateMetatile,
-  validateTile,
+  validateTileByGrid,
   validateTileGrid,
-  validateTileGridBoundingBox,
-  validateZoomLevel,
+  validateBboxByGrid,
+  validateZoomByGrid,
 } from './validations';
 import {geometryToBoundingBox} from '../converters/geometry_converters';
 import {
@@ -61,7 +61,7 @@ function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  */
 function geoCoordsToTile(
-  lonlat: LonLat,
+  lonlat: GeoPoint,
   zoom: Zoom,
   metatile = 1,
   reverseIntersectionPolicy: boolean,
@@ -91,7 +91,7 @@ function geoCoordsToTile(
  * @param lonlat
  * @param referenceTileGrid
  */
-function edgeOfMap(lonlat: LonLat, referenceTileGrid: TileGrid): boolean {
+function edgeOfMap(lonlat: GeoPoint, referenceTileGrid: TileGrid): boolean {
   return (
     lonlat.lon === referenceTileGrid.boundingBox.max.lon ||
     lonlat.lat === referenceTileGrid.boundingBox.min.lat
@@ -114,18 +114,18 @@ export function boundingBoxToTileRange(
 ): TileRange {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
-  validateTileGridBoundingBox(bbox, referenceTileGrid);
-  validateZoomLevel(zoom, referenceTileGrid);
+  validateBboxByGrid(bbox, referenceTileGrid);
+  validateZoomByGrid(zoom, referenceTileGrid);
 
   const firstTile = geoCoordsToTile(
-    new LonLat(bbox.min.lon, bbox.max.lat),
+    new GeoPoint(bbox.min.lon, bbox.max.lat),
     zoom,
     metatile,
     false,
     referenceTileGrid
   );
   const lastTile = geoCoordsToTile(
-    new LonLat(bbox.max.lon, bbox.min.lat),
+    new GeoPoint(bbox.max.lon, bbox.min.lat),
     zoom,
     metatile,
     true,
@@ -157,7 +157,7 @@ export function zoomShift(
 ): Zoom {
   validateTileGrid(referenceTileGrid);
   validateTileGrid(targetTileGrid);
-  validateZoomLevel(zoom, referenceTileGrid);
+  validateZoomByGrid(zoom, referenceTileGrid);
 
   const scale = referenceTileGrid.wellKnownScaleSet.scaleDenominators.get(zoom);
   if (scale === undefined) {
@@ -190,15 +190,15 @@ export function zoomShift(
  * @returns tile within the tile grid by the input values of `lonlat` and `zoom`
  */
 export function lonLatZoomToTile(
-  lonlat: LonLat,
+  lonlat: GeoPoint,
   zoom: Zoom,
   metatile = 1,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): Tile {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
-  validateZoomLevel(zoom, referenceTileGrid);
-  validateLonlat(lonlat, referenceTileGrid);
+  validateZoomByGrid(zoom, referenceTileGrid);
+  validateGeoPoint(lonlat, referenceTileGrid);
 
   return geoCoordsToTile(lonlat, zoom, metatile, false, referenceTileGrid);
 }
@@ -216,7 +216,7 @@ export function tileToBoundingBox(
   clamp = false
 ): BoundingBox {
   validateTileGrid(referenceTileGrid);
-  validateTile(tile, referenceTileGrid);
+  validateTileByGrid(tile, referenceTileGrid);
   const metatile = tile.metatile ?? 1;
 
   const width = tileProjectedWidth(tile.z, referenceTileGrid) * metatile;
@@ -315,11 +315,11 @@ export function expandBBoxToTileGrid(
 }
 
 function snapPointToGrid(
-  point: LonLat,
+  point: GeoPoint,
   zoom: Zoom,
   isMax: boolean,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): LonLat {
+): GeoPoint {
   const width = tileProjectedWidth(zoom, referenceTileGrid);
   const height = tileProjectedHeight(zoom, referenceTileGrid);
   let lon, lat;
@@ -332,7 +332,7 @@ function snapPointToGrid(
     lat = Math.floor(point.lat / height) * height;
   }
 
-  return new LonLat(avoidNegativeZero(lon), avoidNegativeZero(lat));
+  return new GeoPoint(avoidNegativeZero(lon), avoidNegativeZero(lat));
 }
 
 function avoidNegativeZero(value: number): number {
