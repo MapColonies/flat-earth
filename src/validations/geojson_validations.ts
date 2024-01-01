@@ -6,11 +6,11 @@ import {
 } from './validation_classes';
 import {check, HintError, HintIssue} from '@placemarkio/check-geojson';
 import {kinks} from '@turf/turf';
-import {Geometry,Point as GeoJsonPoint} from 'geojson';
 import {TileGrid} from '../tiles/tiles_classes';
 import {TILEGRID_WORLD_CRS84} from '../tiles/tiles_constants';
 import {validateLonlat} from './validations';
-import { LonLat, Point } from "../classes";
+import {LonLat} from '../classes';
+import {Geometry} from 'geojson';
 
 /**
  * Validates that the input `geojson` is valid based on the RFC 7946 GeoJSON specification
