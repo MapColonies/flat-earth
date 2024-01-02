@@ -9,7 +9,6 @@ import {
   ValidationIssue,
   ValidationIssueType,
   ValidationResult,
-  ValidationSeverity,
 } from '../src/validations/validation_classes';
 
 describe('Validations', () => {
@@ -52,7 +51,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Expected to find four or more positions here.',
-          ValidationSeverity.Error,
           ValidationIssueType.GeoJsonNotEnoughCoordinates,
           33,
           73
@@ -76,14 +74,12 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'First and last positions of a Polygon or MultiPolygon’s ring should be the same.',
-          ValidationSeverity.Error,
           ValidationIssueType.GeoJsonNotClosed,
           34,
           46
         ),
         new ValidationIssue(
           'First and last positions of a Polygon or MultiPolygon’s ring should be the same.',
-          ValidationSeverity.Error,
           ValidationIssueType.GeoJsonNotClosed,
           73,
           85
@@ -110,7 +106,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'The polygon is self intersecting',
-          ValidationSeverity.Warning,
           ValidationIssueType.GeoJsonSelfIntersect
         ),
       ]);
@@ -154,7 +149,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Type Point was not specified in the allowed types',
-          ValidationSeverity.Warning,
           ValidationIssueType.GeoJsonInvalidType
         ),
       ]);
@@ -212,7 +206,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Type Polygon was not specified in the allowed types',
-          ValidationSeverity.Warning,
           ValidationIssueType.GeoJsonInvalidType
         ),
       ]);
@@ -238,7 +231,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Point lon: -185 lat: 8.901183 is not inside the grid',
-          ValidationSeverity.Error,
           ValidationIssueType.GeoJsonNotInGrid
         ),
       ]);
@@ -253,7 +245,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Point lon: -110 lat: 95 is not inside the grid',
-          ValidationSeverity.Error,
           ValidationIssueType.GeoJsonNotInGrid
         ),
       ]);
@@ -276,7 +267,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Point lon: 185.6 lat: 10.1 is not inside the grid',
-          ValidationSeverity.Error,
           ValidationIssueType.GeoJsonNotInGrid
         ),
       ]);
@@ -338,7 +328,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Point lon: 185 lat: 2 is not inside the grid',
-          ValidationSeverity.Error,
           ValidationIssueType.GeoJsonNotInGrid
         ),
       ]);
@@ -382,7 +371,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Polygon has more than 4 vertices',
-          ValidationSeverity.Info,
           ValidationIssueType.GeoJsonTooManyCoordinates
         ),
       ]);
@@ -445,7 +433,6 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'Polygon has more than 5 vertices',
-          ValidationSeverity.Info,
           ValidationIssueType.GeoJsonTooManyCoordinates
         ),
       ]);

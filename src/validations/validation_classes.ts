@@ -11,7 +11,6 @@ export class ValidationResult {
 export class ValidationIssue {
   constructor(
     public message: string,
-    public severity: ValidationSeverity,
     public validationIssueType: ValidationIssueType,
     public from: number = 0,
     public to: number = 0

@@ -2,10 +2,9 @@ import {
   ValidationIssue,
   ValidationIssueType,
   ValidationResult,
-  ValidationSeverity,
 } from './validation_classes';
 import {check, HintError, HintIssue} from '@placemarkio/check-geojson';
-import { geometry, kinks } from "@turf/turf";
+import {kinks} from '@turf/turf';
 import {TileGrid} from '../tiles/tiles_classes';
 import {TILEGRID_WORLD_CRS84} from '../tiles/tiles_constants';
 import {validateLonlat} from './validations';
@@ -41,7 +40,6 @@ export function validateGeoJsonSelfIntersect(
     return new ValidationResult(false, [
       new ValidationIssue(
         'The polygon is self intersecting',
-        ValidationSeverity.Warning,
         ValidationIssueType.GeoJsonSelfIntersect
       ),
     ]);
@@ -49,7 +47,15 @@ export function validateGeoJsonSelfIntersect(
     return new ValidationResult(true);
   }
 }
-const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'GeometryCollection'];
+const geometryTypes = [
+  'Point',
+  'MultiPoint',
+  'Polygon',
+  'MultiPolygon',
+  'LineString',
+  'MultiLineString',
+  'GeometryCollection',
+];
 
 /**
  * Validates that the input `geojson` is on of the `types`
@@ -153,7 +159,6 @@ function isPointInGrid(x: number, y: number, tileGrid: TileGrid) {
     return new ValidationResult(false, [
       new ValidationIssue(
         `Point lon: ${x} lat: ${y} is not inside the grid`,
-        ValidationSeverity.Error,
         ValidationIssueType.GeoJsonNotInGrid
       ),
     ]);
@@ -170,7 +175,6 @@ function innerValidateGeoJsonTypes(
     return new ValidationResult(false, [
       new ValidationIssue(
         `Type ${geojson.type} was not specified in the allowed types`,
-        ValidationSeverity.Warning,
         ValidationIssueType.GeoJsonInvalidType
       ),
     ]);
@@ -182,13 +186,8 @@ function innerValidateGeoJsonTypes(
 function convertHintIssueToValidationIssue(
   hintIssue: HintIssue
 ): ValidationIssue {
-  const severity =
-    hintIssue.severity === 'error'
-      ? ValidationSeverity.Error
-      : ValidationSeverity.Warning;
   return new ValidationIssue(
     hintIssue.message,
-    severity,
     convertHintIssueMessageToValidationIssueType(hintIssue.message),
     hintIssue.from,
     hintIssue.to
@@ -246,7 +245,6 @@ function innerValidateNumberOfVertices(
       return new ValidationResult(false, [
         new ValidationIssue(
           `Polygon has more than ${numberOfVertices} vertices`,
-          ValidationSeverity.Info,
           ValidationIssueType.GeoJsonTooManyCoordinates
         ),
       ]);
@@ -258,7 +256,6 @@ function innerValidateNumberOfVertices(
         return new ValidationResult(false, [
           new ValidationIssue(
             `Polygon has more than ${numberOfVertices} vertices`,
-            ValidationSeverity.Info,
             ValidationIssueType.GeoJsonTooManyCoordinates
           ),
         ]);
