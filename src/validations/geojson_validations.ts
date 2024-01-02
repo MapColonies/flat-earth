@@ -16,16 +16,33 @@ import {Geometry} from 'geojson';
  * @param geojson the geojson to validate
  */
 export function validateGeoJson(geojson: string): ValidationResult {
+  const validationIssues: ValidationIssue[] = [];
   try {
     check(geojson);
-    return new ValidationResult(true);
   } catch (error) {
     if (error instanceof HintError) {
       const issues = error.issues.map(convertHintIssueToValidationIssue);
-      return new ValidationResult(false, issues);
+      validationIssues.push(...issues);
     } else {
       throw error;
     }
+  }
+
+  const gridValidationResult = validateGeoJsonInGrid(geojson);
+  if (gridValidationResult.issues !== undefined) {
+    validationIssues.push(...gridValidationResult.issues);
+  }
+
+  // Although the RFC 7946 GeoJSON specification does not require polygons to not self intersect we check this here
+  const intersectValidationResult = validateGeoJsonSelfIntersect(geojson);
+  if (intersectValidationResult.issues !== undefined) {
+    validationIssues.push(...intersectValidationResult.issues);
+  }
+
+  if (validationIssues.length === 0) {
+    return new ValidationResult(true);
+  } else {
+    return new ValidationResult(false, validationIssues);
   }
 }
 
