@@ -5,7 +5,7 @@ import {
   ValidationSeverity,
 } from './validation_classes';
 import {check, HintError, HintIssue} from '@placemarkio/check-geojson';
-import {kinks} from '@turf/turf';
+import { geometry, kinks } from "@turf/turf";
 import {TileGrid} from '../tiles/tiles_classes';
 import {TILEGRID_WORLD_CRS84} from '../tiles/tiles_constants';
 import {validateLonlat} from './validations';
@@ -49,6 +49,7 @@ export function validateGeoJsonSelfIntersect(
     return new ValidationResult(true);
   }
 }
+const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'GeometryCollection'];
 
 /**
  * Validates that the input `geojson` is on of the `types`
@@ -59,6 +60,10 @@ export function validateGeoJsonTypes(
   geojson: string,
   types: string[]
 ): ValidationResult {
+  if (types.length === 0 || types.some(type => !geometryTypes.includes(type))) {
+    throw new Error('types must be a non empty array of valid geojson types');
+  }
+
   const geoJsonObject = JSON.parse(geojson);
   if (geoJsonObject.type === 'FeatureCollection') {
     for (const feature of geoJsonObject.features) {

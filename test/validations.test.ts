@@ -118,6 +118,24 @@ describe('Validations', () => {
     });
   });
   describe('#validateGeoJsonTypes', () => {
+    it('Should throw exception on empty types array', () => {
+      const geojson = {
+        type: 'Point',
+        coordinates: [[-12.034835, 8.901183]],
+      };
+      const missingTypesValidation = () =>
+        validateGeoJsonTypes(JSON.stringify(geojson), []);
+      expect(missingTypesValidation).toThrow();
+    });
+    it('Should throw exception on wrong type', () => {
+      const geojson = {
+        type: 'Point',
+        coordinates: [[-12.034835, 8.901183]],
+      };
+      const missingTypesValidation = () =>
+        validateGeoJsonTypes(JSON.stringify(geojson), ['Point', 'Point1']);
+      expect(missingTypesValidation).toThrow();
+    });
     it('Should validate a geojson is one of the specified types', () => {
       const geojson = {
         type: 'Point',
