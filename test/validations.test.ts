@@ -269,4 +269,68 @@ describe('Validations', () => {
     ]);
     expect(result).toEqual(expected);
   });
+  it('Should validate a geojson MultiPolygon is inside the grid', () => {
+    const geojson = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [
+          [
+            [102, 2],
+            [103, 2],
+            [103, 3],
+            [102, 3],
+            [102, 2],
+          ],
+        ],
+        [
+          [
+            [100, 0],
+            [101, 0],
+            [101, 1],
+            [100, 1],
+            [100, 0],
+          ],
+        ],
+      ],
+    };
+    const result = validateGeoJsonInGrid(JSON.stringify(geojson));
+    const expected = new ValidationResult(true);
+    expect(result).toEqual(expected);
+  });
+  it('Should validate a geojson MultiPolygon is not inside the grid', () => {
+    const geojson = {
+      type: 'MultiPolygon',
+      coordinates: [
+        [
+          [
+            [185, 2],
+            [103, 2],
+            [103, 3],
+            [102, 3],
+            [102, 2],
+          ],
+        ],
+        [
+          [
+            [100, 0],
+            [101, 0],
+            [101, 1],
+            [100, 1],
+            [100, 0],
+          ],
+        ],
+      ],
+    };
+    const result = validateGeoJsonInGrid(JSON.stringify(geojson));
+    const expected = new ValidationResult(false, [
+      {
+        message: 'Point lon: 185 lat: 2 is not inside the grid',
+        severity: ValidationSeverity.Error,
+        from: 0,
+        to: 0,
+        validationIssueType: ValidationIssueType.GeoJsonNotInGrid,
+      },
+    ]);
+    expect(result).toEqual(expected);
+  });
 });
