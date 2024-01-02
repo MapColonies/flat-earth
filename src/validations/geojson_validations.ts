@@ -42,8 +42,6 @@ export function validateGeoJsonSelfIntersect(
       new ValidationIssue(
         'The polygon is self intersecting',
         ValidationSeverity.Warning,
-        0,
-        0,
         ValidationIssueType.GeoJsonSelfIntersect
       ),
     ]);
@@ -78,6 +76,11 @@ export function validateGeoJsonTypes(
   return new ValidationResult(true);
 }
 
+/**
+ * Validates that the input `geojson` is inside the `tileGrid`
+ * @param geojson
+ * @param tileGrid
+ */
 export function validateGeoJsonInGrid(
   geojson: string,
   tileGrid: TileGrid = TILEGRID_WORLD_CRS84
@@ -146,8 +149,6 @@ function isPointInGrid(x: number, y: number, tileGrid: TileGrid) {
       new ValidationIssue(
         `Point lon: ${x} lat: ${y} is not inside the grid`,
         ValidationSeverity.Error,
-        0,
-        0,
         ValidationIssueType.GeoJsonNotInGrid
       ),
     ]);
@@ -165,8 +166,6 @@ function innerValidateGeoJsonTypes(
       new ValidationIssue(
         `Type ${geojson.type} was not specified in the allowed types`,
         ValidationSeverity.Warning,
-        0,
-        0,
         ValidationIssueType.GeoJsonInvalidType
       ),
     ]);
@@ -185,9 +184,9 @@ function convertHintIssueToValidationIssue(
   return new ValidationIssue(
     hintIssue.message,
     severity,
+    convertHintIssueMessageToValidationIssueType(hintIssue.message),
     hintIssue.from,
-    hintIssue.to,
-    convertHintIssueMessageToValidationIssueType(hintIssue.message)
+    hintIssue.to
   );
 }
 
@@ -204,4 +203,62 @@ function convertHintIssueMessageToValidationIssueType(
     default:
       return ValidationIssueType.GeoJsonInvalid;
   }
+}
+
+/**
+ * Validates that the input `geojson` has less than or equal `numberOfVertices`
+ * @param geojson
+ * @param numberOfVertices
+ */
+export function validateNumberOfVertices(
+  geojson: string,
+  numberOfVertices: number
+) {
+  const geoJsonObject = JSON.parse(geojson);
+  if (geoJsonObject.type === 'FeatureCollection') {
+    for (const feature of geoJsonObject.features) {
+      const validationResult = innerValidateNumberOfVertices(
+        feature.geometry,
+        numberOfVertices
+      );
+      if (!validationResult.isValid) {
+        return validationResult;
+      }
+    }
+  } else {
+    return innerValidateNumberOfVertices(geoJsonObject, numberOfVertices);
+  }
+  return new ValidationResult(true);
+}
+
+function innerValidateNumberOfVertices(
+  geometry: Geometry,
+  numberOfVertices: number
+): ValidationResult {
+  if (geometry.type === 'Polygon') {
+    const coordinates = geometry.coordinates[0];
+    if (coordinates.length > numberOfVertices) {
+      return new ValidationResult(false, [
+        new ValidationIssue(
+          `Polygon has more than ${numberOfVertices} vertices`,
+          ValidationSeverity.Info,
+          ValidationIssueType.GeoJsonTooManyCoordinates
+        ),
+      ]);
+    }
+  } else if (geometry.type === 'MultiPolygon') {
+    const polygons = geometry.coordinates;
+    for (const polygon of polygons) {
+      if (polygon[0].length > numberOfVertices) {
+        return new ValidationResult(false, [
+          new ValidationIssue(
+            `Polygon has more than ${numberOfVertices} vertices`,
+            ValidationSeverity.Info,
+            ValidationIssueType.GeoJsonTooManyCoordinates
+          ),
+        ]);
+      }
+    }
+  }
+  return new ValidationResult(true);
 }

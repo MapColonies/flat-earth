@@ -12,9 +12,9 @@ export class ValidationIssue {
   constructor(
     public message: string,
     public severity: ValidationSeverity,
-    public from: number,
-    public to: number,
-    public validationIssueType: ValidationIssueType
+    public validationIssueType: ValidationIssueType,
+    public from: number = 0,
+    public to: number = 0
   ) {}
 }
 
@@ -31,4 +31,5 @@ export enum ValidationIssueType {
   GeoJsonNotClosed,
   GeoJsonInvalidType,
   GeoJsonNotInGrid,
+  GeoJsonTooManyCoordinates,
 }
