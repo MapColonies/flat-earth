@@ -18,6 +18,22 @@ export function findNzaTile(lonLat: LonLat): NzaTile | undefined {
   }
 }
 
+export function findNzaTileByTileName(tileName: string): NzaTile | undefined {
+  const find = NZA_TILES_CACHE.find(tile => {
+    if (tile.tile_name === tileName) {
+      return new NzaTile(tile.tile_name, tile.zone, tile.min_x, tile.min_y);
+    } else {
+      return undefined;
+    }
+  });
+
+  if (find) {
+    return new NzaTile(find.tile_name, find.zone, find.min_x, find.min_y);
+  } else {
+    return undefined;
+  }
+}
+
 function loadNzaTilesCache() {
   // TODO: load from service
   return [
