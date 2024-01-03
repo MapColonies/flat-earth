@@ -3,7 +3,7 @@ import {BoundingBox, Geometry, LonLat, Polygon} from '../classes';
 import {Tile, TileGrid, TileIntersectionType, TileRange} from './tiles_classes';
 import {Zoom} from '../types';
 import {
-  validateLonlat,
+  validateLonlatByGrid,
   validateMetatile,
   validateTile,
   validateTileGrid,
@@ -37,17 +37,17 @@ export function tileProjectedHeight(
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): number {
+  const crsBounds = referenceTileGrid.supportedCRS.bounds;
   return (
-    (referenceTileGrid.boundingBox.max.lat -
-      referenceTileGrid.boundingBox.min.lat) /
+    (crsBounds.max.lat - crsBounds.min.lat) /
     (referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom)
   );
 }
 
 function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
+  const crsBounds = referenceTileGrid.supportedCRS.bounds;
   return (
-    (referenceTileGrid.boundingBox.max.lon -
-      referenceTileGrid.boundingBox.min.lon) /
+    (crsBounds.max.lon - crsBounds.min.lon) /
     (referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom)
   );
 }
@@ -70,8 +70,9 @@ function geoCoordsToTile(
   const width = tileProjectedWidth(zoom, referenceTileGrid) * metatile;
   const height = tileProjectedHeight(zoom, referenceTileGrid) * metatile;
 
-  const tileX = (lonlat.lon - referenceTileGrid.boundingBox.min.lon) / width;
-  const tileY = (referenceTileGrid.boundingBox.max.lat - lonlat.lat) / height;
+  const crsBounds = referenceTileGrid.supportedCRS.bounds;
+  const tileX = (lonlat.lon - crsBounds.min.lon) / width;
+  const tileY = (crsBounds.max.lat - lonlat.lat) / height;
 
   // When explicitly asked to reverse the intersection policy, (location on the edge of the tile)
   // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
@@ -92,10 +93,8 @@ function geoCoordsToTile(
  * @param referenceTileGrid
  */
 function edgeOfMap(lonlat: LonLat, referenceTileGrid: TileGrid): boolean {
-  return (
-    lonlat.lon === referenceTileGrid.boundingBox.max.lon ||
-    lonlat.lat === referenceTileGrid.boundingBox.min.lat
-  );
+  const crsBounds = referenceTileGrid.supportedCRS.bounds;
+  return lonlat.lon === crsBounds.max.lon || lonlat.lat === crsBounds.min.lat;
 }
 
 /**
@@ -198,7 +197,7 @@ export function lonLatZoomToTile(
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
   validateZoomLevel(zoom, referenceTileGrid);
-  validateLonlat(lonlat, referenceTileGrid);
+  validateLonlatByGrid(lonlat, referenceTileGrid);
 
   return geoCoordsToTile(lonlat, zoom, metatile, false, referenceTileGrid);
 }
@@ -221,38 +220,22 @@ export function tileToBoundingBox(
 
   const width = tileProjectedWidth(tile.z, referenceTileGrid) * metatile;
   const height = tileProjectedHeight(tile.z, referenceTileGrid) * metatile;
-
+  const crsBounds = referenceTileGrid.supportedCRS.bounds;
   let bbox: BoundingBox = new BoundingBox(
-    referenceTileGrid.boundingBox.min.lon + tile.x * width,
-    referenceTileGrid.boundingBox.max.lat - (tile.y + 1) * height,
-    referenceTileGrid.boundingBox.min.lon + (tile.x + 1) * width,
-    referenceTileGrid.boundingBox.max.lat - tile.y * height
+    crsBounds.min.lon + tile.x * width,
+    crsBounds.max.lat - (tile.y + 1) * height,
+    crsBounds.min.lon + (tile.x + 1) * width,
+    crsBounds.max.lat - tile.y * height
   );
 
   if (clamp) {
     // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
     // of the tile grid
     bbox = new BoundingBox(
-      clampValues(
-        bbox.min.lon,
-        referenceTileGrid.boundingBox.min.lon,
-        referenceTileGrid.boundingBox.max.lon
-      ),
-      clampValues(
-        bbox.min.lat,
-        referenceTileGrid.boundingBox.min.lat,
-        referenceTileGrid.boundingBox.max.lat
-      ),
-      clampValues(
-        bbox.max.lon,
-        referenceTileGrid.boundingBox.min.lon,
-        referenceTileGrid.boundingBox.max.lon
-      ),
-      clampValues(
-        bbox.max.lat,
-        referenceTileGrid.boundingBox.min.lat,
-        referenceTileGrid.boundingBox.max.lat
-      )
+      clampValues(bbox.min.lon, crsBounds.min.lon, crsBounds.max.lon),
+      clampValues(bbox.min.lat, crsBounds.min.lat, crsBounds.max.lat),
+      clampValues(bbox.max.lon, crsBounds.min.lon, crsBounds.max.lon),
+      clampValues(bbox.max.lat, crsBounds.min.lat, crsBounds.max.lat)
     );
   }
 
@@ -347,19 +330,17 @@ export function findMinimalZoom(
 ): Zoom {
   const dx = boundingBox.max.lon - boundingBox.min.lon;
   const dy = boundingBox.max.lat - boundingBox.min.lat;
-
+  const crsBounds = referenceTileGrid.supportedCRS.bounds;
   const minimalXZoom = Math.floor(
     Math.log2(
-      (referenceTileGrid.boundingBox.max.lon -
-        referenceTileGrid.boundingBox.min.lon) /
+      (crsBounds.max.lon - crsBounds.min.lon) /
         (referenceTileGrid.numberOfMinLevelTilesX * dx)
     )
   );
 
   const minimalYZoom = Math.floor(
     Math.log2(
-      (referenceTileGrid.boundingBox.max.lat -
-        referenceTileGrid.boundingBox.min.lat) /
+      (crsBounds.max.lat - crsBounds.min.lat) /
         (referenceTileGrid.numberOfMinLevelTilesY * dy)
     )
   );

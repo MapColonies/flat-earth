@@ -33,7 +33,9 @@
     "@turf/boolean-concave": "^6.5.0",
     "@turf/boolean-valid": "^6.5.0",
     "@turf/turf": "^7.0.0-alpha.2",
-    "geographiclib-geodesic": "^2.0.0"
+    "@types/proj4": "^2.5.5",
+    "geographiclib-geodesic": "^2.0.0",
+    "proj4": "^2.9.2"
   },
   "directories": {
     "test": "test"

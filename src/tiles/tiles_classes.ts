@@ -1,5 +1,5 @@
-import {BoundingBox} from '../classes';
 import {Zoom} from '../types';
+import {CoordinateReferenceSystem} from '../crs/crs_classes';
 
 /**
  * An interface for a well known scale set. {link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#56|OGC spec}
@@ -10,19 +10,6 @@ export class ScaleSet {
   constructor(identifier: string, scaleDenominators: Map<Zoom, number>) {
     this.identifier = identifier;
     this.scaleDenominators = scaleDenominators;
-  }
-}
-
-/**
- * An interface for a coordinate reference system (CRS)
- */
-export class CoordinateReferenceSystem {
-  // partially implemented, currently unused
-  identifier: string;
-  name: string;
-  constructor(identifier: string, name: string) {
-    this.identifier = identifier;
-    this.name = name;
   }
 }
 
@@ -64,7 +51,6 @@ export class TileGrid {
   title: string;
   abstract?: string;
   keywords?: string;
-  boundingBox: BoundingBox;
   supportedCRS: CoordinateReferenceSystem; // Currently unused
   wellKnownScaleSet: ScaleSet; // Currently at least one must be given
   numberOfMinLevelTilesX: number;
@@ -74,7 +60,6 @@ export class TileGrid {
   constructor(
     identifier: string,
     title: string,
-    boundingBox: BoundingBox,
     supportedCRS: CoordinateReferenceSystem,
     wellKnownScaleSet: ScaleSet,
     numberOfMinLevelTilesX: number,
@@ -86,7 +71,6 @@ export class TileGrid {
   ) {
     this.identifier = identifier;
     this.title = title;
-    this.boundingBox = boundingBox;
     this.supportedCRS = supportedCRS;
     this.wellKnownScaleSet = wellKnownScaleSet;
     this.numberOfMinLevelTilesX = numberOfMinLevelTilesX;

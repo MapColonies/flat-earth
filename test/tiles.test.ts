@@ -9,7 +9,6 @@ import {
   zoomShift,
 } from '../src/tiles/tiles';
 import {
-  CRS_CRS84,
   SCALESET_GOOGLE_CRS84_QUAD_MODIFIED,
   TILEGRID_WEB_MERCATOR,
   TILEGRID_WORLD_CRS84,
@@ -17,6 +16,7 @@ import {
 import {BoundingBox, LonLat, Point, Polygon} from '../src/classes';
 import {Tile, TileGrid, TileRange} from '../src/tiles/tiles_classes';
 import {Zoom} from '../src/types';
+import {CoordinateReferenceSystem} from '../src/crs/crs_classes';
 
 const tileGridTests = [
   {
@@ -25,8 +25,12 @@ const tileGridTests = [
     tileGrid: new TileGrid(
       'WorldCRS84Quad',
       'CRS84 for the World',
-      new BoundingBox(90, -90, 90, 90),
-      CRS_CRS84,
+      new CoordinateReferenceSystem(
+        'test',
+        'test',
+        'test',
+        new BoundingBox(-180, -90, -180, 90)
+      ),
       SCALESET_GOOGLE_CRS84_QUAD_MODIFIED,
       2,
       1,
@@ -40,8 +44,12 @@ const tileGridTests = [
     tileGrid: new TileGrid(
       'WorldCRS84Quad',
       'CRS84 for the World',
-      new BoundingBox(-90, 90, 90, 90),
-      CRS_CRS84,
+      new CoordinateReferenceSystem(
+        'test',
+        'test',
+        'test',
+        new BoundingBox(-180, -90, 180, -90)
+      ),
       SCALESET_GOOGLE_CRS84_QUAD_MODIFIED,
       2,
       1,
@@ -186,7 +194,7 @@ describe('#boundingBoxToTiles', () => {
     };
 
     expect(badTilesGenerator).toThrow(
-      RangeError("longitude -190 is out of range of tile grid's bounding box")
+      RangeError('longitude -190 is out of range of crs bounding box')
     );
   });
   it("should throw an error when the given bounding box's max.lon value is larger than tile grid's bounding box max.lon value", () => {
@@ -198,7 +206,7 @@ describe('#boundingBoxToTiles', () => {
     };
 
     expect(badTilesGenerator).toThrow(
-      RangeError("longitude 190 is out of range of tile grid's bounding box")
+      RangeError('longitude 190 is out of range of crs bounding box')
     );
   });
   it("should throw an error when the given bounding box's min.lat value is less than tile grid's bounding box min.lat value", () => {
@@ -210,7 +218,7 @@ describe('#boundingBoxToTiles', () => {
     };
 
     expect(badTilesGenerator).toThrow(
-      RangeError("latitude -100 is out of range of tile grid's bounding box")
+      RangeError('latitude -100 is out of range of crs bounding box')
     );
   });
   it("should throw an error when the given bounding box's max.lat value is larger than tile grid's bounding box max.lat value", () => {
@@ -222,7 +230,7 @@ describe('#boundingBoxToTiles', () => {
     };
 
     expect(badTilesGenerator).toThrow(
-      RangeError("latitude 100 is out of range of tile grid's bounding box")
+      RangeError('latitude 100 is out of range of crs bounding box')
     );
   });
 
@@ -352,7 +360,7 @@ describe('#lonLatZoomToTile', () => {
 
     expect(tile).toEqual(expected);
   });
-  it("should throw an error when longitude is outside of tile grid's bounding box", () => {
+  it('should throw an error when longitude is outside of crs bounding box', () => {
     const lonLat: LonLat = {lon: -190, lat: 30};
     const zoom: Zoom = 0;
 
@@ -361,10 +369,10 @@ describe('#lonLatZoomToTile', () => {
     };
 
     expect(badLonLatZoomToTile).toThrow(
-      RangeError("longitude -190 is out of range of tile grid's bounding box")
+      RangeError('longitude -190 is out of range of crs bounding box')
     );
   });
-  it("should throw an error when latitude is outside of tile grid's bounding box", () => {
+  it('should throw an error when latitude is outside of crs bounding box', () => {
     const lonLat: LonLat = {lon: 30, lat: 100};
     const zoom: Zoom = 0;
 
@@ -373,10 +381,10 @@ describe('#lonLatZoomToTile', () => {
     };
 
     expect(badLonLatZoomToTile).toThrow(
-      RangeError("latitude 100 is out of range of tile grid's bounding box")
+      RangeError('latitude 100 is out of range of crs bounding box')
     );
   });
-  it("should throw an error when the zoom level is not part of zoom levels of tile grid's scale set", () => {
+  it('should throw an error when the zoom level is not part of zoom levels of crs scale set', () => {
     const lonLat: LonLat = {lon: 30, lat: 30};
     const zoom: Zoom = 1.5;
 
@@ -447,10 +455,10 @@ describe('#tileToBoundingBox', () => {
     const tile: Tile = {x: 0, y: 0, z: 0};
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
     const expected: BoundingBox = new BoundingBox(
-      TILEGRID_WEB_MERCATOR.boundingBox.min.lon,
-      TILEGRID_WEB_MERCATOR.boundingBox.min.lat,
-      TILEGRID_WEB_MERCATOR.boundingBox.max.lon,
-      TILEGRID_WEB_MERCATOR.boundingBox.max.lat
+      TILEGRID_WEB_MERCATOR.supportedCRS.bounds.min.lon,
+      TILEGRID_WEB_MERCATOR.supportedCRS.bounds.min.lat,
+      TILEGRID_WEB_MERCATOR.supportedCRS.bounds.max.lon,
+      TILEGRID_WEB_MERCATOR.supportedCRS.bounds.max.lat
     );
 
     const boundingBox = tileToBoundingBox(tile, tileGrid);
@@ -507,7 +515,7 @@ describe('#tileToBoundingBox', () => {
       RangeError('y index out of range of tile grid')
     );
   });
-  it("should throw an error when the tile's z index is not part of zoom levels of tile grid's scale set", () => {
+  it("should throw an error when the tile's z index is not part of zoom levels of crs scale set", () => {
     const tile: Tile = {x: 2, y: 1, z: 1.5};
 
     const badTileToBoundingBox = (): void => {

@@ -3,6 +3,7 @@ import {SCALE_FACTOR} from '../tiles/tiles_constants';
 import {Zoom} from '../types';
 import {ScaleSet, Tile, TileGrid} from '../tiles/tiles_classes';
 import {BoundingBox, LonLat} from '../classes';
+import {CoordinateReferenceSystem} from '../crs/crs_classes';
 
 /**
  * Validates that the input `scaleSet` is valid
@@ -30,7 +31,7 @@ export function validateScaleSet(scaleSet: ScaleSet): void {
  * @param tileGrid the tile grid to validate
  */
 export function validateTileGrid(tileGrid: TileGrid): void {
-  validateBoundingBox(tileGrid.boundingBox);
+  validateBoundingBox(tileGrid.supportedCRS.bounds);
   validateScaleSet(tileGrid.wellKnownScaleSet);
 
   if (tileGrid.numberOfMinLevelTilesX < 1) {
@@ -79,34 +80,42 @@ export function validateTileGridBoundingBox(
 ): void {
   validateBoundingBox(bbox);
 
-  validateLonlat({lon: bbox.min.lon, lat: bbox.min.lat}, referenceTileGrid);
-  validateLonlat({lon: bbox.max.lon, lat: bbox.max.lat}, referenceTileGrid);
+  validateLonlatByGrid(
+    {lon: bbox.min.lon, lat: bbox.min.lat},
+    referenceTileGrid
+  );
+  validateLonlatByGrid(
+    {lon: bbox.max.lon, lat: bbox.max.lat},
+    referenceTileGrid
+  );
 }
 
 /**
  * Validates that the input `lonlat` is valid
- * @param lonlat the longtitude and latitudes to validate
+ * @param lonlat the longitude and latitudes to validate
  * @param referenceTileGrid the tile grid to validate the `lonlat` against
  */
-export function validateLonlat(
+export function validateLonlatByGrid(
   lonlat: LonLat,
   referenceTileGrid: TileGrid
 ): void {
-  if (
-    lonlat.lon < referenceTileGrid.boundingBox.min.lon ||
-    lonlat.lon > referenceTileGrid.boundingBox.max.lon
-  ) {
+  return validateLonlatByCrs(lonlat, referenceTileGrid.supportedCRS);
+}
+
+export function validateLonlatByCrs(
+  lonlat: LonLat,
+  crs: CoordinateReferenceSystem
+) {
+  const crsBounds = crs.bounds;
+  if (lonlat.lon < crsBounds.min.lon || lonlat.lon > crsBounds.max.lon) {
     throw new RangeError(
-      `longitude ${lonlat.lon} is out of range of tile grid's bounding box`
+      `longitude ${lonlat.lon} is out of range of crs bounding box`
     );
   }
 
-  if (
-    lonlat.lat < referenceTileGrid.boundingBox.min.lat ||
-    lonlat.lat > referenceTileGrid.boundingBox.max.lat
-  ) {
+  if (lonlat.lat < crsBounds.min.lat || lonlat.lat > crsBounds.max.lat) {
     throw new RangeError(
-      `latitude ${lonlat.lat} is out of range of tile grid's bounding box`
+      `latitude ${lonlat.lat} is out of range of crs bounding box`
     );
   }
 }

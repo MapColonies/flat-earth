@@ -1,12 +1,5 @@
-/* eslint-disable @typescript-eslint/no-magic-numbers */
-import {
-  CoordinateReferenceSystem,
-  Ellipsoid,
-  ScaleSet,
-  TileGrid,
-} from './tiles_classes';
-import {BoundingBox} from '../classes';
-
+import {Ellipsoid, ScaleSet, TileGrid} from './tiles_classes';
+import {CRS_3857, CRS_CRS84} from '../crs/crs_constants';
 /**
  * Size of a pixel in meters
  */
@@ -16,24 +9,6 @@ export const PIXEL_SIZE = 0.00028;
  * A scale factor between adjacent zoom levels
  */
 export const SCALE_FACTOR = 2;
-
-/**
- * @category Coordinate Reference System
- */
-export const CRS_CRS84: CoordinateReferenceSystem =
-  new CoordinateReferenceSystem(
-    'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
-    'WGS 84 longitude-latitude'
-  );
-
-/**
- * @category Coordinate Reference System
- */
-export const CRS_3857: CoordinateReferenceSystem =
-  new CoordinateReferenceSystem(
-    'http://www.opengis.net/def/crs/EPSG/0/3857',
-    'WGS 84 / Pseudo-Mercator'
-  );
 
 /**
  * @category Ellipsoid
@@ -152,7 +127,6 @@ export const SCALESET_GOOGLE_CRS84_QUAD_MODIFIED: ScaleSet = new ScaleSet(
 export const TILEGRID_WORLD_CRS84: TileGrid = new TileGrid(
   'WorldCRS84Quad',
   'CRS84 for the World',
-  new BoundingBox(-180, -90, 180, 90),
   CRS_CRS84,
   SCALESET_GOOGLE_CRS84_QUAD_MODIFIED,
   2,
@@ -167,7 +141,6 @@ export const TILEGRID_WORLD_CRS84: TileGrid = new TileGrid(
 export const TILEGRID_WEB_MERCATOR: TileGrid = new TileGrid(
   'WebMercatorQuad',
   'Google Maps Compatible for the World',
-  new BoundingBox(-180, -85.05112877980659, 180, 85.05112877980659),
   CRS_3857,
   SCALESET_GOOGLE_MAPS_COMPATIBLE,
   1,
