@@ -7,8 +7,8 @@ import {check, HintError, HintIssue} from '@placemarkio/check-geojson';
 import {kinks} from '@turf/turf';
 import {TileGrid} from '../tiles/tiles_classes';
 import {TILEGRID_WORLD_CRS84} from '../tiles/tiles_constants';
-import {validateLonlat} from './validations';
-import {LonLat} from '../classes';
+import {validateGeoPoint} from './validations';
+import {GeoPoint} from '../classes';
 import {Geometry} from 'geojson';
 
 /**
@@ -171,7 +171,7 @@ function innerValidateGeoJsonInGrid(
 
 function isPointInGrid(x: number, y: number, tileGrid: TileGrid) {
   try {
-    validateLonlat(new LonLat(x, y), tileGrid);
+    validateGeoPoint(new GeoPoint(x, y), tileGrid);
   } catch (error) {
     return new ValidationResult(false, [
       new ValidationIssue(
