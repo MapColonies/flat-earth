@@ -1,14 +1,14 @@
 import {
-  area as turfArea, bbox,
+  area as turfArea,
   booleanEqual,
   distance as turfDistance,
-  point
-} from "@turf/turf";
+  point,
+} from '@turf/turf';
 import {Geometry, Point, Polygon} from '../classes';
 
 import {Geodesic} from 'geographiclib-geodesic';
 import {convertGeometryToTurfGeometry} from '../converters/turf/turf_converters';
-import { geometryToBoundingBox } from "../converters/geometry_converters";
+import {geometryToBoundingBox} from '../converters/geometry_converters';
 
 const geod = Geodesic.WGS84;
 

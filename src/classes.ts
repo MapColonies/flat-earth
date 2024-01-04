@@ -1,4 +1,5 @@
 import {Latitude, Longitude} from './types';
+
 export abstract class Geometry {
   type: string;
   protected constructor(type: string) {
@@ -9,7 +10,7 @@ export abstract class Geometry {
 /**
  * A polygon is an area defined by a closed ring of points.
  * The first and last points of a ring must be the same.
- * points must be ordered counterclockwise.
+ * Points must be ordered counterclockwise.
  */
 export class Polygon extends Geometry {
   constructor(public points: Array<Point> = []) {
@@ -26,7 +27,7 @@ export class Line extends Geometry {
 }
 
 export class Point extends Geometry {
-  coordinates: LonLat;
+  coordinates: GeoPoint;
   constructor(
     public lon: number,
     public lat: number
@@ -37,8 +38,8 @@ export class Point extends Geometry {
 }
 
 export class BoundingBox extends Geometry {
-  min: LonLat;
-  max: LonLat;
+  min: GeoPoint;
+  max: GeoPoint;
   constructor(
     minLon: Longitude,
     minLat: Latitude,
@@ -51,7 +52,7 @@ export class BoundingBox extends Geometry {
   }
 }
 
-export class LonLat {
+export class GeoPoint {
   constructor(
     public lon: Longitude,
     public lat: Latitude

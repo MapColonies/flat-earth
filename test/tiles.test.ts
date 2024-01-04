@@ -1,10 +1,12 @@
 import {
-  boundingBoxToTiles,
+  boundingBoxToTileRange,
+  expandBBoxToTileGrid,
+  findMinimalZoom,
+  geometryToTiles,
   lonLatZoomToTile,
   tileToBoundingBox,
+  tileToTileRange,
   zoomShift,
-  // tileToBoundingBox,
-  // zoomShift,
 } from '../src/tiles/tiles';
 import {
   CRS_CRS84,
@@ -12,8 +14,8 @@ import {
   TILEGRID_WEB_MERCATOR,
   TILEGRID_WORLD_CRS84,
 } from '../src/tiles/tiles_constants';
-import {BoundingBox, LonLat} from '../src/classes';
-import {Tile, TileGrid} from '../src/tiles/tiles_classes';
+import {BoundingBox, GeoPoint, Point, Polygon} from '../src/classes';
+import {Tile, TileGrid, TileRange} from '../src/tiles/tiles_classes';
 import {Zoom} from '../src/types';
 
 const tileGridTests = [
@@ -86,23 +88,23 @@ const tileGridTests = [
   {
     testCaseName: 'number of tiles on the x axis at min zoom is less than 1',
     expected:
-      'number of tiles on the x axis of a tile grid at the min zoom level must be at lmax.lon 1',
+      'number of tiles on the x axis of a tile grid at the min zoom level must be at least 1',
     tileGrid: {...TILEGRID_WORLD_CRS84, ...{numberOfMinLevelTilesX: 0}},
   },
   {
     testCaseName: 'number of tiles on the y axis at min zoom is less than 1',
     expected:
-      'number of tiles on the y axis of a tile grid at the min zoom level must be at lmax.lon 1',
+      'number of tiles on the y axis of a tile grid at the min zoom level must be at least 1',
     tileGrid: {...TILEGRID_WORLD_CRS84, ...{numberOfMinLevelTilesY: 0}},
   },
   {
     testCaseName: 'tile width is less than 1',
-    expected: 'tile width of a tile grid must be at lmax.lon 1',
+    expected: 'tile width of a tile grid must be at least 1',
     tileGrid: {...TILEGRID_WORLD_CRS84, ...{tileWidth: 0}},
   },
   {
     testCaseName: 'tile height is less than 1',
-    expected: 'tile height of a tile grid must be at lmax.lon 1',
+    expected: 'tile height of a tile grid must be at least 1',
     tileGrid: {...TILEGRID_WORLD_CRS84, ...{tileHeight: 0}},
   },
 ];
@@ -111,68 +113,52 @@ describe('#boundingBoxToTiles', () => {
   it('should return a generator function which yields tiles inside the bounding box', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
-    const expected = {value: {x: 9, y: 2, z: 3, metatile: 1}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(9, 2, 3, 1)];
 
-    const tilesGenerator = boundingBoxToTiles(bbox, zoom);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tileRange = boundingBoxToTileRange(bbox, zoom);
+    expect(tileRange.tiles()).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with negative coordinates', () => {
     const bbox: BoundingBox = new BoundingBox(-40, -40, -30, -30);
     const zoom: Zoom = 3;
-    const expected = {value: {x: 6, y: 5, z: 3, metatile: 1}, done: false};
-    const expectedNext = {value: undefined, done: true};
-
-    const tilesGenerator = boundingBoxToTiles(bbox, zoom);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const expected = [new Tile(6, 5, 3, 1)];
+    const tileRange = boundingBoxToTileRange(bbox, zoom);
+    expect(tileRange.tiles()).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with non default metatile', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
     const metatile = 3;
-    const expected = {value: {x: 3, y: 0, z: 3, metatile: 3}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(3, 0, 3, 3)];
 
-    const tilesGenerator = boundingBoxToTiles(bbox, zoom, metatile);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tileRange = boundingBoxToTileRange(bbox, zoom, metatile);
+    expect(tileRange.tiles()).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with non default tile grid', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-    const expected = {value: {x: 4, y: 2, z: 3, metatile: 1}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(4, 2, 3, 1)];
 
-    const tilesGenerator = boundingBoxToTiles(bbox, zoom, undefined, tileGrid);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tileRange = boundingBoxToTileRange(bbox, zoom, undefined, tileGrid);
+    expect(tileRange.tiles()).toEqual(expected);
   });
   it('should return a generator function which yields tiles inside the bounding box with non default tile grid & non default metatile', () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
     const zoom: Zoom = 3;
     const metatile = 3;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
-    const expected = {value: {x: 1, y: 0, z: 3, metatile: 3}, done: false};
-    const expectedNext = {value: undefined, done: true};
+    const expected = [new Tile(1, 0, 3, 3)];
 
-    const tilesGenerator = boundingBoxToTiles(bbox, zoom, metatile, tileGrid);
-
-    expect(tilesGenerator.next()).toEqual(expected);
-    expect(tilesGenerator.next()).toEqual(expectedNext);
+    const tileRange = boundingBoxToTileRange(bbox, zoom, metatile, tileGrid);
+    expect(tileRange.tiles()).toEqual(expected);
   });
   it("should throw an error when the given bounding box's max.lon value is more or equal to the min.lon value", () => {
     const bbox: BoundingBox = new BoundingBox(30, 30, 30, 40);
     const zoom: Zoom = 3;
 
     const badTilesGenerator = (): void => {
-      boundingBoxToTiles(bbox, zoom);
+      boundingBoxToTileRange(bbox, zoom);
     };
 
     expect(badTilesGenerator).toThrow(
@@ -184,7 +170,7 @@ describe('#boundingBoxToTiles', () => {
     const zoom: Zoom = 3;
 
     const badTilesGenerator = (): void => {
-      boundingBoxToTiles(bbox, zoom);
+      boundingBoxToTileRange(bbox, zoom);
     };
 
     expect(badTilesGenerator).toThrow(
@@ -196,11 +182,11 @@ describe('#boundingBoxToTiles', () => {
     const zoom: Zoom = 3;
 
     const badTilesGenerator = (): void => {
-      boundingBoxToTiles(bbox, zoom);
+      boundingBoxToTileRange(bbox, zoom);
     };
 
     expect(badTilesGenerator).toThrow(
-      RangeError("longtitude -190 is out of range of tile grid's bounding box")
+      RangeError("longitude -190 is out of range of tile grid's bounding box")
     );
   });
   it("should throw an error when the given bounding box's max.lon value is larger than tile grid's bounding box max.lon value", () => {
@@ -208,11 +194,11 @@ describe('#boundingBoxToTiles', () => {
     const zoom: Zoom = 3;
 
     const badTilesGenerator = (): void => {
-      boundingBoxToTiles(bbox, zoom);
+      boundingBoxToTileRange(bbox, zoom);
     };
 
     expect(badTilesGenerator).toThrow(
-      RangeError("longtitude 190 is out of range of tile grid's bounding box")
+      RangeError("longitude 190 is out of range of tile grid's bounding box")
     );
   });
   it("should throw an error when the given bounding box's min.lat value is less than tile grid's bounding box min.lat value", () => {
@@ -220,7 +206,7 @@ describe('#boundingBoxToTiles', () => {
     const zoom: Zoom = 3;
 
     const badTilesGenerator = (): void => {
-      boundingBoxToTiles(bbox, zoom);
+      boundingBoxToTileRange(bbox, zoom);
     };
 
     expect(badTilesGenerator).toThrow(
@@ -232,28 +218,36 @@ describe('#boundingBoxToTiles', () => {
     const zoom: Zoom = 3;
 
     const badTilesGenerator = (): void => {
-      boundingBoxToTiles(bbox, zoom);
+      boundingBoxToTileRange(bbox, zoom);
     };
 
     expect(badTilesGenerator).toThrow(
       RangeError("latitude 100 is out of range of tile grid's bounding box")
     );
   });
-  describe('Bad tile grid', () => {
-    test.each(tileGridTests)(
-      "should throw an error when the tile grid's $testCaseName",
-      ({tileGrid, expected}) => {
-        const badTilesGenerator = (): void => {
-          const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
-          const zoom: Zoom = 3;
 
-          boundingBoxToTiles(bbox, zoom, undefined, tileGrid);
-        };
-
-        expect(badTilesGenerator).toThrow(new Error(expected));
-      }
-    );
+  it('should return the correct TileRange', () => {
+    const boundingBox = new BoundingBox(-135, -45, -45, 45);
+    const tileRange = boundingBoxToTileRange(boundingBox, 2);
+    const expectedTileRange = new TileRange(1, 1, 2, 2, 2);
+    expect(tileRange).toEqual(expectedTileRange);
   });
+});
+
+describe('Bad tile grid', () => {
+  test.each(tileGridTests)(
+    "should throw an error when the tile grid's $testCaseName",
+    ({tileGrid, expected}) => {
+      const badTilesGenerator = (): void => {
+        const bbox: BoundingBox = new BoundingBox(30, 30, 40, 40);
+        const zoom: Zoom = 3;
+
+        boundingBoxToTileRange(bbox, zoom, undefined, tileGrid);
+      };
+
+      expect(badTilesGenerator).toThrow(new Error(expected));
+    }
+  );
 });
 
 describe('#zoomShift', () => {
@@ -291,8 +285,8 @@ describe('#zoomShift', () => {
 });
 
 describe('#lonLatZoomToTile', () => {
-  it('should return a tile for a given longtitude, latitude & zoom', () => {
-    const lonLat: LonLat = {lon: 30, lat: 30};
+  it('should return a tile for a given longitude, latitude & zoom', () => {
+    const lonLat: GeoPoint = {lon: 30, lat: 30};
     const zoom: Zoom = 2;
     const expected: Tile = {x: 4, y: 1, z: 2, metatile: 1};
 
@@ -300,8 +294,8 @@ describe('#lonLatZoomToTile', () => {
 
     expect(tile).toEqual(expected);
   });
-  it('should return a tile for a given negative longtitude, latitude & zoom', () => {
-    const lonLat: LonLat = {lon: -30, lat: -30};
+  it('should return a tile for a given negative longitude, latitude & zoom', () => {
+    const lonLat: GeoPoint = {lon: -30, lat: -30};
     const zoom: Zoom = 2;
     const expected: Tile = {x: 3, y: 2, z: 2, metatile: 1};
 
@@ -309,8 +303,8 @@ describe('#lonLatZoomToTile', () => {
 
     expect(tile).toEqual(expected);
   });
-  it('should return a tile for a given longtitude, latitude & zoom with non default metatile', () => {
-    const lonLat: LonLat = {lon: 30, lat: 30};
+  it('should return a tile for a given longitude, latitude & zoom with non default metatile', () => {
+    const lonLat: GeoPoint = {lon: 30, lat: 30};
     const zoom: Zoom = 2;
     const metatile = 3;
     const expected: Tile = {x: 1, y: 0, z: 2, metatile: 3};
@@ -319,8 +313,8 @@ describe('#lonLatZoomToTile', () => {
 
     expect(tile).toEqual(expected);
   });
-  it('should return a tile for a given longtitude, latitude & zoom with non default tile grid', () => {
-    const lonLat: LonLat = {lon: 30, lat: 30};
+  it('should return a tile for a given longitude, latitude & zoom with non default tile grid', () => {
+    const lonLat: GeoPoint = {lon: 30, lat: 30};
     const zoom: Zoom = 2;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
     const expected: Tile = {x: 2, y: 1, z: 2, metatile: 1};
@@ -329,8 +323,8 @@ describe('#lonLatZoomToTile', () => {
 
     expect(tile).toEqual(expected);
   });
-  it('should return a tile for a given longtitude, latitude & zoom with non default tile grid & non default metatile', () => {
-    const lonLat: LonLat = {lon: 90, lat: 30};
+  it('should return a tile for a given longitude, latitude & zoom with non default tile grid & non default metatile', () => {
+    const lonLat: GeoPoint = {lon: 90, lat: 30};
     const zoom: Zoom = 2;
     const metatile = 3;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
@@ -340,8 +334,8 @@ describe('#lonLatZoomToTile', () => {
 
     expect(tile).toEqual(expected);
   });
-  it("should return a tile when logtitude is equal to tile grid's bounding box extent", () => {
-    const lonLat: LonLat = {lon: 180, lat: 30};
+  it("should return a tile when longitude is equal to tile grid's bounding box extent", () => {
+    const lonLat: GeoPoint = {lon: 180, lat: 30};
     const zoom: Zoom = 2;
     const expected: Tile = {x: 7, y: 1, z: 2, metatile: 1};
 
@@ -350,7 +344,7 @@ describe('#lonLatZoomToTile', () => {
     expect(tile).toEqual(expected);
   });
   it("should return a tile when latitude is equal to tile grid's bounding box extent", () => {
-    const lonLat: LonLat = {lon: 30, lat: -90};
+    const lonLat: GeoPoint = {lon: 30, lat: -90};
     const zoom: Zoom = 2;
     const expected: Tile = {x: 4, y: 3, z: 2, metatile: 1};
 
@@ -358,8 +352,8 @@ describe('#lonLatZoomToTile', () => {
 
     expect(tile).toEqual(expected);
   });
-  it("should throw an error when longtitude is outside of tile grid's bounding box", () => {
-    const lonLat: LonLat = {lon: -190, lat: 30};
+  it("should throw an error when longitude is outside of tile grid's bounding box", () => {
+    const lonLat: GeoPoint = {lon: -190, lat: 30};
     const zoom: Zoom = 0;
 
     const badLonLatZoomToTile = (): void => {
@@ -367,11 +361,11 @@ describe('#lonLatZoomToTile', () => {
     };
 
     expect(badLonLatZoomToTile).toThrow(
-      RangeError("longtitude -190 is out of range of tile grid's bounding box")
+      RangeError("longitude -190 is out of range of tile grid's bounding box")
     );
   });
   it("should throw an error when latitude is outside of tile grid's bounding box", () => {
-    const lonLat: LonLat = {lon: 30, lat: 100};
+    const lonLat: GeoPoint = {lon: 30, lat: 100};
     const zoom: Zoom = 0;
 
     const badLonLatZoomToTile = (): void => {
@@ -383,7 +377,7 @@ describe('#lonLatZoomToTile', () => {
     );
   });
   it("should throw an error when the zoom level is not part of zoom levels of tile grid's scale set", () => {
-    const lonLat: LonLat = {lon: 30, lat: 30};
+    const lonLat: GeoPoint = {lon: 30, lat: 30};
     const zoom: Zoom = 1.5;
 
     const badLonLatZoomToTile = (): void => {
@@ -395,7 +389,7 @@ describe('#lonLatZoomToTile', () => {
     );
   });
   it('should throw an error when metatile is zero or less', () => {
-    const lonLat: LonLat = {lon: 30, lat: 30};
+    const lonLat: GeoPoint = {lon: 30, lat: 30};
     const zoom: Zoom = 0;
     const metatile = 0;
 
@@ -412,7 +406,7 @@ describe('#lonLatZoomToTile', () => {
       "should throw an error when the tile grid's $testCaseName",
       ({tileGrid, expected}) => {
         const badLonLatZoomToTile = (): void => {
-          const lonLat: LonLat = {lon: 30, lat: 30};
+          const lonLat: GeoPoint = {lon: 30, lat: 30};
           const zoom: Zoom = 0;
 
           lonLatZoomToTile(lonLat, zoom, undefined, tileGrid);
@@ -570,5 +564,248 @@ describe('#tileToBoundingBox', () => {
         expect(badTileToBoundingBox).toThrow(new Error(expected));
       }
     );
+  });
+});
+describe('tileToRange', () => {
+  it('create range with same zoom', () => {
+    const tile = new Tile(1, 1, 2);
+
+    const range = tileToTileRange(tile, 2);
+    const expectedRange = new TileRange(1, 1, 1, 1, 2);
+    expect(range).toEqual(expectedRange);
+  });
+
+  it('create range with higher zoom one level up', () => {
+    const tile = new Tile(1, 1, 1);
+    const range = tileToTileRange(tile, 2);
+
+    const expectedRange = new TileRange(2, 2, 3, 3, 2);
+    expect(range).toEqual(expectedRange);
+  });
+
+  it('throws error when target zoom level is lower than tile zoom', () => {
+    const tile = new Tile(1, 1, 1);
+
+    const badTileToTileRange = (): void => {
+      tileToTileRange(tile, 0);
+    };
+
+    expect(badTileToTileRange).toThrow();
+  });
+
+  it('create range with higher zoom in more than one level', () => {
+    const tile = new Tile(0, 0, 0, 1);
+    const range = tileToTileRange(tile, 2);
+
+    const expectedRange = new TileRange(0, 0, 3, 3, 2);
+    expect(range).toEqual(expectedRange);
+  });
+});
+
+describe('Snap a bounding box to tile grid', () => {
+  it('should get a bounding box smaller than the grid tiles and enlarge it to the grid', () => {
+    const boundingBox = new BoundingBox(-110, -35, -50, 35);
+    const snappedBoundingBox = expandBBoxToTileGrid(boundingBox, 2);
+
+    const expectedBoundingBox = new BoundingBox(-135, -45, -45, 45);
+    expect(snappedBoundingBox).toEqual(expectedBoundingBox);
+  });
+
+  it('should get a bounding box smaller than the grid tiles and enlarge it to the grid', () => {
+    const boundingBox = new BoundingBox(50, -85, 125, -15);
+    const snappedBoundingBox = expandBBoxToTileGrid(boundingBox, 2);
+
+    const expectedBoundingBox = new BoundingBox(45, -90, 135, 0);
+    expect(snappedBoundingBox).toEqual(expectedBoundingBox);
+  });
+
+  it('Bounding boxes is the same before and after snapping', () => {
+    const boundingBox = new BoundingBox(-135, -45, -45, 45);
+    const snappedBoundingBox = expandBBoxToTileGrid(boundingBox, 2);
+    const expectedBoundingBox = new BoundingBox(-135, -45, -45, 45);
+    expect(snappedBoundingBox).toEqual(expectedBoundingBox);
+  });
+});
+
+describe('Find minimal zoom that can contain bounding box in one tile', () => {
+  it('should return correct zoom starting at zoom 2 and moving to 1', () => {
+    const boundingBox = new BoundingBox(-135, -45, -45, 45);
+    const minimalZoom = findMinimalZoom(boundingBox);
+    const expectedZoom = 1;
+    expect(minimalZoom).toEqual(expectedZoom);
+  });
+
+  it('should return correct zoom', () => {
+    const boundingBox = new BoundingBox(10, 10, 30, 30);
+    const minimalZoom = findMinimalZoom(boundingBox);
+    const expectedZoom = 3;
+    expect(minimalZoom).toEqual(expectedZoom);
+  });
+
+  it('Small bounding box located on the edge of minimal tiles should go one level up', () => {
+    const boundingBox = new BoundingBox(-100, -60, -45, -5);
+    const minimalZoom = findMinimalZoom(boundingBox);
+    const expectedZoom = 1;
+    expect(minimalZoom).toEqual(expectedZoom);
+  });
+});
+
+describe('#geometryToTiles', () => {
+  it('generates expected tiles from bbox', () => {
+    const boundingBox = new BoundingBox(-45, -45, 0, 0);
+    const tileRanges = geometryToTiles(boundingBox, 2);
+    const expectedTiles = [new Tile(3, 2, 2, 1)];
+    const tiles = tileRanges.flatMap(tileRange => tileRange.tiles());
+    expect(tiles).toEqual(expectedTiles);
+  });
+
+  it('generates expected tiles from none bbox polygon', () => {
+    // this is a polygon of a triangle
+    const polygon = new Polygon([
+      new Point(-45, 0),
+      new Point(0, 45),
+      new Point(45, 0),
+      new Point(-45, 0),
+    ]);
+
+    const tileRanges = geometryToTiles(polygon, 2);
+    const tiles = tileRanges.flatMap(tileRange => tileRange.tiles());
+    const expectedTiles = [new Tile(3, 1, 2, 1), new Tile(4, 1, 2, 1)];
+
+    expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
+  });
+
+  it('generates expected tiles from none bbox polygon in higher zoom', () => {
+    // this is a polygon of a triangle
+    const polygon = new Polygon([
+      new Point(-45, 0),
+      new Point(0, 45),
+      new Point(45, 0),
+      new Point(-45, 0),
+    ]);
+
+    const tileRanges = geometryToTiles(polygon, 3);
+    const expectedTileRanges = [
+      new TileRange(7, 2, 7, 2, 3),
+      new TileRange(7, 3, 7, 3, 3),
+      new TileRange(8, 2, 8, 2, 3),
+      new TileRange(8, 3, 8, 3, 3),
+      new TileRange(6, 3, 6, 3, 3),
+      new TileRange(9, 3, 9, 3, 3),
+    ];
+
+    expect(tileRanges).toEqual(expect.arrayContaining(expectedTileRanges));
+  });
+
+  // it('generates expected tiles from none bbox polygon in higher zoom', () => {
+  //   // this is a polygon of a triangle
+  //   const polygon = new Polygon([
+  //     new Point(-45, 0),
+  //     new Point(0, 45),
+  //     new Point(45, 0),
+  //     new Point(-45, 0),
+  //   ]);
+  //
+  //   const tileRanges = geometryToTiles(polygon, 5);
+  //   const expectedTileRanges = [
+  //     new TileRange(24, 16, 25, 17, 5),
+  //     new TileRange(25, 16, 26, 17, 5),
+  //     new TileRange(25, 17, 26, 18, 5),
+  //     new TileRange(26, 16, 28, 18, 5),
+  //     new TileRange(26, 18, 27, 19, 5),
+  //     new TileRange(27, 18, 28, 19, 5),
+  //     new TileRange(27, 19, 28, 20, 5),
+  //     new TileRange(28, 16, 32, 20, 5),
+  //     new TileRange(28, 20, 29, 21, 5),
+  //     new TileRange(29, 20, 30, 21, 5),
+  //     new TileRange(29, 21, 30, 22, 5),
+  //     new TileRange(30, 20, 32, 22, 5),
+  //     new TileRange(30, 22, 31, 23, 5),
+  //     new TileRange(31, 22, 32, 23, 5),
+  //     new TileRange(31, 23, 32, 24, 5),
+  //     new TileRange(32, 16, 36, 20, 5),
+  //     new TileRange(32, 20, 34, 22, 5),
+  //     new TileRange(32, 22, 33, 23, 5),
+  //     new TileRange(32, 23, 33, 24, 5),
+  //     new TileRange(33, 22, 34, 23, 5),
+  //     new TileRange(34, 20, 35, 21, 5),
+  //     new TileRange(34, 21, 35, 22, 5),
+  //     new TileRange(35, 20, 36, 21, 5),
+  //     new TileRange(36, 16, 38, 18, 5),
+  //     new TileRange(36, 19, 37, 20, 5),
+  //     new TileRange(36, 18, 37, 19, 5),
+  //     new TileRange(37, 18, 38, 19, 5),
+  //     new TileRange(38, 16, 39, 17, 5),
+  //     new TileRange(38, 17, 39, 18, 5),
+  //     new TileRange(39, 16, 40, 17, 5),
+  //   ];
+  //
+  //   expect(tileRanges).toEqual(expect.arrayContaining(expectedTileRanges));
+  // });
+
+  it('Should return a list of tiles for polygon in a specific zoom', () => {
+    // Polygon looks like a house
+    const polygon = new Polygon([
+      new Point(-90, -90),
+      new Point(90, -90),
+      new Point(90, 0),
+      new Point(0, 45),
+      new Point(-90, 0),
+      new Point(-90, -90),
+    ]);
+    const tileRanges = geometryToTiles(polygon, 2);
+    const expectedTiles = [
+      new Tile(2, 1, 2, 1),
+      new Tile(3, 1, 2, 1),
+      new Tile(4, 1, 2, 1),
+      new Tile(5, 1, 2, 1),
+      new Tile(2, 2, 2, 1),
+      new Tile(3, 2, 2, 1),
+      new Tile(4, 2, 2, 1),
+      new Tile(5, 2, 2, 1),
+      new Tile(2, 3, 2, 1),
+      new Tile(3, 3, 2, 1),
+      new Tile(4, 3, 2, 1),
+      new Tile(5, 3, 2, 1),
+    ];
+
+    const tiles = tileRanges.flatMap(tileRange => tileRange.tiles());
+    expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
+  });
+
+  it('should take minimal zoom even if the polygon is small', () => {
+    const polygon = new Polygon([
+      new Point(34.80117503043931, 31.72186022095839),
+      new Point(34.72650598377592, 31.687080518522365),
+      new Point(34.73943749465019, 31.660099528252445),
+      new Point(34.75654046064636, 31.660454592172286),
+      new Point(34.77239199010512, 31.679626028688716),
+      new Point(34.75278615103656, 31.685305694287223),
+      new Point(34.77197484459302, 31.690630065179775),
+      new Point(34.77239199010512, 31.69985825112292),
+      new Point(34.80117503043931, 31.72186022095839),
+    ]);
+    // Polygon bounding box is smaller than the minimal zoom (in this example this bounding box
+    // size match zoom 11,but we ask here to parse in zoom 10, so we need to make sure to take the smallest of the two.
+    const tileRanges = geometryToTiles(polygon, 10);
+    expect(tileRanges.length).toEqual(1);
+  });
+
+  it('Should return a list of tiles for polygon in a specific zoom', () => {
+    // Polygon looks like a house
+    const polygon = new Polygon([
+      new Point(34.80117503043931, 31.72186022095839),
+      new Point(34.72650598377592, 31.687080518522365),
+      new Point(34.73943749465019, 31.660099528252445),
+      new Point(34.75654046064636, 31.660454592172286),
+      new Point(34.77239199010512, 31.679626028688716),
+      new Point(34.75278615103656, 31.685305694287223),
+      new Point(34.77197484459302, 31.690630065179775),
+      new Point(34.77239199010512, 31.69985825112292),
+      new Point(34.80117503043931, 31.72186022095839),
+    ]);
+    const tileRanges = geometryToTiles(polygon, 18);
+
+    expect(tileRanges.length).toEqual(807);
   });
 });
