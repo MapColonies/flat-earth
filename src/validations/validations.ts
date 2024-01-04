@@ -1,7 +1,7 @@
-import {SCALE_FACTOR} from './tiles_constants';
+import {SCALE_FACTOR} from '../tiles/tiles_constants';
 
 import {Zoom} from '../types';
-import {ScaleSet, Tile, TileGrid} from './tiles_classes';
+import {ScaleSet, Tile, TileGrid} from '../tiles/tiles_classes';
 import {BoundingBox, GeoPoint} from '../classes';
 
 /**

@@ -9,7 +9,7 @@ import {
   validateTileByGrid,
   validateTileGrid,
   validateZoomByGrid,
-} from './validations';
+} from '../validations/validations';
 import {geometryToBoundingBox} from '../converters/geometry_converters';
 import {
   boundingBoxToTurfBbox,
