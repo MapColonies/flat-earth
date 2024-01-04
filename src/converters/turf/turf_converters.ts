@@ -19,8 +19,8 @@ export function geometryToTurfBbox(geometry: Geometry) {
 }
 
 /**
- * Converts a {@link Geometry} to a {@link turf Feature}
- * In case of a {@BoundingBox} it will return a {@link turf Polygon}
+ * Converts a {@link Geometry} to a {@link Feature}
+ * In case of a {@link BoundingBox} it will return a {@link turfPolygon}
  * @param geometry
  */
 export function convertGeometryToTurfGeometry(

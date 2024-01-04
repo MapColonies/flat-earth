@@ -17,7 +17,8 @@
     "fix": "gts fix",
     "prepare": "npm run compile",
     "pretest": "npm run compile",
-    "posttest": "npm run lint"
+    "posttest": "npm run lint",
+    "docs": "npx typedoc --entryPointStrategy expand ./src"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",
