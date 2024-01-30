@@ -9,7 +9,7 @@ import {
   validateTileByGrid,
   validateTileGrid,
   validateZoomByGrid,
-} from './validations';
+} from '../validations/validations';
 import {geometryToBoundingBox} from '../converters/geometry_converters';
 import {
   boundingBoxToTurfBbox,
@@ -54,7 +54,7 @@ function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
 }
 
 /**
- * Transforms a longitude and latitude to a tile coordinate
+ * Transforms a longitude and latitude to a tile coordinates
  * @param lonlat the longitude and latitude
  * @param zoom the zoom level
  * @param metatile the size of a metatile
@@ -282,18 +282,8 @@ export function expandBBoxToTileGrid(
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): BoundingBox {
-  const minPoint = snapPointToGrid(
-    boundingBox.min,
-    zoom,
-    false,
-    referenceTileGrid
-  );
-  const maxPoint = snapPointToGrid(
-    boundingBox.max,
-    zoom,
-    true,
-    referenceTileGrid
-  );
+  const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
+  const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
 
   return new BoundingBox(
     minPoint.lon,
@@ -303,25 +293,28 @@ export function expandBBoxToTileGrid(
   );
 }
 
-function snapPointToGrid(
+function snapMinPointToGrid(
   point: GeoPoint,
   zoom: Zoom,
-  isMax: boolean,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): GeoPoint {
   const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const minLon = Math.floor(point.lon / width) * width;
   const height = tileProjectedHeight(zoom, referenceTileGrid);
-  let lon, lat;
+  const minLat = Math.floor(point.lat / height) * height;
+  return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
+}
 
-  if (isMax) {
-    lon = Math.ceil(point.lon / width) * width;
-    lat = Math.ceil(point.lat / height) * height;
-  } else {
-    lon = Math.floor(point.lon / width) * width;
-    lat = Math.floor(point.lat / height) * height;
-  }
-
-  return new GeoPoint(avoidNegativeZero(lon), avoidNegativeZero(lat));
+function snapMaxPointToGrid(
+  point: GeoPoint,
+  zoom: Zoom,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): GeoPoint {
+  const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const maxLon = Math.ceil(point.lon / width) * width;
+  const height = tileProjectedHeight(zoom, referenceTileGrid);
+  const maxLat = Math.ceil(point.lat / height) * height;
+  return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
 }
 
 function avoidNegativeZero(value: number): number {
