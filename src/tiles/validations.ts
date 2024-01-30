@@ -2,7 +2,7 @@ import {SCALE_FACTOR} from './tiles_constants';
 
 import {Zoom} from '../types';
 import {ScaleSet, Tile, TileGrid} from './tiles_classes';
-import {BoundingBox, LonLat} from '../classes';
+import {BoundingBox, GeoPoint} from '../classes';
 
 /**
  * Validates that the input `scaleSet` is valid
@@ -35,22 +35,22 @@ export function validateTileGrid(tileGrid: TileGrid): void {
 
   if (tileGrid.numberOfMinLevelTilesX < 1) {
     throw new Error(
-      'number of tiles on the x axis of a tile grid at the min zoom level must be at lmax.lon 1'
+      'number of tiles on the x axis of a tile grid at the min zoom level must be at least 1'
     );
   }
 
   if (tileGrid.numberOfMinLevelTilesY < 1) {
     throw new Error(
-      'number of tiles on the y axis of a tile grid at the min zoom level must be at lmax.lon 1'
+      'number of tiles on the y axis of a tile grid at the min zoom level must be at least 1'
     );
   }
 
   if (tileGrid.tileWidth < 1) {
-    throw new Error('tile width of a tile grid must be at lmax.lon 1');
+    throw new Error('tile width of a tile grid must be at least 1');
   }
 
   if (tileGrid.tileHeight < 1) {
-    throw new Error('tile height of a tile grid must be at lmax.lon 1');
+    throw new Error('tile height of a tile grid must be at least 1');
   }
 }
 
@@ -73,40 +73,40 @@ export function validateBoundingBox(bbox: BoundingBox): void {
  * @param bbox the bounding box to validate
  * @param referenceTileGrid the tile grid to validate the `bbox` against its own bounding box
  */
-export function validateTileGridBoundingBox(
+export function validateBboxByGrid(
   bbox: BoundingBox,
   referenceTileGrid: TileGrid
 ): void {
   validateBoundingBox(bbox);
 
-  validateLonlat({lon: bbox.min.lon, lat: bbox.min.lat}, referenceTileGrid);
-  validateLonlat({lon: bbox.max.lon, lat: bbox.max.lat}, referenceTileGrid);
+  validateGeoPoint(bbox.min, referenceTileGrid);
+  validateGeoPoint(bbox.max, referenceTileGrid);
 }
 
 /**
- * Validates that the input `lonlat` is valid
- * @param lonlat the longtitude and latitudes to validate
- * @param referenceTileGrid the tile grid to validate the `lonlat` against
+ * Validates that the input `geoPoint` is valid
+ * @param geoPoint the longtitude and latitudes to validate
+ * @param referenceTileGrid the tile grid to validate the `geoPoint` against
  */
-export function validateLonlat(
-  lonlat: LonLat,
+export function validateGeoPoint(
+  geoPoint: GeoPoint,
   referenceTileGrid: TileGrid
 ): void {
   if (
-    lonlat.lon < referenceTileGrid.boundingBox.min.lon ||
-    lonlat.lon > referenceTileGrid.boundingBox.max.lon
+    geoPoint.lon < referenceTileGrid.boundingBox.min.lon ||
+    geoPoint.lon > referenceTileGrid.boundingBox.max.lon
   ) {
     throw new RangeError(
-      `longtitude ${lonlat.lon} is out of range of tile grid's bounding box`
+      `longitude ${geoPoint.lon} is out of range of tile grid's bounding box`
     );
   }
 
   if (
-    lonlat.lat < referenceTileGrid.boundingBox.min.lat ||
-    lonlat.lat > referenceTileGrid.boundingBox.max.lat
+    geoPoint.lat < referenceTileGrid.boundingBox.min.lat ||
+    geoPoint.lat > referenceTileGrid.boundingBox.max.lat
   ) {
     throw new RangeError(
-      `latitude ${lonlat.lat} is out of range of tile grid's bounding box`
+      `latitude ${geoPoint.lat} is out of range of tile grid's bounding box`
     );
   }
 }
@@ -116,7 +116,7 @@ export function validateLonlat(
  * @param zoom the zoom level to validate
  * @param referenceTileGrid the tile grid to validate the `zoom` against
  */
-export function validateZoomLevel(
+export function validateZoomByGrid(
   zoom: Zoom,
   referenceTileGrid: TileGrid
 ): void {
@@ -130,8 +130,11 @@ export function validateZoomLevel(
  * @param tile the tile to validate
  * @param referenceTileGrid the tile grid to validate the `tile` against
  */
-export function validateTile(tile: Tile, referenceTileGrid: TileGrid): void {
-  validateZoomLevel(tile.z, referenceTileGrid);
+export function validateTileByGrid(
+  tile: Tile,
+  referenceTileGrid: TileGrid
+): void {
+  validateZoomByGrid(tile.z, referenceTileGrid);
   if (tile.metatile !== undefined) {
     validateMetatile(tile.metatile);
   }

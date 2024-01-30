@@ -97,3 +97,37 @@ export class TileGrid {
     this.keywords = keywords;
   }
 }
+
+export class TileRange {
+  constructor(
+    public minX: number,
+    public minY: number,
+    public maxX: number,
+    public maxY: number,
+    public zoom: number,
+    public metatile = 1
+  ) {}
+
+  *tileGenerator() {
+    for (let y = this.minY; y <= this.maxY; y++) {
+      for (let x = this.minX; x <= this.maxX; x++) {
+        yield new Tile(x, y, this.zoom, this.metatile);
+      }
+    }
+  }
+
+  tiles(): Tile[] {
+    const tilesGenerator = this.tileGenerator();
+    const tiles = [];
+    for (const tile of tilesGenerator) {
+      tiles.push(tile);
+    }
+    return tiles;
+  }
+}
+
+export enum TileIntersectionType {
+  FULL = 'FULL',
+  PARTIAL = 'PARTIAL',
+  NONE = 'NONE',
+}

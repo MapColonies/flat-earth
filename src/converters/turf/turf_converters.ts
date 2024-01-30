@@ -9,7 +9,7 @@ import {
   Feature,
   LineString,
   GeoJsonProperties,
-  Polygon as GeoJsonPolygon,
+  Polygon as TurfPolygon,
 } from 'geojson';
 import {boundingBoxToPolygon} from '../geometry_converters';
 
@@ -25,24 +25,12 @@ export function geometryToTurfBbox(geometry: Geometry) {
  */
 export function convertGeometryToTurfGeometry(
   geometry: Geometry
-):
-  | Feature<LineString, GeoJsonProperties>
-  | Feature<GeoJsonPolygon, GeoJsonProperties> {
+): Feature<LineString | TurfPolygon, GeoJsonProperties> {
   switch (geometry.type) {
     case 'Polygon':
-      return turfPolygon([
-        (geometry as Polygon).points.map(point => [
-          point.coordinates.lon,
-          point.coordinates.lat,
-        ]),
-      ]);
+      return polygonToTurfPolygon(geometry as Polygon);
     case 'Line':
-      return turfLineString(
-        (geometry as Line).points.map(point => [
-          point.coordinates.lon,
-          point.coordinates.lat,
-        ])
-      );
+      return lineToTurfLine(geometry as Line);
     case 'BoundingBox':
       // in case of a bounding box we convert it to a polygon and will use one recursion
       return convertGeometryToTurfGeometry(
@@ -53,4 +41,26 @@ export function convertGeometryToTurfGeometry(
         'Cant convert geometry to turf geometry, geometry not supported'
       );
   }
+}
+
+export function polygonToTurfPolygon(
+  polygon: Polygon
+): Feature<TurfPolygon, GeoJsonProperties> {
+  return turfPolygon([
+    polygon.points.map(point => [point.coordinates.lon, point.coordinates.lat]),
+  ]);
+}
+
+export function lineToTurfLine(
+  line: Line
+): Feature<LineString, GeoJsonProperties> {
+  return turfLineString(
+    line.points.map(point => [point.coordinates.lon, point.coordinates.lat])
+  );
+}
+
+export function boundingBoxToTurfBbox(
+  boundingBox: BoundingBox
+): Feature<TurfPolygon, GeoJsonProperties> {
+  return polygonToTurfPolygon(boundingBoxToPolygon(boundingBox));
 }
