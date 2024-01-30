@@ -9,5 +9,4 @@
 /node_modules/
 /.idea/
 /build/
-```
-/flat-earth-1.0.0.tgz
+/*.tgz

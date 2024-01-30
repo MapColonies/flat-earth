@@ -40,7 +40,7 @@ export const CRS_3857: CoordinateReferenceSystem =
  */
 export const ELLIPSOID_WGS84: Ellipsoid = new Ellipsoid(
   'WGS 84',
-  6378137, //TODO: fix semiMajorAxis
+  6378137,
   298.257223563
 );
 
@@ -73,6 +73,10 @@ export const SCALESET_GOOGLE_CRS84_QUAD: ScaleSet = new ScaleSet(
     [18, 2132.729583849784],
     [19, 1066.364791924892],
     [20, 533.182395962446],
+    [21, 266.591197981223],
+    [22, 133.2955989906115],
+    [23, 66.64779949530575],
+    [24, 33.323899747652874],
   ])
 );
 
@@ -142,6 +146,10 @@ export const SCALESET_GOOGLE_CRS84_QUAD_MODIFIED: ScaleSet = new ScaleSet(
     [18, 1066.364791924892],
     [19, 533.182395962446],
     [20, 266.591197981223],
+    [21, 133.2955989906115],
+    [22, 66.64779949530575],
+    [23, 33.323899747652874],
+    [24, 16.661949873826437],
   ])
 );
 

@@ -1,14 +1,14 @@
 import {SCALE_FACTOR, TILEGRID_WORLD_CRS84} from './tiles_constants';
-import {BoundingBox, Geometry, LonLat, Polygon} from '../classes';
+import {BoundingBox, Geometry, GeoPoint, Polygon} from '../classes';
 import {Tile, TileGrid, TileIntersectionType, TileRange} from './tiles_classes';
 import {Zoom} from '../types';
 import {
-  validateLonlat,
+  validateBboxByGrid,
+  validateGeoPoint,
   validateMetatile,
-  validateTile,
+  validateTileByGrid,
   validateTileGrid,
-  validateTileGridBoundingBox,
-  validateZoomLevel,
+  validateZoomByGrid,
 } from '../validations/validations';
 import {geometryToBoundingBox} from '../converters/geometry_converters';
 import {
@@ -16,6 +16,7 @@ import {
   polygonToTurfPolygon,
 } from '../converters/turf/turf_converters';
 import {area as turfArea, featureCollection, intersect} from '@turf/turf';
+import {isEdgeOfMap} from './tile_grids';
 
 function clampValues(
   value: number,
@@ -61,7 +62,7 @@ function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  */
 function geoCoordsToTile(
-  lonlat: LonLat,
+  lonlat: GeoPoint,
   zoom: Zoom,
   metatile = 1,
   reverseIntersectionPolicy: boolean,
@@ -73,9 +74,9 @@ function geoCoordsToTile(
   const tileX = (lonlat.lon - referenceTileGrid.boundingBox.min.lon) / width;
   const tileY = (referenceTileGrid.boundingBox.max.lat - lonlat.lat) / height;
 
-  // When explicitly asked to reverse the intersection policy, (location on the edge of the tile)
+  // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
   // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  if (reverseIntersectionPolicy || edgeOfMap(lonlat, referenceTileGrid)) {
+  if (reverseIntersectionPolicy || isEdgeOfMap(lonlat, referenceTileGrid)) {
     const x = Math.ceil(tileX) - 1;
     const y = Math.ceil(tileY) - 1;
     return new Tile(x, y, zoom, metatile);
@@ -84,18 +85,6 @@ function geoCoordsToTile(
     const y = Math.floor(tileY);
     return new Tile(x, y, zoom, metatile);
   }
-}
-
-/**
- * Check if the given location is on the edge of the tile grid
- * @param lonlat
- * @param referenceTileGrid
- */
-function edgeOfMap(lonlat: LonLat, referenceTileGrid: TileGrid): boolean {
-  return (
-    lonlat.lon === referenceTileGrid.boundingBox.max.lon ||
-    lonlat.lat === referenceTileGrid.boundingBox.min.lat
-  );
 }
 
 /**
@@ -114,18 +103,18 @@ export function boundingBoxToTileRange(
 ): TileRange {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
-  validateTileGridBoundingBox(bbox, referenceTileGrid);
-  validateZoomLevel(zoom, referenceTileGrid);
+  validateBboxByGrid(bbox, referenceTileGrid);
+  validateZoomByGrid(zoom, referenceTileGrid);
 
   const firstTile = geoCoordsToTile(
-    new LonLat(bbox.min.lon, bbox.max.lat),
+    new GeoPoint(bbox.min.lon, bbox.max.lat),
     zoom,
     metatile,
     false,
     referenceTileGrid
   );
   const lastTile = geoCoordsToTile(
-    new LonLat(bbox.max.lon, bbox.min.lat),
+    new GeoPoint(bbox.max.lon, bbox.min.lat),
     zoom,
     metatile,
     true,
@@ -157,7 +146,7 @@ export function zoomShift(
 ): Zoom {
   validateTileGrid(referenceTileGrid);
   validateTileGrid(targetTileGrid);
-  validateZoomLevel(zoom, referenceTileGrid);
+  validateZoomByGrid(zoom, referenceTileGrid);
 
   const scale = referenceTileGrid.wellKnownScaleSet.scaleDenominators.get(zoom);
   if (scale === undefined) {
@@ -190,15 +179,15 @@ export function zoomShift(
  * @returns tile within the tile grid by the input values of `lonlat` and `zoom`
  */
 export function lonLatZoomToTile(
-  lonlat: LonLat,
+  lonlat: GeoPoint,
   zoom: Zoom,
   metatile = 1,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): Tile {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
-  validateZoomLevel(zoom, referenceTileGrid);
-  validateLonlat(lonlat, referenceTileGrid);
+  validateZoomByGrid(zoom, referenceTileGrid);
+  validateGeoPoint(lonlat, referenceTileGrid);
 
   return geoCoordsToTile(lonlat, zoom, metatile, false, referenceTileGrid);
 }
@@ -216,7 +205,7 @@ export function tileToBoundingBox(
   clamp = false
 ): BoundingBox {
   validateTileGrid(referenceTileGrid);
-  validateTile(tile, referenceTileGrid);
+  validateTileByGrid(tile, referenceTileGrid);
   const metatile = tile.metatile ?? 1;
 
   const width = tileProjectedWidth(tile.z, referenceTileGrid) * metatile;
@@ -260,8 +249,8 @@ export function tileToBoundingBox(
 }
 
 /**
- * converts tile to tile range in a higher zoom level
- * This method will help finding what tiles are needed to cover a given tile at a different zoom level
+ * Converts tile to tile range in a higher zoom level
+ * This method will help find what tiles are needed to cover a given tile at a different zoom level
  * @param tile
  * @param zoom target tile range zoom
  * @returns the first tile of the tile range and the last tile of the tile range
@@ -305,27 +294,27 @@ export function expandBBoxToTileGrid(
 }
 
 function snapMinPointToGrid(
-  point: LonLat,
+  point: GeoPoint,
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): LonLat {
+): GeoPoint {
   const width = tileProjectedWidth(zoom, referenceTileGrid);
   const minLon = Math.floor(point.lon / width) * width;
   const height = tileProjectedHeight(zoom, referenceTileGrid);
   const minLat = Math.floor(point.lat / height) * height;
-  return new LonLat(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
+  return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
 }
 
 function snapMaxPointToGrid(
-  point: LonLat,
+  point: GeoPoint,
   zoom: Zoom,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): LonLat {
+): GeoPoint {
   const width = tileProjectedWidth(zoom, referenceTileGrid);
   const maxLon = Math.ceil(point.lon / width) * width;
   const height = tileProjectedHeight(zoom, referenceTileGrid);
   const maxLat = Math.ceil(point.lat / height) * height;
-  return new LonLat(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
+  return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
 }
 
 function avoidNegativeZero(value: number): number {

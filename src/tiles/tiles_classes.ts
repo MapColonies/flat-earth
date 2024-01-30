@@ -99,33 +99,16 @@ export class TileGrid {
 }
 
 export class TileRange {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  zoom: number;
-  metatile: number;
   constructor(
-    minX: number,
-    minY: number,
-    maxX: number,
-    maxY: number,
-    zoom: number,
-    metatile = 1
-  ) {
-    this.minX = minX;
-    this.minY = minY;
-    this.maxX = maxX;
-    this.maxY = maxY;
-    this.zoom = zoom;
-    this.metatile = metatile;
-  }
+    public minX: number,
+    public minY: number,
+    public maxX: number,
+    public maxY: number,
+    public zoom: number,
+    public metatile = 1
+  ) {}
 
   *tileGenerator() {
-    if (this.minX === this.maxX && this.minY === this.maxY) {
-      yield new Tile(this.minX, this.minY, this.zoom, this.metatile);
-      return;
-    }
     for (let y = this.minY; y <= this.maxY; y++) {
       for (let x = this.minX; x <= this.maxX; x++) {
         yield new Tile(x, y, this.zoom, this.metatile);
