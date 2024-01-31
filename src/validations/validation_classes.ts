@@ -1,15 +1,11 @@
 export class ValidationResult {
-  isValid: boolean;
-  issues?: ValidationIssue[];
 
-  constructor(isValid: boolean, issues?: ValidationIssue[]) {
-    this.isValid = isValid;
-    this.issues = issues;
+  public constructor(public isValid: boolean, public issues?: ValidationIssue[]) {
   }
 }
 
 export class ValidationIssue {
-  constructor(
+  public constructor(
     public message: string,
     public validationIssueType: ValidationIssueType,
     public from: number = 0,
@@ -18,17 +14,17 @@ export class ValidationIssue {
 }
 
 export enum ValidationSeverity {
-  Error,
-  Warning,
-  Info,
+  ERROR,
+  WARNING,
+  INFO,
 }
 
 export enum ValidationIssueType {
-  GeoJsonInvalid,
-  GeoJsonNotEnoughCoordinates,
-  GeoJsonSelfIntersect,
-  GeoJsonNotClosed,
-  GeoJsonInvalidType,
-  GeoJsonNotInGrid,
-  GeoJsonTooManyCoordinates,
+  GEOJSON_INVALID,
+  GEOJSON_NOT_ENOUGH_COORDINATES,
+  GEOJSON_SELF_INTERSECT,
+  GEOJSON_NOT_CLOSED,
+  GEOJSON_INVALID_TYPE,
+  GEOJSON_NOT_IN_GRID,
+  GEOJSON_TOO_MANY_COORDINATES,
 }

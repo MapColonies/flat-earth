@@ -1,5 +1,5 @@
-import {BoundingBox, Geometry, Point, Polygon} from '../classes';
-import {geometryToTurfBbox} from './turf/turf_converters';
+import { BoundingBox, Geometry, Point, Polygon } from '../classes';
+import { geometryToTurfBbox } from './turf/turf_converters';
 
 /**
  * Calculates the bounding box of a geometry
@@ -14,12 +14,7 @@ export function geometryToBoundingBox(geometry: Geometry): BoundingBox {
     case 'Polygon':
     case 'Line': {
       const bboxResult = geometryToTurfBbox(geometry);
-      return new BoundingBox(
-        bboxResult[0],
-        bboxResult[1],
-        bboxResult[2],
-        bboxResult[3]
-      );
+      return new BoundingBox(bboxResult[0], bboxResult[1], bboxResult[2], bboxResult[3]);
     }
     default:
       throw new Error('Geometry not supported');

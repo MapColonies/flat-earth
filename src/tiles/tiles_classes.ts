@@ -1,5 +1,5 @@
-import {BoundingBox} from '../classes';
-import {Zoom} from '../types';
+import { BoundingBox } from '../classes';
+import { Zoom } from '../types';
 
 /**
  * An interface for a well known scale set. {link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#56|OGC spec}

@@ -1,9 +1,7 @@
-import {Latitude, Longitude} from './types';
+import { Latitude, Longitude } from './types';
 
 export abstract class Geometry {
-  type: string;
-  protected constructor(type: string) {
-    this.type = type;
+  protected constructor(public type: string) {
   }
 }
 
@@ -13,47 +11,40 @@ export abstract class Geometry {
  * Points must be ordered counterclockwise.
  */
 export class Polygon extends Geometry {
-  constructor(public points: Array<Point> = []) {
+  public constructor(public points: Point[] = []) {
     super('Polygon');
-    this.points = points;
   }
 }
 
 export class Line extends Geometry {
-  constructor(public points: Array<Point> = []) {
+  public constructor(public points: Point[] = []) {
     super('Line');
-    this.points = points;
   }
 }
 
 export class Point extends Geometry {
-  coordinates: GeoPoint;
-  constructor(
-    public lon: number,
-    public lat: number
+  public coordinates: GeoPoint;
+  public constructor(
+    lon: number,
+    lat: number
   ) {
     super('Point');
-    this.coordinates = {lon, lat};
+    this.coordinates = { lon, lat };
   }
 }
 
 export class BoundingBox extends Geometry {
-  min: GeoPoint;
-  max: GeoPoint;
-  constructor(
-    minLon: Longitude,
-    minLat: Latitude,
-    maxLon: Longitude,
-    maxLat: Latitude
-  ) {
+  public min: GeoPoint;
+  public max: GeoPoint;
+  public constructor(minLon: Longitude, minLat: Latitude, maxLon: Longitude, maxLat: Latitude) {
     super('BoundingBox');
-    this.min = {lon: minLon, lat: minLat};
-    this.max = {lon: maxLon, lat: maxLat};
+    this.min = { lon: minLon, lat: minLat };
+    this.max = { lon: maxLon, lat: maxLat };
   }
 }
 
 export class GeoPoint {
-  constructor(
+  public constructor(
     public lon: Longitude,
     public lat: Latitude
   ) {}

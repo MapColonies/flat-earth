@@ -1,13 +1,8 @@
-import {
-  area as turfArea,
-  booleanEqual,
-  distance as turfDistance,
-  point,
-} from '@turf/turf';
-import {Geometry, Point, Polygon} from '../classes';
-import {Geodesic} from 'geographiclib-geodesic';
-import {convertGeometryToTurfGeometry} from '../converters/turf/turf_converters';
-import {geometryToBoundingBox} from '../converters/geometry_converters';
+import { area as turfArea, booleanEqual, distance as turfDistance, point } from '@turf/turf';
+import { Geometry, Point, Polygon } from '../classes';
+import { Geodesic } from 'geographiclib-geodesic';
+import { convertGeometryToTurfGeometry } from '../converters/turf/turf_converters';
+import { geometryToBoundingBox } from '../converters/geometry_converters';
 
 const geod = Geodesic.WGS84;
 
@@ -28,7 +23,7 @@ export function area(polygon: Polygon) {
 export function distance(from: Point, to: Point): number {
   const turfForm = point([from.coordinates.lon, from.coordinates.lat]);
   const turfTo = point([to.coordinates.lon, to.coordinates.lat]);
-  return turfDistance(turfForm, turfTo, {units: 'meters'});
+  return turfDistance(turfForm, turfTo, { units: 'meters' });
 }
 
 /**
@@ -40,12 +35,7 @@ export function distance(from: Point, to: Point): number {
  * @returns {number} distance in meters
  */
 export function geodesicDistance(from: Point, to: Point): number | undefined {
-  const r = geod.Inverse(
-    from.coordinates.lat,
-    from.coordinates.lon,
-    to.coordinates.lat,
-    to.coordinates.lon
-  );
+  const r = geod.Inverse(from.coordinates.lat, from.coordinates.lon, to.coordinates.lat, to.coordinates.lon);
   return r.s12;
 }
 
