@@ -11,3 +11,5 @@
 /build/
 /*.tgz
 dist
+coverage
+reports
