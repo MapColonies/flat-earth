@@ -10,11 +10,10 @@
   "license": "Apache-2.0",
   "keywords": [],
   "scripts": {
-    "test": "jest",
     "compile": "tsc",
     "prepublish": "npm run compile",
-    "pretest": "npm run compile",
-    "posttest": "npm run lint",
+    "pretest": "npm run lint",
+    "test": "jest -c test/jest.config.js",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "prelint:fix": "npm run format:fix",

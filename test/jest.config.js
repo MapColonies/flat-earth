@@ -5,16 +5,9 @@ module.exports = {
   testMatch: ['<rootDir>/test/**/*.test.ts'],
   coverageReporters: ['text', 'html'],
   collectCoverage: true,
-  collectCoverageFrom: [
-    '<rootDir>/src/**/*.ts',
-    '!*/node_modules/',
-    '!/vendor/**',
-  ],
+  collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**'],
   coverageDirectory: '<rootDir>/coverage',
-  reporters: [
-    'default',
-    ['jest-html-reporters', { publicPath: './reports' }],
-  ],
+  reporters: ['default', ['jest-html-reporters', { publicPath: './reports' }]],
   rootDir: '..',
   preset: 'ts-jest',
   testEnvironment: 'node',
