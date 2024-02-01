@@ -7,11 +7,11 @@ import {
   tileToBoundingBox,
   tileToTileRange,
   zoomShift,
-} from '../src/tiles/tiles';
-import { CRS_CRS84, SCALESET_GOOGLE_CRS84_QUAD_MODIFIED, TILEGRID_WEB_MERCATOR, TILEGRID_WORLD_CRS84 } from '../src/tiles/tiles_constants';
-import { BoundingBox, GeoPoint, Point, Polygon } from '../src/classes';
-import { Tile, TileGrid, TileRange } from '../src/tiles/tiles_classes';
-import { Zoom } from '../src/types';
+} from '../../src/tiles/tiles';
+import { CRS_CRS84, SCALESET_GOOGLE_CRS84_QUAD_MODIFIED, TILEGRID_WEB_MERCATOR, TILEGRID_WORLD_CRS84 } from '../../src/tiles/tiles_constants';
+import { BoundingBox, GeoPoint, Point, Polygon } from '../../src/classes';
+import { Tile, TileGrid, TileRange } from '../../src/tiles/tiles_classes';
+import { Zoom } from '../../src/types';
 
 const tileGridTests = [
   {
