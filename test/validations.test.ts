@@ -230,7 +230,7 @@ describe('Validations', () => {
       ]);
       expect(result).toEqual(expected);
     });
-    
+
     it('Should validate a geojson MultiPolygon is inside the grid', () => {
       const geojson = {
         type: 'MultiPolygon',
@@ -259,7 +259,7 @@ describe('Validations', () => {
       const expected = new ValidationResult(true);
       expect(result).toEqual(expected);
     });
-    
+
     it('Should validate a geojson MultiPolygon is not inside the grid', () => {
       const geojson = {
         type: 'MultiPolygon',

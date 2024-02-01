@@ -5,12 +5,10 @@ import { Zoom } from '../types';
  * An interface for a well known scale set. {link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#56|OGC spec}
  */
 export class ScaleSet {
-  identifier: string;
-  scaleDenominators: Map<Zoom, number>;
-  constructor(identifier: string, scaleDenominators: Map<Zoom, number>) {
-    this.identifier = identifier;
-    this.scaleDenominators = scaleDenominators;
-  }
+  public constructor(
+    public identifier: string,
+    public scaleDenominators: Map<Zoom, number>
+  ) {}
 }
 
 /**
@@ -18,88 +16,56 @@ export class ScaleSet {
  */
 export class CoordinateReferenceSystem {
   // partially implemented, currently unused
-  identifier: string;
-  name: string;
-  constructor(identifier: string, name: string) {
-    this.identifier = identifier;
-    this.name = name;
-  }
+  public constructor(
+    public identifier: string,
+    public name: string
+  ) {}
 }
 
 /**
  * An interface for an oblate ellipsoid
  */
 export class Ellipsoid {
-  name: string;
-  semiMajorAxis: number;
-  inverseFlattening: number;
-  constructor(name: string, semiMajorAxis: number, inverseFlattening: number) {
-    this.name = name;
-    this.semiMajorAxis = semiMajorAxis;
-    this.inverseFlattening = inverseFlattening;
-  }
+  public constructor(
+    public name: string,
+    public semiMajorAxis: number,
+    public inverseFlattening: number
+  ) {}
 }
 
 /**
  * An interface for a tile that supports a metatile definition
  */
 export class Tile {
-  x: number;
-  y: number;
-  z: number;
-  metatile?: number;
-  constructor(x: number, y: number, z: number, metatile?: number) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.metatile = metatile;
-  }
+  public constructor(
+    public x: number,
+    public y: number,
+    public z: number,
+    public metatile?: number
+  ) {}
 }
 
 /**
  * A class for a two-dimensional tile grid. See `TileMatrixSet2D` in {@link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#15|OGC spec}
  */
 export class TileGrid {
-  identifier: string;
-  title: string;
-  abstract?: string;
-  keywords?: string;
-  boundingBox: BoundingBox;
-  supportedCRS: CoordinateReferenceSystem; // Currently unused
-  wellKnownScaleSet: ScaleSet; // Currently at least one must be given
-  numberOfMinLevelTilesX: number;
-  numberOfMinLevelTilesY: number;
-  tileWidth: number;
-  tileHeight: number;
-  constructor(
-    identifier: string,
-    title: string,
-    boundingBox: BoundingBox,
-    supportedCRS: CoordinateReferenceSystem,
-    wellKnownScaleSet: ScaleSet,
-    numberOfMinLevelTilesX: number,
-    numberOfMinLevelTilesY: number,
-    tileWidth: number,
-    tileHeight: number,
-    abstract?: string,
-    keywords?: string
-  ) {
-    this.identifier = identifier;
-    this.title = title;
-    this.boundingBox = boundingBox;
-    this.supportedCRS = supportedCRS;
-    this.wellKnownScaleSet = wellKnownScaleSet;
-    this.numberOfMinLevelTilesX = numberOfMinLevelTilesX;
-    this.numberOfMinLevelTilesY = numberOfMinLevelTilesY;
-    this.tileWidth = tileWidth;
-    this.tileHeight = tileHeight;
-    this.abstract = abstract;
-    this.keywords = keywords;
-  }
+  public constructor(
+    public identifier: string,
+    public title: string,
+    public boundingBox: BoundingBox,
+    public supportedCRS: CoordinateReferenceSystem,
+    public wellKnownScaleSet: ScaleSet,
+    public numberOfMinLevelTilesX: number,
+    public numberOfMinLevelTilesY: number,
+    public tileWidth: number,
+    public tileHeight: number,
+    public abstract?: string,
+    public keywords?: string
+  ) {}
 }
 
 export class TileRange {
-  constructor(
+  public constructor(
     public minX: number,
     public minY: number,
     public maxX: number,
@@ -108,7 +74,7 @@ export class TileRange {
     public metatile = 1
   ) {}
 
-  *tileGenerator() {
+  public *tileGenerator(): Generator<Tile, void, void> {
     for (let y = this.minY; y <= this.maxY; y++) {
       for (let x = this.minX; x <= this.maxX; x++) {
         yield new Tile(x, y, this.zoom, this.metatile);
@@ -116,7 +82,7 @@ export class TileRange {
     }
   }
 
-  tiles(): Tile[] {
+  public tiles(): Tile[] {
     const tilesGenerator = this.tileGenerator();
     const tiles = [];
     for (const tile of tilesGenerator) {

@@ -1,8 +1,7 @@
 import { Latitude, Longitude } from './types';
 
 export abstract class Geometry {
-  protected constructor(public type: string) {
-  }
+  protected constructor(public type: string) {}
 }
 
 /**
@@ -24,10 +23,7 @@ export class Line extends Geometry {
 
 export class Point extends Geometry {
   public coordinates: GeoPoint;
-  public constructor(
-    lon: number,
-    lat: number
-  ) {
+  public constructor(lon: number, lat: number) {
     super('Point');
     this.coordinates = { lon, lat };
   }

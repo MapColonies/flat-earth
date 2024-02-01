@@ -1,7 +1,8 @@
 export class ValidationResult {
-
-  public constructor(public isValid: boolean, public issues?: ValidationIssue[]) {
-  }
+  public constructor(
+    public isValid: boolean,
+    public issues?: ValidationIssue[]
+  ) {}
 }
 
 export class ValidationIssue {

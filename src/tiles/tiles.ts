@@ -41,6 +41,13 @@ function polygonToTiles(polygon: Polygon, zoom: Zoom, referenceTileGrid: TileGri
   return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
 }
 
+function avoidNegativeZero(value: number): number {
+  if (value === 0) {
+    return 0;
+  }
+  return value;
+}
+
 function polygonToTileRanges(polygon: Polygon, tileRange: TileRange, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   const tileRanges: TileRange[] = [];
   const partialTiles: Tile[] = [];
@@ -98,11 +105,7 @@ function geoCoordsToTile(
   }
 }
 
-function snapMinPointToGrid(
-  point: GeoPoint,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): GeoPoint {
+function snapMinPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
   const width = tileProjectedWidth(zoom, referenceTileGrid);
   const minLon = Math.floor(point.lon / width) * width;
   const height = tileProjectedHeight(zoom, referenceTileGrid);
@@ -110,11 +113,7 @@ function snapMinPointToGrid(
   return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
 }
 
-function snapMaxPointToGrid(
-  point: GeoPoint,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): GeoPoint {
+function snapMaxPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
   const width = tileProjectedWidth(zoom, referenceTileGrid);
   const maxLon = Math.ceil(point.lon / width) * width;
   const height = tileProjectedHeight(zoom, referenceTileGrid);
@@ -197,7 +196,7 @@ export function lonLatZoomToTile(lonlat: GeoPoint, zoom: Zoom, metatile = 1, ref
   validateZoomByGrid(zoom, referenceTileGrid);
   validateGeoPoint(lonlat, referenceTileGrid);
 
-  return geoCoordsToTile(lonlat, zoom, false,metatile, referenceTileGrid);
+  return geoCoordsToTile(lonlat, zoom, false, metatile, referenceTileGrid);
 }
 
 /**
@@ -248,11 +247,11 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
     throw new Error(`Target zoom level ${zoom} must be higher or equal to the tile's zoom level ${tile.z}`);
   }
   const dz = zoom - tile.z;
-  const scaleFactor = Math.pow(2, dz);
-  const minX = tile.x * scaleFactor;
-  const minY = tile.y * scaleFactor;
-  const maxX = (tile.x + 1) * scaleFactor - 1;
-  const maxY = (tile.y + 1) * scaleFactor - 1;
+  const scaleFactorBetweenTwoLevels = Math.pow(SCALE_FACTOR, dz);
+  const minX = tile.x * scaleFactorBetweenTwoLevels;
+  const minY = tile.y * scaleFactorBetweenTwoLevels;
+  const maxX = (tile.x + 1) * scaleFactorBetweenTwoLevels - 1;
+  const maxY = (tile.y + 1) * scaleFactorBetweenTwoLevels - 1;
   return new TileRange(minX, minY, maxX, maxY, zoom);
 }
 

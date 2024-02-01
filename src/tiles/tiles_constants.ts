@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
-import { CoordinateReferenceSystem, Ellipsoid, ScaleSet, TileGrid } from './tiles_classes';
 import { BoundingBox } from '../classes';
+import { CoordinateReferenceSystem, Ellipsoid, ScaleSet, TileGrid } from './tiles_classes';
 
 /**
  * Size of a pixel in meters
@@ -25,7 +25,7 @@ export const CRS_CRS84: CoordinateReferenceSystem = new CoordinateReferenceSyste
  */
 export const CRS_3857: CoordinateReferenceSystem = new CoordinateReferenceSystem(
   'http://www.opengis.net/def/crs/EPSG/0/3857',
-  'WGS 84 / Pseudo-Mercator',
+  'WGS 84 / Pseudo-Mercator'
 );
 
 /**

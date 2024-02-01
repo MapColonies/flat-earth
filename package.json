@@ -11,16 +11,16 @@
   "keywords": [],
   "scripts": {
     "test": "jest",
-    "clean": "gts clean",
     "compile": "tsc",
-    "fix": "gts fix",
     "prepublish": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "prelint:fix": "npm run format:fix",
-    "prelint": "npm run format"
+    "prelint": "npm run format",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix ."
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",

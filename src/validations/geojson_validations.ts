@@ -1,6 +1,6 @@
 import { check, HintError, HintIssue } from '@placemarkio/check-geojson';
 import { kinks } from '@turf/turf';
-import { Geometry,LineString,MultiLineString,Polygon, MultiPolygon, Feature, FeatureCollection } from 'geojson';
+import { Geometry, LineString, MultiLineString, Polygon, MultiPolygon, Feature, FeatureCollection } from 'geojson';
 import { TileGrid } from '../tiles/tiles_classes';
 import { TILEGRID_WORLD_CRS84 } from '../tiles/tiles_constants';
 import { GeoPoint } from '../classes';
@@ -104,7 +104,6 @@ function innerValidateNumberOfVertices(geometry: Geometry, numberOfVertices: num
   return new ValidationResult(true);
 }
 
-
 /**
  * Validates that the input `geojson` is valid based on the RFC 7946 GeoJSON specification
  * @param geojson the geojson to validate
@@ -153,7 +152,6 @@ export function validateGeoJsonSelfIntersect(geojson: string): ValidationResult 
   }
 }
 
-
 /**
  * Validates that the input `geojson` is on of the `types`
  * @param geojson
@@ -165,7 +163,7 @@ export function validateGeoJsonTypes(geojson: string, types: string[]): Validati
   }
 
   const geoJsonObject = JSON.parse(geojson) as FeatureCollection | Geometry;
-  
+
   if (geoJsonObject.type === 'FeatureCollection') {
     for (const feature of geoJsonObject.features) {
       const validationResult = innerValidateGeoJsonTypes(feature.geometry, types);
@@ -205,7 +203,7 @@ export function validateGeoJsonInGrid(geojson: string, tileGrid: TileGrid = TILE
  * @param geojson
  * @param numberOfVertices
  */
-export function validateNumberOfVertices(geojson: string, numberOfVertices: number): ValidationResult{
+export function validateNumberOfVertices(geojson: string, numberOfVertices: number): ValidationResult {
   const geoJsonObject = JSON.parse(geojson) as FeatureCollection | Geometry;
   if (geoJsonObject.type === 'FeatureCollection') {
     for (const feature of geoJsonObject.features) {

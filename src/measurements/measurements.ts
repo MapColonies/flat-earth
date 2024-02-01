@@ -1,12 +1,12 @@
 import { area as turfArea, booleanEqual, distance as turfDistance, point } from '@turf/turf';
-import { Geometry, Point, Polygon } from '../classes';
 import { Geodesic } from 'geographiclib-geodesic';
+import { Geometry, Point, Polygon } from '../classes';
 import { convertGeometryToTurfGeometry } from '../converters/turf/turf_converters';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
 
 const geod = Geodesic.WGS84;
 
-export function area(polygon: Polygon) {
+export function area(polygon: Polygon): number {
   const feature = convertGeometryToTurfGeometry(polygon);
   return turfArea(feature);
 }
@@ -44,7 +44,7 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * @param geometry1
  * @param geometry2
  */
-export function geometriesEqual(geometry1: Geometry, geometry2: Geometry) {
+export function geometriesEqual(geometry1: Geometry, geometry2: Geometry): boolean {
   const turfGeometry1 = convertGeometryToTurfGeometry(geometry1);
   const turfGeometry2 = convertGeometryToTurfGeometry(geometry2);
   return booleanEqual(turfGeometry1, turfGeometry2);
@@ -54,7 +54,7 @@ export function geometriesEqual(geometry1: Geometry, geometry2: Geometry) {
  * Check if a geometry covers it's bounding box
  * @param geometry
  */
-export function geometryCoversBoundingBox(geometry: Geometry) {
+export function geometryCoversBoundingBox(geometry: Geometry): boolean {
   const boundingBox = geometryToBoundingBox(geometry);
   return geometriesEqual(geometry, boundingBox);
 }
