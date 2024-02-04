@@ -1,3 +1,7 @@
 {
-  "extends": "./node_modules/gts/"
+  "ignorePatterns": ["**/*.js", "dist", "helm", "coverage", "reports", ".husky"],
+  "extends": ["@map-colonies/eslint-config/jest", "@map-colonies/eslint-config/ts-base"],
+  "parserOptions": {
+    "project": "./tsconfig.lint.json"
+  }
 }

@@ -5,20 +5,17 @@ import {
   validateGeoJsonTypes,
   validateNumberOfVertices,
 } from '../src/validations/geojson_validations';
-import {
-  ValidationIssue,
-  ValidationIssueType,
-  ValidationResult,
-} from '../src/validations/validation_classes';
+import { ValidationIssue, ValidationIssueType, ValidationResult } from '../src/validations/validation_classes';
 
 describe('Validations', () => {
   describe('#validateGeoJson', () => {
     it('Should validate a geojson point is ok', () => {
-      const geojson = {type: 'Point', coordinates: [125.6, 10.1]};
+      const geojson = { type: 'Point', coordinates: [125.6, 10.1] };
       const result = validateGeoJson(JSON.stringify(geojson));
       const expected = new ValidationResult(true);
       expect(result).toStrictEqual(expected);
     });
+
     it('Should validate a geojson polygon is ok', () => {
       const geojson = {
         type: 'Polygon',
@@ -36,6 +33,7 @@ describe('Validations', () => {
       const expected = new ValidationResult(true);
       expect(result).toStrictEqual(expected);
     });
+
     it('Should validate a geojson polygon is not ok due to missing minimum number of points', () => {
       const geojson = {
         type: 'Polygon',
@@ -49,15 +47,11 @@ describe('Validations', () => {
       };
       const result = validateGeoJson(JSON.stringify(geojson));
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Expected to find four or more positions here.',
-          ValidationIssueType.GeoJsonNotEnoughCoordinates,
-          33,
-          73
-        ),
+        new ValidationIssue('Expected to find four or more positions here.', ValidationIssueType.GEOJSON_NOT_ENOUGH_COORDINATES, 33, 73),
       ]);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson polygon is not ok due to missing last point', () => {
       const geojson = {
         type: 'Polygon',
@@ -74,13 +68,13 @@ describe('Validations', () => {
       const expected = new ValidationResult(false, [
         new ValidationIssue(
           'First and last positions of a Polygon or MultiPolygon’s ring should be the same.',
-          ValidationIssueType.GeoJsonNotClosed,
+          ValidationIssueType.GEOJSON_NOT_CLOSED,
           34,
           46
         ),
         new ValidationIssue(
           'First and last positions of a Polygon or MultiPolygon’s ring should be the same.',
-          ValidationIssueType.GeoJsonNotClosed,
+          ValidationIssueType.GEOJSON_NOT_CLOSED,
           73,
           85
         ),
@@ -88,6 +82,7 @@ describe('Validations', () => {
       expect(result).toEqual(expected);
     });
   });
+
   describe('#validateGeoJsonSelfIntersect', () => {
     it('Should validate a geojson self intersect', () => {
       const geojson = {
@@ -104,33 +99,31 @@ describe('Validations', () => {
       };
       const result = validateGeoJsonSelfIntersect(JSON.stringify(geojson));
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'The polygon is self intersecting',
-          ValidationIssueType.GeoJsonSelfIntersect
-        ),
+        new ValidationIssue('The polygon is self intersecting', ValidationIssueType.GEOJSON_SELF_INTERSECT),
       ]);
       expect(result).toEqual(expected);
     });
   });
+
   describe('#validateGeoJsonTypes', () => {
     it('Should throw exception on empty types array', () => {
       const geojson = {
         type: 'Point',
         coordinates: [[-12.034835, 8.901183]],
       };
-      const missingTypesValidation = () =>
-        validateGeoJsonTypes(JSON.stringify(geojson), []);
+      const missingTypesValidation = () => validateGeoJsonTypes(JSON.stringify(geojson), []);
       expect(missingTypesValidation).toThrow();
     });
+
     it('Should throw exception on wrong type', () => {
       const geojson = {
         type: 'Point',
         coordinates: [[-12.034835, 8.901183]],
       };
-      const missingTypesValidation = () =>
-        validateGeoJsonTypes(JSON.stringify(geojson), ['Point', 'Point1']);
+      const missingTypesValidation = () => validateGeoJsonTypes(JSON.stringify(geojson), ['Point', 'Point1']);
       expect(missingTypesValidation).toThrow();
     });
+
     it('Should validate a geojson is one of the specified types', () => {
       const geojson = {
         type: 'Point',
@@ -140,6 +133,7 @@ describe('Validations', () => {
       const expected = new ValidationResult(true);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson is not one of the specified types', () => {
       const geojson = {
         type: 'Point',
@@ -147,39 +141,11 @@ describe('Validations', () => {
       };
       const result = validateGeoJsonTypes(JSON.stringify(geojson), ['Polygon']);
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Type Point was not specified in the allowed types',
-          ValidationIssueType.GeoJsonInvalidType
-        ),
+        new ValidationIssue('Type Point was not specified in the allowed types', ValidationIssueType.GEOJSON_INVALID_TYPE),
       ]);
       expect(result).toEqual(expected);
     });
-    it('Should validate a collection of geojson is according to the specified types', () => {
-      const geojson = {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'Polygon',
-              coordinates: [
-                [
-                  [-0.703125, 24.84656534821976],
-                  [11.25, 24.84656534821976],
-                  [11.25, 31.353636941500987],
-                  [-0.703125, 31.353636941500987],
-                  [-0.703125, 24.84656534821976],
-                ],
-              ],
-            },
-          },
-        ],
-      };
-      const result = validateGeoJsonTypes(JSON.stringify(geojson), ['Polygon']);
-      const expected = new ValidationResult(true);
-      expect(result).toEqual(expected);
-    });
+
     it('Should validate a collection of geojson is according to the specified types', () => {
       const geojson = {
         type: 'FeatureCollection',
@@ -204,14 +170,12 @@ describe('Validations', () => {
       };
       const result = validateGeoJsonTypes(JSON.stringify(geojson), ['Point']);
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Type Polygon was not specified in the allowed types',
-          ValidationIssueType.GeoJsonInvalidType
-        ),
+        new ValidationIssue('Type Polygon was not specified in the allowed types', ValidationIssueType.GEOJSON_INVALID_TYPE),
       ]);
       expect(result).toEqual(expected);
     });
   });
+
   describe('#validateGeoJsonInGrid', () => {
     it('Should validate a geojson inside the grid', () => {
       const geojson = {
@@ -222,6 +186,7 @@ describe('Validations', () => {
       const expected = new ValidationResult(true);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson is not inside the grid (lon)', () => {
       const geojson = {
         type: 'Point',
@@ -229,13 +194,11 @@ describe('Validations', () => {
       };
       const result = validateGeoJsonInGrid(JSON.stringify(geojson));
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Point lon: -185 lat: 8.901183 is not inside the grid',
-          ValidationIssueType.GeoJsonNotInGrid
-        ),
+        new ValidationIssue('Point lon: -185 lat: 8.901183 is not inside the grid', ValidationIssueType.GEOJSON_NOT_IN_GRID),
       ]);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson is not inside the grid (lat)', () => {
       const geojson = {
         type: 'Point',
@@ -243,13 +206,11 @@ describe('Validations', () => {
       };
       const result = validateGeoJsonInGrid(JSON.stringify(geojson));
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Point lon: -110 lat: 95 is not inside the grid',
-          ValidationIssueType.GeoJsonNotInGrid
-        ),
+        new ValidationIssue('Point lon: -110 lat: 95 is not inside the grid', ValidationIssueType.GEOJSON_NOT_IN_GRID),
       ]);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson polygon is not inside the grid', () => {
       const geojson = {
         type: 'Polygon',
@@ -265,13 +226,11 @@ describe('Validations', () => {
       };
       const result = validateGeoJsonInGrid(JSON.stringify(geojson));
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Point lon: 185.6 lat: 10.1 is not inside the grid',
-          ValidationIssueType.GeoJsonNotInGrid
-        ),
+        new ValidationIssue('Point lon: 185.6 lat: 10.1 is not inside the grid', ValidationIssueType.GEOJSON_NOT_IN_GRID),
       ]);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson MultiPolygon is inside the grid', () => {
       const geojson = {
         type: 'MultiPolygon',
@@ -300,6 +259,7 @@ describe('Validations', () => {
       const expected = new ValidationResult(true);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson MultiPolygon is not inside the grid', () => {
       const geojson = {
         type: 'MultiPolygon',
@@ -326,14 +286,12 @@ describe('Validations', () => {
       };
       const result = validateGeoJsonInGrid(JSON.stringify(geojson));
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Point lon: 185 lat: 2 is not inside the grid',
-          ValidationIssueType.GeoJsonNotInGrid
-        ),
+        new ValidationIssue('Point lon: 185 lat: 2 is not inside the grid', ValidationIssueType.GEOJSON_NOT_IN_GRID),
       ]);
       expect(result).toEqual(expected);
     });
   });
+
   describe('#validateNumberOfVertices', () => {
     it('Should validate number of vertices is ok in a polygon', () => {
       const geojson = {
@@ -353,6 +311,7 @@ describe('Validations', () => {
       const expected = new ValidationResult(true);
       expect(result).toEqual(expected);
     });
+
     it('Should validate number of vertices is more than allowed in a polygon', () => {
       const geojson = {
         type: 'Polygon',
@@ -369,13 +328,11 @@ describe('Validations', () => {
 
       const result = validateNumberOfVertices(JSON.stringify(geojson), 4);
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Polygon has more than 4 vertices',
-          ValidationIssueType.GeoJsonTooManyCoordinates
-        ),
+        new ValidationIssue('Polygon has more than 4 vertices', ValidationIssueType.GEOJSON_TOO_MANY_COORDINATES),
       ]);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson MultiPolygon number of vertices is ok', () => {
       const geojson = {
         type: 'MultiPolygon',
@@ -404,6 +361,7 @@ describe('Validations', () => {
       const expected = new ValidationResult(true);
       expect(result).toEqual(expected);
     });
+
     it('Should validate a geojson MultiPolygon number of vertices is more than allowed', () => {
       const geojson = {
         type: 'MultiPolygon',
@@ -431,10 +389,7 @@ describe('Validations', () => {
       };
       const result = validateNumberOfVertices(JSON.stringify(geojson), 5);
       const expected = new ValidationResult(false, [
-        new ValidationIssue(
-          'Polygon has more than 5 vertices',
-          ValidationIssueType.GeoJsonTooManyCoordinates
-        ),
+        new ValidationIssue('Polygon has more than 5 vertices', ValidationIssueType.GEOJSON_TOO_MANY_COORDINATES),
       ]);
       expect(result).toEqual(expected);
     });

@@ -1,29 +1,21 @@
-import {BoundingBox, Geometry, Point, Polygon} from '../classes';
-import {geometryToTurfBbox} from './turf/turf_converters';
+import { BoundingBox, Geometry, Point, Polygon, Line } from '../classes';
+import { geometryToTurfBbox } from './turf/turf_converters';
 
 /**
  * Calculates the bounding box of a geometry
  * @param geometry
  */
 export function geometryToBoundingBox(geometry: Geometry): BoundingBox {
-  switch (geometry.type) {
-    case 'Point': {
-      const point = geometry as Point;
-      return new BoundingBox(point.lon, point.lat, point.lon, point.lat);
-    }
-    case 'Polygon':
-    case 'Line': {
-      const bboxResult = geometryToTurfBbox(geometry);
-      return new BoundingBox(
-        bboxResult[0],
-        bboxResult[1],
-        bboxResult[2],
-        bboxResult[3]
-      );
-    }
-    default:
-      throw new Error('Geometry not supported');
+  if (geometry instanceof Point) {
+    return new BoundingBox(geometry.coordinates.lon, geometry.coordinates.lat, geometry.coordinates.lon, geometry.coordinates.lat);
   }
+
+  if (geometry instanceof Polygon || geometry instanceof Line) {
+    const bboxResult = geometryToTurfBbox(geometry);
+    return new BoundingBox(bboxResult[0], bboxResult[1], bboxResult[2], bboxResult[3]);
+  }
+
+  throw new Error('Geometry not supported');
 }
 
 /**

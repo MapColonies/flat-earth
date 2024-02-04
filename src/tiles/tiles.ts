@@ -1,7 +1,6 @@
-import {SCALE_FACTOR, TILEGRID_WORLD_CRS84} from './tiles_constants';
-import {BoundingBox, Geometry, GeoPoint, Polygon} from '../classes';
-import {Tile, TileGrid, TileIntersectionType, TileRange} from './tiles_classes';
-import {Zoom} from '../types';
+import { area as turfArea, featureCollection, intersect } from '@turf/turf';
+import { BoundingBox, Geometry, GeoPoint, Polygon } from '../classes';
+import { Zoom } from '../types';
 import {
   validateBboxByGrid,
   validateGeoPoint,
@@ -10,19 +9,13 @@ import {
   validateTileGrid,
   validateZoomByGrid,
 } from '../validations/validations';
-import {geometryToBoundingBox} from '../converters/geometry_converters';
-import {
-  boundingBoxToTurfBbox,
-  polygonToTurfPolygon,
-} from '../converters/turf/turf_converters';
-import {area as turfArea, featureCollection, intersect} from '@turf/turf';
-import {isEdgeOfMap} from './tile_grids';
+import { geometryToBoundingBox } from '../converters/geometry_converters';
+import { boundingBoxToTurfBbox, polygonToTurfPolygon } from '../converters/turf/turf_converters';
+import { SCALE_FACTOR, TILEGRID_WORLD_CRS84 } from './tiles_constants';
+import { Tile, TileGrid, TileIntersectionType, TileRange } from './tiles_classes';
+import { isEdgeOfMap } from './tile_grids';
 
-function clampValues(
-  value: number,
-  minValue: number,
-  maxValue: number
-): number {
+function clampValues(value: number, minValue: number, maxValue: number): number {
   if (value < minValue) {
     return minValue;
   }
@@ -34,38 +27,63 @@ function clampValues(
   return value;
 }
 
-export function tileProjectedHeight(
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): number {
+function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
   return (
-    (referenceTileGrid.boundingBox.max.lat -
-      referenceTileGrid.boundingBox.min.lat) /
-    (referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom)
+    (referenceTileGrid.boundingBox.max.lon - referenceTileGrid.boundingBox.min.lon) /
+    (referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom)
   );
 }
 
-function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
-  return (
-    (referenceTileGrid.boundingBox.max.lon -
-      referenceTileGrid.boundingBox.min.lon) /
-    (referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom)
-  );
+function polygonToTiles(polygon: Polygon, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+  const boundingBox = geometryToBoundingBox(polygon);
+  const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
+  const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), 1, referenceTileGrid);
+  return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
+}
+
+function avoidNegativeZero(value: number): number {
+  if (value === 0) {
+    return 0;
+  }
+  return value;
+}
+
+function polygonToTileRanges(polygon: Polygon, tileRange: TileRange, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+  const tileRanges: TileRange[] = [];
+  const partialTiles: Tile[] = [];
+  for (const tile of tileRange.tileGenerator()) {
+    const tileIntersectionType = polygonTileIntersection(polygon, tile);
+    if (tileIntersectionType === TileIntersectionType.FULL) {
+      tileRanges.push(tileToTileRange(tile, zoom));
+    } else if (tileIntersectionType === TileIntersectionType.PARTIAL) {
+      if (tile.z === zoom) {
+        tileRanges.push(tileToTileRange(tile, zoom));
+      } else {
+        partialTiles.push(tile);
+      }
+    }
+  }
+
+  for (const tile of partialTiles) {
+    tileRanges.push(...polygonToTileRanges(polygon, tileToTileRange(tile, tile.z + 1), zoom, referenceTileGrid));
+  }
+
+  return tileRanges;
 }
 
 /**
  * Transforms a longitude and latitude to a tile coordinates
  * @param lonlat the longitude and latitude
  * @param zoom the zoom level
- * @param metatile the size of a metatile
  * @param reverseIntersectionPolicy a boolean whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
+ * @param metatile the size of a metatile
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  */
 function geoCoordsToTile(
   lonlat: GeoPoint,
   zoom: Zoom,
-  metatile = 1,
   reverseIntersectionPolicy: boolean,
+  metatile = 1,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): Tile {
   const width = tileProjectedWidth(zoom, referenceTileGrid) * metatile;
@@ -87,6 +105,29 @@ function geoCoordsToTile(
   }
 }
 
+function snapMinPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
+  const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const minLon = Math.floor(point.lon / width) * width;
+  const height = tileProjectedHeight(zoom, referenceTileGrid);
+  const minLat = Math.floor(point.lat / height) * height;
+  return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
+}
+
+function snapMaxPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
+  const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const maxLon = Math.ceil(point.lon / width) * width;
+  const height = tileProjectedHeight(zoom, referenceTileGrid);
+  const maxLat = Math.ceil(point.lat / height) * height;
+  return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
+}
+
+export function tileProjectedHeight(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): number {
+  return (
+    (referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) /
+    (referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom)
+  );
+}
+
 /**
  * Creates a generator function which calculates a tile within a bounding box
  * @param bbox the bounding box
@@ -95,40 +136,16 @@ function geoCoordsToTile(
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  * @returns generator function which calculates tiles within the `bbox`
  */
-export function boundingBoxToTileRange(
-  bbox: BoundingBox,
-  zoom: Zoom,
-  metatile = 1,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): TileRange {
+export function boundingBoxToTileRange(bbox: BoundingBox, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
   validateBboxByGrid(bbox, referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
 
-  const firstTile = geoCoordsToTile(
-    new GeoPoint(bbox.min.lon, bbox.max.lat),
-    zoom,
-    metatile,
-    false,
-    referenceTileGrid
-  );
-  const lastTile = geoCoordsToTile(
-    new GeoPoint(bbox.max.lon, bbox.min.lat),
-    zoom,
-    metatile,
-    true,
-    referenceTileGrid
-  );
+  const firstTile = geoCoordsToTile(new GeoPoint(bbox.min.lon, bbox.max.lat), zoom, false, metatile, referenceTileGrid);
+  const lastTile = geoCoordsToTile(new GeoPoint(bbox.max.lon, bbox.min.lat), zoom, true, metatile, referenceTileGrid);
 
-  return new TileRange(
-    firstTile.x,
-    firstTile.y,
-    lastTile.x,
-    lastTile.y,
-    zoom,
-    metatile
-  );
+  return new TileRange(firstTile.x, firstTile.y, lastTile.x, lastTile.y, zoom, metatile);
 }
 
 /**
@@ -139,11 +156,7 @@ export function boundingBoxToTileRange(
  * @throws Error when there is no matching scales for equivalent zooms
  * @returns a matching zoom level
  */
-export function zoomShift(
-  zoom: Zoom,
-  referenceTileGrid: TileGrid,
-  targetTileGrid: TileGrid
-): Zoom {
+export function zoomShift(zoom: Zoom, referenceTileGrid: TileGrid, targetTileGrid: TileGrid): Zoom {
   validateTileGrid(referenceTileGrid);
   validateTileGrid(targetTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
@@ -155,8 +168,7 @@ export function zoomShift(
   }
 
   let matchingZoom: Zoom | undefined;
-  for (const [targetZoom, targetScaleDenominator] of targetTileGrid
-    .wellKnownScaleSet.scaleDenominators) {
+  for (const [targetZoom, targetScaleDenominator] of targetTileGrid.wellKnownScaleSet.scaleDenominators) {
     if (targetScaleDenominator === scale) {
       matchingZoom = targetZoom;
       break;
@@ -178,18 +190,13 @@ export function zoomShift(
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  * @returns tile within the tile grid by the input values of `lonlat` and `zoom`
  */
-export function lonLatZoomToTile(
-  lonlat: GeoPoint,
-  zoom: Zoom,
-  metatile = 1,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): Tile {
+export function lonLatZoomToTile(lonlat: GeoPoint, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
   validateGeoPoint(lonlat, referenceTileGrid);
 
-  return geoCoordsToTile(lonlat, zoom, metatile, false, referenceTileGrid);
+  return geoCoordsToTile(lonlat, zoom, false, metatile, referenceTileGrid);
 }
 
 /**
@@ -199,11 +206,7 @@ export function lonLatZoomToTile(
  * @param clamp a boolean whether to clamp the calculated bounding box to the tile grid's bounding box
  * @returns bounding box of the input `tile`
  */
-export function tileToBoundingBox(
-  tile: Tile,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84,
-  clamp = false
-): BoundingBox {
+export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84, clamp = false): BoundingBox {
   validateTileGrid(referenceTileGrid);
   validateTileByGrid(tile, referenceTileGrid);
   const metatile = tile.metatile ?? 1;
@@ -222,26 +225,10 @@ export function tileToBoundingBox(
     // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
     // of the tile grid
     bbox = new BoundingBox(
-      clampValues(
-        bbox.min.lon,
-        referenceTileGrid.boundingBox.min.lon,
-        referenceTileGrid.boundingBox.max.lon
-      ),
-      clampValues(
-        bbox.min.lat,
-        referenceTileGrid.boundingBox.min.lat,
-        referenceTileGrid.boundingBox.max.lat
-      ),
-      clampValues(
-        bbox.max.lon,
-        referenceTileGrid.boundingBox.min.lon,
-        referenceTileGrid.boundingBox.max.lon
-      ),
-      clampValues(
-        bbox.max.lat,
-        referenceTileGrid.boundingBox.min.lat,
-        referenceTileGrid.boundingBox.max.lat
-      )
+      clampValues(bbox.min.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
+      clampValues(bbox.min.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat),
+      clampValues(bbox.max.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
+      clampValues(bbox.max.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat)
     );
   }
 
@@ -257,16 +244,14 @@ export function tileToBoundingBox(
  */
 export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
   if (zoom < tile.z) {
-    throw new Error(
-      `Target zoom level ${zoom} must be higher or equal to the tile's zoom level ${tile.z}`
-    );
+    throw new Error(`Target zoom level ${zoom} must be higher or equal to the tile's zoom level ${tile.z}`);
   }
   const dz = zoom - tile.z;
-  const scaleFactor = Math.pow(2, dz);
-  const minX = tile.x * scaleFactor;
-  const minY = tile.y * scaleFactor;
-  const maxX = (tile.x + 1) * scaleFactor - 1;
-  const maxY = (tile.y + 1) * scaleFactor - 1;
+  const scaleFactorBetweenTwoLevels = Math.pow(SCALE_FACTOR, dz);
+  const minX = tile.x * scaleFactorBetweenTwoLevels;
+  const minY = tile.y * scaleFactorBetweenTwoLevels;
+  const maxX = (tile.x + 1) * scaleFactorBetweenTwoLevels - 1;
+  const maxY = (tile.y + 1) * scaleFactorBetweenTwoLevels - 1;
   return new TileRange(minX, minY, maxX, maxY, zoom);
 }
 
@@ -277,52 +262,11 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
  * @param referenceTileGrid
  * @returns bbox that contains the original bbox and match tile grid lines
  */
-export function expandBBoxToTileGrid(
-  boundingBox: BoundingBox,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): BoundingBox {
+export function expandBBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): BoundingBox {
   const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
   const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
 
-  return new BoundingBox(
-    minPoint.lon,
-    minPoint.lat,
-    maxPoint.lon,
-    maxPoint.lat
-  );
-}
-
-function snapMinPointToGrid(
-  point: GeoPoint,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): GeoPoint {
-  const width = tileProjectedWidth(zoom, referenceTileGrid);
-  const minLon = Math.floor(point.lon / width) * width;
-  const height = tileProjectedHeight(zoom, referenceTileGrid);
-  const minLat = Math.floor(point.lat / height) * height;
-  return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
-}
-
-function snapMaxPointToGrid(
-  point: GeoPoint,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): GeoPoint {
-  const width = tileProjectedWidth(zoom, referenceTileGrid);
-  const maxLon = Math.ceil(point.lon / width) * width;
-  const height = tileProjectedHeight(zoom, referenceTileGrid);
-  const maxLat = Math.ceil(point.lat / height) * height;
-  return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
-}
-
-function avoidNegativeZero(value: number): number {
-  if (value === 0) {
-    return 0;
-  }
-
-  return value;
+  return new BoundingBox(minPoint.lon, minPoint.lat, maxPoint.lon, maxPoint.lat);
 }
 
 /**
@@ -330,27 +274,16 @@ function avoidNegativeZero(value: number): number {
  * @param boundingBox
  * @param referenceTileGrid
  */
-export function findMinimalZoom(
-  boundingBox: BoundingBox,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): Zoom {
+export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Zoom {
   const dx = boundingBox.max.lon - boundingBox.min.lon;
   const dy = boundingBox.max.lat - boundingBox.min.lat;
 
   const minimalXZoom = Math.floor(
-    Math.log2(
-      (referenceTileGrid.boundingBox.max.lon -
-        referenceTileGrid.boundingBox.min.lon) /
-        (referenceTileGrid.numberOfMinLevelTilesX * dx)
-    )
+    Math.log2((referenceTileGrid.boundingBox.max.lon - referenceTileGrid.boundingBox.min.lon) / (referenceTileGrid.numberOfMinLevelTilesX * dx))
   );
 
   const minimalYZoom = Math.floor(
-    Math.log2(
-      (referenceTileGrid.boundingBox.max.lat -
-        referenceTileGrid.boundingBox.min.lat) /
-        (referenceTileGrid.numberOfMinLevelTilesY * dy)
-    )
+    Math.log2((referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) / (referenceTileGrid.numberOfMinLevelTilesY * dy))
   );
 
   return Math.min(minimalXZoom, minimalYZoom);
@@ -362,37 +295,20 @@ export function findMinimalZoom(
  * @param zoom
  * @param referenceTileGrid
  */
-export function geometryToTiles(
-  geometry: Geometry,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): TileRange[] {
+export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   switch (geometry.type) {
     case 'Polygon':
       return polygonToTiles(geometry as Polygon, zoom, referenceTileGrid);
     case 'BoundingBox':
-      return [
-        boundingBoxToTileRange(
-          geometry as BoundingBox,
-          zoom,
-          1,
-          referenceTileGrid
-        ),
-      ];
+      return [boundingBoxToTileRange(geometry as BoundingBox, zoom, 1, referenceTileGrid)];
     default:
       throw new Error(`Unsupported geometry type: ${geometry.type}`);
   }
 }
 
-export function polygonTileIntersection(
-  geometry: Polygon,
-  tile: Tile,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): TileIntersectionType {
+export function polygonTileIntersection(geometry: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
   const turfGeometry = polygonToTurfPolygon(geometry);
-  const turfBoundingBox = boundingBoxToTurfBbox(
-    tileToBoundingBox(tile, referenceTileGrid)
-  );
+  const turfBoundingBox = boundingBoxToTurfBbox(tileToBoundingBox(tile, referenceTileGrid));
   const features = featureCollection([turfGeometry, turfBoundingBox]);
   const intersectionResult = intersect(features);
   if (intersectionResult === null) {
@@ -405,54 +321,4 @@ export function polygonTileIntersection(
     }
     return TileIntersectionType.PARTIAL;
   }
-}
-function polygonToTiles(
-  polygon: Polygon,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): TileRange[] {
-  const boundingBox = geometryToBoundingBox(polygon);
-  const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
-  const tileRange = boundingBoxToTileRange(
-    boundingBox,
-    Math.min(minimalZoom, zoom),
-    1,
-    referenceTileGrid
-  );
-  return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
-}
-
-function polygonToTileRanges(
-  polygon: Polygon,
-  tileRange: TileRange,
-  zoom: Zoom,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): TileRange[] {
-  const tileRanges: TileRange[] = [];
-  const partialTiles: Tile[] = [];
-  for (const tile of tileRange.tileGenerator()) {
-    const tileIntersectionType = polygonTileIntersection(polygon, tile);
-    if (tileIntersectionType === TileIntersectionType.FULL) {
-      tileRanges.push(tileToTileRange(tile, zoom));
-    } else if (tileIntersectionType === TileIntersectionType.PARTIAL) {
-      if (tile.z === zoom) {
-        tileRanges.push(tileToTileRange(tile, zoom));
-      } else {
-        partialTiles.push(tile);
-      }
-    }
-  }
-
-  for (const tile of partialTiles) {
-    tileRanges.push(
-      ...polygonToTileRanges(
-        polygon,
-        tileToTileRange(tile, tile.z + 1),
-        zoom,
-        referenceTileGrid
-      )
-    );
-  }
-
-  return tileRanges;
 }

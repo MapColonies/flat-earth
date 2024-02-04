@@ -1,11 +1,6 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
-import {
-  CoordinateReferenceSystem,
-  Ellipsoid,
-  ScaleSet,
-  TileGrid,
-} from './tiles_classes';
-import {BoundingBox} from '../classes';
+import { BoundingBox } from '../classes';
+import { CoordinateReferenceSystem, Ellipsoid, ScaleSet, TileGrid } from './tiles_classes';
 
 /**
  * Size of a pixel in meters
@@ -20,29 +15,23 @@ export const SCALE_FACTOR = 2;
 /**
  * @category Coordinate Reference System
  */
-export const CRS_CRS84: CoordinateReferenceSystem =
-  new CoordinateReferenceSystem(
-    'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
-    'WGS 84 longitude-latitude'
-  );
+export const CRS_CRS84: CoordinateReferenceSystem = new CoordinateReferenceSystem(
+  'http://www.opengis.net/def/crs/OGC/1.3/CRS84',
+  'WGS 84 longitude-latitude'
+);
 
 /**
  * @category Coordinate Reference System
  */
-export const CRS_3857: CoordinateReferenceSystem =
-  new CoordinateReferenceSystem(
-    'http://www.opengis.net/def/crs/EPSG/0/3857',
-    'WGS 84 / Pseudo-Mercator'
-  );
+export const CRS_3857: CoordinateReferenceSystem = new CoordinateReferenceSystem(
+  'http://www.opengis.net/def/crs/EPSG/0/3857',
+  'WGS 84 / Pseudo-Mercator'
+);
 
 /**
  * @category Ellipsoid
  */
-export const ELLIPSOID_WGS84: Ellipsoid = new Ellipsoid(
-  'WGS 84',
-  6378137,
-  298.257223563
-);
+export const ELLIPSOID_WGS84: Ellipsoid = new Ellipsoid('WGS 84', 6378137, 298.257223563);
 
 /**
  * scale denominators depend on a zoom level and are calculated as
