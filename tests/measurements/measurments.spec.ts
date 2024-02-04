@@ -1,6 +1,6 @@
-import * as measurements from '../src/measurements/measurements';
-import { BoundingBox, Line, Point, Polygon } from '../src/classes';
-import { boundingBoxToPolygon, geometryToBoundingBox } from '../src/converters/geometry_converters';
+import * as measurements from '../../src/measurements/measurements';
+import { BoundingBox, Line, Point, Polygon } from '../../src/classes';
+import { boundingBoxToPolygon, geometryToBoundingBox } from '../../src/converters/geometry_converters';
 
 test('Haversine distance', () => {
   const from = new Point(0, 0);

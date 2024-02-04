@@ -4,8 +4,8 @@ import {
   validateGeoJsonSelfIntersect,
   validateGeoJsonTypes,
   validateNumberOfVertices,
-} from '../src/validations/geojson_validations';
-import { ValidationIssue, ValidationIssueType, ValidationResult } from '../src/validations/validation_classes';
+} from '../../src/validations/geojson_validations';
+import { ValidationIssue, ValidationIssueType, ValidationResult } from '../../src/validations/validation_classes';
 
 describe('Validations', () => {
   describe('#validateGeoJson', () => {
