@@ -13,7 +13,7 @@
     "compile": "tsc",
     "prepublish": "npm run compile",
     "pretest": "npm run lint",
-    "test": "jest -c test/jest.config.js",
+    "test": "jest -c tests/jest.config.js",
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
     "prelint:fix": "npm run format:fix",
