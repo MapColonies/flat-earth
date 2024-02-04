@@ -3,7 +3,7 @@ const baseConfig = require('./jest.config');
 /** @type {import('jest').Config} */
 module.exports = {
   ...baseConfig,
-  reporters: ['default'],
+  displayName: 'web-unit-tests',
   testEnvironment: 'jsdom',
   coverageThreshold: {
     global: {

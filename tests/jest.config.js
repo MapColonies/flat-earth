@@ -3,6 +3,7 @@ module.exports = {
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
   },
+  displayName: 'unit-tests',
   testMatch: ['<rootDir>/tests/**/*.spec.ts'],
   coverageReporters: ['text', 'html'],
   collectCoverage: true,
