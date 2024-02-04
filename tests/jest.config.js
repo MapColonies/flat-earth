@@ -1,3 +1,4 @@
+/** @type {import('jest').Config} */
 module.exports = {
   transform: {
     '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
@@ -7,7 +8,7 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**'],
   coverageDirectory: '<rootDir>/coverage',
-  reporters: ['default', ['jest-html-reporters', { publicPath: './reports' }]],
+  reporters: ['default'],
   rootDir: '..',
   preset: 'ts-jest',
   testEnvironment: 'node',
