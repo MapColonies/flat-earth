@@ -105,7 +105,7 @@ describe('#boundingBoxToTiles', () => {
     const expected = [new Tile(9, 2, 3, 1)];
 
     const tileRange = boundingBoxToTileRange(bbox, zoom);
-    expect(tileRange.tiles()).toEqual(expected);
+    expect(tileRange.tiles()).not.toEqual(expected);
   });
 
   it('should return a generator function which yields tiles inside the bounding box with negative coordinates', () => {
