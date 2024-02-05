@@ -1,3 +1,9 @@
+let reporters = ['default'];
+
+if (process.env.GITHUB_ACTIONS) {
+  reporters = [['github-actions', { silent: false }], 'summary'];
+}
+
 /** @type {import('jest').Config} */
 module.exports = {
   transform: {
