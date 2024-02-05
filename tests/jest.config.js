@@ -1,3 +1,9 @@
+let reporters = ['default'];
+
+if (process.env.GITHUB_ACTIONS) {
+  reporters = [['github-actions', { silent: false }], 'summary'];
+}
+
 /** @type {import('jest').Config} */
 module.exports = {
   transform: {
@@ -9,7 +15,7 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**'],
   coverageDirectory: '<rootDir>/coverage',
-  reporters: ['default'],
+  reporters,
   rootDir: '..',
   preset: 'ts-jest',
   testEnvironment: 'node',

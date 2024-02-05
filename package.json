@@ -12,7 +12,6 @@
   "scripts": {
     "compile": "tsc",
     "prepublish": "npm run compile",
-    "pretest": "npm run lint",
     "test": "npm run test:node && npm run test:web",
     "test:node": "jest -c tests/jest.config.js",
     "test:web": "jest -c tests/jest-web.config.js",
