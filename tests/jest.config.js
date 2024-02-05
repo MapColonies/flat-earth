@@ -15,7 +15,7 @@ module.exports = {
   collectCoverage: true,
   collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!*/node_modules/', '!/vendor/**'],
   coverageDirectory: '<rootDir>/coverage',
-  reporters: ['default'],
+  reporters,
   rootDir: '..',
   preset: 'ts-jest',
   testEnvironment: 'node',
