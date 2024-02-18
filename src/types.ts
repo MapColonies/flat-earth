@@ -1,5 +1,5 @@
 /**
- * An ellipsoidal longtitude
+ * An ellipsoidal longitude
  */
 export type Longitude = number;
 

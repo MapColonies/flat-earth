@@ -74,7 +74,7 @@ export function validateBboxByGrid(bbox: BoundingBox, referenceTileGrid: TileGri
 
 /**
  * Validates that the input `geoPoint` is valid
- * @param geoPoint the longtitude and latitudes to validate
+ * @param geoPoint the longitude and latitudes to validate
  * @param referenceTileGrid the tile grid to validate the `geoPoint` against
  */
 export function validateGeoPoint(geoPoint: GeoPoint, referenceTileGrid: TileGrid): void {

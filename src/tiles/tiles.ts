@@ -183,8 +183,8 @@ export function zoomShift(zoom: Zoom, referenceTileGrid: TileGrid, targetTileGri
 }
 
 /**
- * Calculates a tile for a longtitude, latitude and zoom
- * @param lonlat a longtitude and latitude
+ * Calculates a tile for longitude, latitude and zoom
+ * @param lonlat a longitude and latitude
  * @param zoom the zoom level
  * @param metatile the size of a metatile
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
