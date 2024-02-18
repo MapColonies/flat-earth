@@ -13,15 +13,15 @@ export function geometryToTurfBbox(geometry: Geometry): BBox {
  * In case of a {@link BoundingBox} it will return a polygon ({@link TurfPolygon})
  * @param geometry
  */
-export function convertGeometryToTurfGeometry(geometry: Geometry): Feature<LineString | TurfPolygon> {
+export function convertGeometryToFeature(geometry: Geometry): Feature<LineString | TurfPolygon> {
   switch (geometry.type) {
     case 'Polygon':
       return polygonToTurfPolygon(geometry as Polygon);
     case 'Line':
       return lineToTurfLine(geometry as Line);
     case 'BoundingBox':
-      // in case of a bounding box we convert it to a polygon and will use one recursion
-      return convertGeometryToTurfGeometry(boundingBoxToPolygon(geometry as BoundingBox));
+      // in case of a bounding box we convert it into a polygon and will use one recursion
+      return convertGeometryToFeature(boundingBoxToPolygon(geometry as BoundingBox));
     default:
       throw new Error('Cant convert geometry to turf geometry, geometry not supported');
   }
