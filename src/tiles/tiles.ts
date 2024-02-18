@@ -13,7 +13,7 @@ import { geometryToBoundingBox } from '../converters/geometry_converters';
 import { boundingBoxToTurfBbox, polygonToTurfPolygon } from '../converters/turf/turf_converters';
 import { SCALE_FACTOR, TILEGRID_WORLD_CRS84 } from './tiles_constants';
 import { Tile, TileGrid, TileIntersectionType, TileRange } from './tiles_classes';
-import { isEdgeOfMap } from './tile_grids';
+import { isPointOnEdgeOfTileGrid } from './tile_grids';
 
 function clampValues(value: number, minValue: number, maxValue: number): number {
   if (value < minValue) {
@@ -94,7 +94,7 @@ function geoCoordsToTile(
 
   // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
   // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  if (reverseIntersectionPolicy || isEdgeOfMap(lonlat, referenceTileGrid)) {
+  if (reverseIntersectionPolicy || isPointOnEdgeOfTileGrid(lonlat, referenceTileGrid)) {
     const x = Math.ceil(tileX) - 1;
     const y = Math.ceil(tileY) - 1;
     return new Tile(x, y, zoom, metatile);
