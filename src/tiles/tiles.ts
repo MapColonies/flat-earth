@@ -15,6 +15,13 @@ import { SCALE_FACTOR, TILEGRID_WORLD_CRS84 } from './tiles_constants';
 import { Tile, TileGrid, TileIntersectionType, TileRange } from './tiles_classes';
 import { isPointOnEdgeOfTileGrid } from './tile_grids';
 
+function avoidNegativeZero(value: number): number {
+  if (value === 0) {
+    return 0;
+  }
+  return value;
+}
+
 function clampValues(value: number, minValue: number, maxValue: number): number {
   if (value < minValue) {
     return minValue;
@@ -27,7 +34,14 @@ function clampValues(value: number, minValue: number, maxValue: number): number 
   return value;
 }
 
-function tileProjectedWidth(zoom: Zoom, referenceTileGrid: TileGrid): number {
+function tileEffectiveHeight(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): number {
+  return (
+    (referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) /
+    (referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom)
+  );
+}
+
+function tileEffectiveWidth(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): number {
   return (
     (referenceTileGrid.boundingBox.max.lon - referenceTileGrid.boundingBox.min.lon) /
     (referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom)
@@ -39,13 +53,6 @@ function polygonToTiles(polygon: Polygon, zoom: Zoom, referenceTileGrid: TileGri
   const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
   const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), 1, referenceTileGrid);
   return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
-}
-
-function avoidNegativeZero(value: number): number {
-  if (value === 0) {
-    return 0;
-  }
-  return value;
 }
 
 function polygonToTileRanges(polygon: Polygon, tileRange: TileRange, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
@@ -86,8 +93,8 @@ function geoCoordsToTile(
   metatile = 1,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): Tile {
-  const width = tileProjectedWidth(zoom, referenceTileGrid) * metatile;
-  const height = tileProjectedHeight(zoom, referenceTileGrid) * metatile;
+  const width = tileEffectiveWidth(zoom, referenceTileGrid) * metatile;
+  const height = tileEffectiveHeight(zoom, referenceTileGrid) * metatile;
 
   const x = (geoPoint.lon - referenceTileGrid.boundingBox.min.lon) / width;
   const y = (referenceTileGrid.boundingBox.max.lat - geoPoint.lat) / height;
@@ -106,26 +113,19 @@ function geoCoordsToTile(
 }
 
 function snapMinPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
-  const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const width = tileEffectiveWidth(zoom, referenceTileGrid);
   const minLon = Math.floor(point.lon / width) * width;
-  const height = tileProjectedHeight(zoom, referenceTileGrid);
+  const height = tileEffectiveHeight(zoom, referenceTileGrid);
   const minLat = Math.floor(point.lat / height) * height;
   return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
 }
 
 function snapMaxPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
-  const width = tileProjectedWidth(zoom, referenceTileGrid);
+  const width = tileEffectiveWidth(zoom, referenceTileGrid);
   const maxLon = Math.ceil(point.lon / width) * width;
-  const height = tileProjectedHeight(zoom, referenceTileGrid);
+  const height = tileEffectiveHeight(zoom, referenceTileGrid);
   const maxLat = Math.ceil(point.lat / height) * height;
   return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
-}
-
-export function tileProjectedHeight(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): number {
-  return (
-    (referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) /
-    (referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom)
-  );
 }
 
 /**
@@ -211,8 +211,8 @@ export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILE
   validateTileByGrid(tile, referenceTileGrid);
   const metatile = tile.metatile ?? 1;
 
-  const width = tileProjectedWidth(tile.z, referenceTileGrid) * metatile;
-  const height = tileProjectedHeight(tile.z, referenceTileGrid) * metatile;
+  const width = tileEffectiveWidth(tile.z, referenceTileGrid) * metatile;
+  const height = tileEffectiveHeight(tile.z, referenceTileGrid) * metatile;
 
   let bbox: BoundingBox = new BoundingBox(
     referenceTileGrid.boundingBox.min.lon + tile.x * width,
