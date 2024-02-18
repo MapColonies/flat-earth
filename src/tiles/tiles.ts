@@ -73,14 +73,14 @@ function polygonToTileRanges(polygon: Polygon, tileRange: TileRange, zoom: Zoom,
 
 /**
  * Transforms a longitude and latitude to a tile coordinates
- * @param lonlat the longitude and latitude
+ * @param geoPoint a point with longitude and latitude
  * @param zoom the zoom level
  * @param reverseIntersectionPolicy a boolean whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
  * @param metatile the size of a metatile
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  */
 function geoCoordsToTile(
-  lonlat: GeoPoint,
+  geoPoint: GeoPoint,
   zoom: Zoom,
   reverseIntersectionPolicy: boolean,
   metatile = 1,
@@ -89,12 +89,12 @@ function geoCoordsToTile(
   const width = tileProjectedWidth(zoom, referenceTileGrid) * metatile;
   const height = tileProjectedHeight(zoom, referenceTileGrid) * metatile;
 
-  const tileX = (lonlat.lon - referenceTileGrid.boundingBox.min.lon) / width;
-  const tileY = (referenceTileGrid.boundingBox.max.lat - lonlat.lat) / height;
+  const tileX = (geoPoint.lon - referenceTileGrid.boundingBox.min.lon) / width;
+  const tileY = (referenceTileGrid.boundingBox.max.lat - geoPoint.lat) / height;
 
   // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
   // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  if (reverseIntersectionPolicy || isPointOnEdgeOfTileGrid(lonlat, referenceTileGrid)) {
+  if (reverseIntersectionPolicy || isPointOnEdgeOfTileGrid(geoPoint, referenceTileGrid)) {
     const x = Math.ceil(tileX) - 1;
     const y = Math.ceil(tileY) - 1;
     return new Tile(x, y, zoom, metatile);
@@ -184,19 +184,19 @@ export function zoomShift(zoom: Zoom, referenceTileGrid: TileGrid, targetTileGri
 
 /**
  * Calculates a tile for longitude, latitude and zoom
- * @param lonlat a longitude and latitude
+ * @param geoPoint a point with longitude and latitude
  * @param zoom the zoom level
  * @param metatile the size of a metatile
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
- * @returns tile within the tile grid by the input values of `lonlat` and `zoom`
+ * @returns tile within the tile grid
  */
-export function lonLatZoomToTile(lonlat: GeoPoint, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile {
+export function geoPointZoomToTile(geoPoint: GeoPoint, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
-  validateGeoPoint(lonlat, referenceTileGrid);
+  validateGeoPoint(geoPoint, referenceTileGrid);
 
-  return geoCoordsToTile(lonlat, zoom, false, metatile, referenceTileGrid);
+  return geoCoordsToTile(geoPoint, zoom, false, metatile, referenceTileGrid);
 }
 
 /**
