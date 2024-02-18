@@ -89,20 +89,20 @@ function geoCoordsToTile(
   const width = tileProjectedWidth(zoom, referenceTileGrid) * metatile;
   const height = tileProjectedHeight(zoom, referenceTileGrid) * metatile;
 
-  const tileX = (geoPoint.lon - referenceTileGrid.boundingBox.min.lon) / width;
-  const tileY = (referenceTileGrid.boundingBox.max.lat - geoPoint.lat) / height;
+  const x = (geoPoint.lon - referenceTileGrid.boundingBox.min.lon) / width;
+  const y = (referenceTileGrid.boundingBox.max.lat - geoPoint.lat) / height;
 
   // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
   // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
   if (reverseIntersectionPolicy || isPointOnEdgeOfTileGrid(geoPoint, referenceTileGrid)) {
-    const x = Math.ceil(tileX) - 1;
-    const y = Math.ceil(tileY) - 1;
-    return new Tile(x, y, zoom, metatile);
-  } else {
-    const x = Math.floor(tileX);
-    const y = Math.floor(tileY);
-    return new Tile(x, y, zoom, metatile);
+    const tileX = Math.ceil(x) - 1;
+    const tileY = Math.ceil(y) - 1;
+    return new Tile(tileX, tileY, zoom, metatile);
   }
+
+  const tileX = Math.floor(x);
+  const tileY = Math.floor(y);
+  return new Tile(tileX, tileY, zoom, metatile);
 }
 
 function snapMinPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
