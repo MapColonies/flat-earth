@@ -9,8 +9,8 @@ export function geometryToTurfBbox(geometry: Geometry): BBox {
 }
 
 /**
- * Converts a {@link Geometry} to a {@link turf Feature}
- * In case of a {@BoundingBox} it will return a {@link turf Polygon}
+ * Converts a {@link Geometry} to a {@link Feature}.
+ * In case of a {@link BoundingBox} it will return a polygon ({@link TurfPolygon})
  * @param geometry
  */
 export function convertGeometryToTurfGeometry(geometry: Geometry): Feature<LineString | TurfPolygon> {

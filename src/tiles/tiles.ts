@@ -80,11 +80,11 @@ function polygonToTileRanges(polygon: Polygon, tileRange: TileRange, zoom: Zoom,
 }
 
 /**
- * Transforms a longitude and latitude to a tile coordinates
+ * Calculates a tile for a longitude, latitude and zoom
  * @param geoPoint a point with longitude and latitude
- * @param zoom the zoom level
+ * @param zoom zoom level
  * @param reverseIntersectionPolicy a boolean whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
- * @param metatile the size of a metatile
+ * @param metatile size of a metatile
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
  */
 function geoCoordsToTile(
@@ -252,6 +252,7 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
   if (zoom < tile.z) {
     throw new Error(`Target zoom level ${zoom} must be higher or equal to the tile's zoom level ${tile.z}`);
   }
+
   const dz = zoom - tile.z;
   const scaleFactorBetweenTwoLevels = Math.pow(SCALE_FACTOR, dz);
   const minX = tile.x * scaleFactorBetweenTwoLevels;
@@ -262,10 +263,10 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
 }
 
 /**
- * Expands bounding box to the containing grid
- * @param boundingBox
- * @param zoom target tiles grid zoom level
- * @param referenceTileGrid
+ * Expands bounding box to the containing grid at a given zoom level
+ * @param boundingBox bounding box to expand
+ * @param zoom zoom level for the tile grid
+ * @param referenceTileGrid tile grid
  * @returns bounding box that contains the input `boundingBox` and snapped to the tile grid
  */
 export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): BoundingBox {
@@ -281,9 +282,10 @@ export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom
 }
 
 /**
- * Find the minimal zoom where a bounding box can be contained in one tile
- * @param boundingBox
- * @param referenceTileGrid
+ * Find the minimal zoom where a bounding box can be contained in a single tile (the tile may still intersect a tile boundary)
+ * @param boundingBox bounding box
+ * @param referenceTileGrid tile grid
+ * @returns minimal zoom that may contain the bounding box in a single tile
  */
 export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Zoom {
   validateBoundingBox(boundingBox);
@@ -305,10 +307,11 @@ export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: Til
 }
 
 /**
- * Convert a geometry to a set of tile ranges in the requested zoom level
- * @param geometry
- * @param zoom
- * @param referenceTileGrid
+ * Convert a geometry to a set of tile ranges in the given zoom level
+ * @param geometry geometry to compute tile ranges for
+ * @param zoom target zoom level
+ * @param referenceTileGrid tile grid
+ * @returns tile range in the given zoom level
  */
 export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   // TODO: a validation is missing to check if the geometry is within the tile grid
@@ -325,6 +328,13 @@ export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGri
   }
 }
 
+/**
+ * Identifies the intersection type between a polygon and a tile from a tile grid
+ * @param polygon polygon to identify intersections with
+ * @param tile target tile
+ * @param referenceTileGrid tile grid
+ * @returns intersection type between the geometry and the tile
+ */
 export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
   // TODO: a validation is missing to check if the polygon is within the tile grid
   validateTileGrid(referenceTileGrid);
