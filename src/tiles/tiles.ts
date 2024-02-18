@@ -2,6 +2,7 @@ import { area as turfArea, featureCollection, intersect } from '@turf/turf';
 import { BoundingBox, Geometry, GeoPoint, Polygon } from '../classes';
 import type { Zoom } from '../types';
 import {
+  validateBoundingBox,
   validateBoundingBoxByGrid,
   validateGeoPoint,
   validateMetatile,
@@ -268,6 +269,11 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
  * @returns bounding box that contains the input `boundingBox` and snapped to the tile grid
  */
 export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): BoundingBox {
+  validateBoundingBox(boundingBox);
+  validateZoomByGrid(zoom, referenceTileGrid);
+  validateTileGrid(referenceTileGrid);
+  validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
+
   const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
   const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
 
@@ -280,6 +286,10 @@ export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom
  * @param referenceTileGrid
  */
 export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Zoom {
+  validateBoundingBox(boundingBox);
+  validateTileGrid(referenceTileGrid);
+  validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
+
   const dx = boundingBox.max.lon - boundingBox.min.lon;
   const dy = boundingBox.max.lat - boundingBox.min.lat;
 
@@ -301,6 +311,10 @@ export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: Til
  * @param referenceTileGrid
  */
 export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+  // TODO: a validation is missing to check if the geometry is within the tile grid
+  validateTileGrid(referenceTileGrid);
+  validateZoomByGrid(zoom, referenceTileGrid);
+
   switch (geometry.type) {
     case 'Polygon':
       return polygonToTiles(geometry as Polygon, zoom, referenceTileGrid);
@@ -312,6 +326,10 @@ export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGri
 }
 
 export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
+  // TODO: a validation is missing to check if the polygon is within the tile grid
+  validateTileGrid(referenceTileGrid);
+  validateTileByGrid(tile, referenceTileGrid);
+
   const turfGeometry = polygonToTurfPolygon(polygon);
   const turfBoundingBox = boundingBoxToTurfBbox(tileToBoundingBox(tile, referenceTileGrid));
   const features = featureCollection([turfGeometry, turfBoundingBox]);
