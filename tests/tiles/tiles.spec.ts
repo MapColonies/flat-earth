@@ -1,6 +1,6 @@
 import {
   boundingBoxToTileRange,
-  expandBBoxToTileGrid,
+  expandBoundingBoxToTileGrid,
   findMinimalZoom,
   geometryToTiles,
   geoPointZoomToTile,
@@ -576,7 +576,7 @@ describe('tileToRange', () => {
 describe('Snap a bounding box to tile grid', () => {
   it('should get a bounding box smaller than the grid tiles and enlarge it to the grid', () => {
     const boundingBox = new BoundingBox(-110, -35, -50, 35);
-    const snappedBoundingBox = expandBBoxToTileGrid(boundingBox, 2);
+    const snappedBoundingBox = expandBoundingBoxToTileGrid(boundingBox, 2);
 
     const expectedBoundingBox = new BoundingBox(-135, -45, -45, 45);
     expect(snappedBoundingBox).toEqual(expectedBoundingBox);
@@ -584,7 +584,7 @@ describe('Snap a bounding box to tile grid', () => {
 
   it('Bounding boxes is the same before and after snapping', () => {
     const boundingBox = new BoundingBox(-135, -45, -45, 45);
-    const snappedBoundingBox = expandBBoxToTileGrid(boundingBox, 2);
+    const snappedBoundingBox = expandBoundingBoxToTileGrid(boundingBox, 2);
     const expectedBoundingBox = new BoundingBox(-135, -45, -45, 45);
     expect(snappedBoundingBox).toEqual(expectedBoundingBox);
   });

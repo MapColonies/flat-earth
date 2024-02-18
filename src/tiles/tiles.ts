@@ -2,7 +2,7 @@ import { area as turfArea, featureCollection, intersect } from '@turf/turf';
 import { BoundingBox, Geometry, GeoPoint, Polygon } from '../classes';
 import type { Zoom } from '../types';
 import {
-  validateBboxByGrid,
+  validateBoundingBoxByGrid,
   validateGeoPoint,
   validateMetatile,
   validateTileByGrid,
@@ -130,20 +130,25 @@ function snapMaxPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: Tile
 
 /**
  * Creates a generator function which calculates a tile within a bounding box
- * @param bbox the bounding box
+ * @param boundingBox the bounding box
  * @param zoom the zoom level
  * @param metatile the size of a metatile
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
- * @returns generator function which calculates tiles within the `bbox`
+ * @returns generator function which calculates tiles within the `boundingBox`
  */
-export function boundingBoxToTileRange(bbox: BoundingBox, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange {
+export function boundingBoxToTileRange(
+  boundingBox: BoundingBox,
+  zoom: Zoom,
+  metatile = 1,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): TileRange {
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
-  validateBboxByGrid(bbox, referenceTileGrid);
+  validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
 
-  const firstTile = geoCoordsToTile(new GeoPoint(bbox.min.lon, bbox.max.lat), zoom, false, metatile, referenceTileGrid);
-  const lastTile = geoCoordsToTile(new GeoPoint(bbox.max.lon, bbox.min.lat), zoom, true, metatile, referenceTileGrid);
+  const firstTile = geoCoordsToTile(new GeoPoint(boundingBox.min.lon, boundingBox.max.lat), zoom, false, metatile, referenceTileGrid);
+  const lastTile = geoCoordsToTile(new GeoPoint(boundingBox.max.lon, boundingBox.min.lat), zoom, true, metatile, referenceTileGrid);
 
   return new TileRange(firstTile.x, firstTile.y, lastTile.x, lastTile.y, zoom, metatile);
 }
@@ -214,7 +219,7 @@ export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILE
   const width = tileEffectiveWidth(tile.z, referenceTileGrid) * metatile;
   const height = tileEffectiveHeight(tile.z, referenceTileGrid) * metatile;
 
-  let bbox: BoundingBox = new BoundingBox(
+  const boundingBox: BoundingBox = new BoundingBox(
     referenceTileGrid.boundingBox.min.lon + tile.x * width,
     referenceTileGrid.boundingBox.max.lat - (tile.y + 1) * height,
     referenceTileGrid.boundingBox.min.lon + (tile.x + 1) * width,
@@ -224,15 +229,15 @@ export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILE
   if (clamp) {
     // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
     // of the tile grid
-    bbox = new BoundingBox(
-      clampValues(bbox.min.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
-      clampValues(bbox.min.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat),
-      clampValues(bbox.max.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
-      clampValues(bbox.max.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat)
+    return new BoundingBox(
+      clampValues(boundingBox.min.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
+      clampValues(boundingBox.min.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat),
+      clampValues(boundingBox.max.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
+      clampValues(boundingBox.max.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat)
     );
   }
 
-  return bbox;
+  return boundingBox;
 }
 
 /**
@@ -256,13 +261,13 @@ export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
 }
 
 /**
- * rounds bbox to grid
+ * Expands bounding box to the containing grid
  * @param boundingBox
  * @param zoom target tiles grid zoom level
  * @param referenceTileGrid
- * @returns bbox that contains the original bbox and match tile grid lines
+ * @returns bounding box that contains the input `boundingBox` and snapped to the tile grid
  */
-export function expandBBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): BoundingBox {
+export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): BoundingBox {
   const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
   const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
 

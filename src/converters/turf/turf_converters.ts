@@ -1,11 +1,11 @@
 import type { Feature, LineString, Polygon as TurfPolygon, BBox } from 'geojson';
-import { bbox as turfBbox, lineString as turfLineString, polygon as turfPolygon } from '@turf/turf';
+import { bbox as turfBoundingBox, lineString as turfLineString, polygon as turfPolygon } from '@turf/turf';
 import { BoundingBox, Geometry, Line, Polygon } from '../../classes';
 import { boundingBoxToPolygon } from '../geometry_converters';
 
 export function geometryToTurfBbox(geometry: Geometry): BBox {
   const turfGeometry = convertGeometryToTurfGeometry(geometry);
-  return turfBbox(turfGeometry);
+  return turfBoundingBox(turfGeometry);
 }
 
 /**
