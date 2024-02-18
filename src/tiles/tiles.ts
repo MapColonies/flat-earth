@@ -306,8 +306,8 @@ export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGri
   }
 }
 
-export function polygonTileIntersection(geometry: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
-  const turfGeometry = polygonToTurfPolygon(geometry);
+export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
+  const turfGeometry = polygonToTurfPolygon(polygon);
   const turfBoundingBox = boundingBoxToTurfBbox(tileToBoundingBox(tile, referenceTileGrid));
   const features = featureCollection([turfGeometry, turfBoundingBox]);
   const intersectionResult = intersect(features);
