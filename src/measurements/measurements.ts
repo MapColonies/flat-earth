@@ -21,9 +21,9 @@ export function area(polygon: Polygon): number {
  */
 //TODO: add options
 export function distance(from: Point, to: Point): number {
-  const turfForm = point([from.coordinates.lon, from.coordinates.lat]);
+  const turfFrom = point([from.coordinates.lon, from.coordinates.lat]);
   const turfTo = point([to.coordinates.lon, to.coordinates.lat]);
-  return turfDistance(turfForm, turfTo, { units: 'meters' });
+  return turfDistance(turfFrom, turfTo, { units: 'meters' });
 }
 
 /**
