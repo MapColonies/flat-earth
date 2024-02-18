@@ -1,6 +1,6 @@
 import { area as turfArea, featureCollection, intersect } from '@turf/turf';
 import { BoundingBox, Geometry, GeoPoint, Polygon } from '../classes';
-import { Zoom } from '../types';
+import type { Zoom } from '../types';
 import {
   validateBboxByGrid,
   validateGeoPoint,

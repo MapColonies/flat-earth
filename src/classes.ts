@@ -1,4 +1,4 @@
-import { Latitude, Longitude } from './types';
+import type { Latitude, Longitude } from './types';
 
 export abstract class Geometry {
   protected constructor(public type: string) {}

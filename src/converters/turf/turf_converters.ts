@@ -1,4 +1,4 @@
-import { Feature, LineString, Polygon as TurfPolygon, BBox } from 'geojson';
+import type { Feature, LineString, Polygon as TurfPolygon, BBox } from 'geojson';
 import { bbox as turfBbox, lineString as turfLineString, polygon as turfPolygon } from '@turf/turf';
 import { BoundingBox, Geometry, Line, Polygon } from '../../classes';
 import { boundingBoxToPolygon } from '../geometry_converters';
