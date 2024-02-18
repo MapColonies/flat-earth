@@ -4,8 +4,8 @@ import { BoundingBox, Geometry, Line, Polygon } from '../../classes';
 import { boundingBoxToPolygon } from '../geometry_converters';
 
 export function geometryToTurfBbox(geometry: Geometry): BBox {
-  const turfGeometry = convertGeometryToTurfGeometry(geometry);
-  return turfBoundingBox(turfGeometry);
+  const feature = convertGeometryToFeature(geometry);
+  return turfBoundingBox(feature);
 }
 
 /**
