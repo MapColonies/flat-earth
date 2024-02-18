@@ -51,10 +51,10 @@ export function geometriesEqual(geometry1: Geometry, geometry2: Geometry): boole
 }
 
 /**
- * Check if a geometry covers it's bounding box
+ * Check if a geometry equals it's bounding box
  * @param geometry
  */
-export function geometryCoversBoundingBox(geometry: Geometry): boolean {
+export function geometryEqualsBoundingBox(geometry: Geometry): boolean {
   const boundingBox = geometryToBoundingBox(geometry);
   return geometriesEqual(geometry, boundingBox);
 }
