@@ -1,27 +1,27 @@
-import { Feature, LineString, Polygon as TurfPolygon, BBox } from 'geojson';
-import { bbox as turfBbox, lineString as turfLineString, polygon as turfPolygon } from '@turf/turf';
+import type { Feature, LineString, Polygon as TurfPolygon, BBox } from 'geojson';
+import { bbox as turfBoundingBox, lineString as turfLineString, polygon as turfPolygon } from '@turf/turf';
 import { BoundingBox, Geometry, Line, Polygon } from '../../classes';
 import { boundingBoxToPolygon } from '../geometry_converters';
 
 export function geometryToTurfBbox(geometry: Geometry): BBox {
-  const turfGeometry = convertGeometryToTurfGeometry(geometry);
-  return turfBbox(turfGeometry);
+  const feature = convertGeometryToFeature(geometry);
+  return turfBoundingBox(feature);
 }
 
 /**
- * Converts a {@link Geometry} to a {@link turf Feature}
- * In case of a {@BoundingBox} it will return a {@link turf Polygon}
+ * Converts a {@link Geometry} to a {@link Feature}.
+ * In case of a {@link BoundingBox} it will return a polygon ({@link TurfPolygon})
  * @param geometry
  */
-export function convertGeometryToTurfGeometry(geometry: Geometry): Feature<LineString | TurfPolygon> {
+export function convertGeometryToFeature(geometry: Geometry): Feature<LineString | TurfPolygon> {
   switch (geometry.type) {
     case 'Polygon':
       return polygonToTurfPolygon(geometry as Polygon);
     case 'Line':
       return lineToTurfLine(geometry as Line);
     case 'BoundingBox':
-      // in case of a bounding box we convert it to a polygon and will use one recursion
-      return convertGeometryToTurfGeometry(boundingBoxToPolygon(geometry as BoundingBox));
+      // in case of a bounding box we convert it into a polygon and will use one recursion
+      return convertGeometryToFeature(boundingBoxToPolygon(geometry as BoundingBox));
     default:
       throw new Error('Cant convert geometry to turf geometry, geometry not supported');
   }

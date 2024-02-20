@@ -1,8 +1,7 @@
-import { SCALE_FACTOR } from '../tiles/tiles_constants';
-
-import { Zoom } from '../types';
-import { ScaleSet, Tile, TileGrid } from '../tiles/tiles_classes';
 import { BoundingBox, GeoPoint } from '../classes';
+import { ScaleSet, Tile, TileGrid } from '../tiles/tiles_classes';
+import { SCALE_FACTOR } from '../tiles/tiles_constants';
+import { Zoom } from '../types';
 
 /**
  * Validates that the input `scaleSet` is valid
@@ -47,34 +46,34 @@ export function validateTileGrid(tileGrid: TileGrid): void {
 }
 
 /**
- * Validates that the input `bbox` is valid
- * @param bbox the bounding box to validate
+ * Validates that the input `boundingBox` is valid
+ * @param boundingBox the bounding box to validate
  */
-export function validateBoundingBox(bbox: BoundingBox): void {
-  if (bbox.max.lon <= bbox.min.lon) {
+export function validateBoundingBox(boundingBox: BoundingBox): void {
+  if (boundingBox.max.lon <= boundingBox.min.lon) {
     throw new Error("bounding box's max.lon must be larger than min.lon");
   }
 
-  if (bbox.max.lat <= bbox.min.lat) {
+  if (boundingBox.max.lat <= boundingBox.min.lat) {
     throw new Error("bounding box's max.lat must be larger than min.lat");
   }
 }
 
 /**
- * Validates that the input `bbox` is a valid bounding box inside the tile grid's bounding box
- * @param bbox the bounding box to validate
- * @param referenceTileGrid the tile grid to validate the `bbox` against its own bounding box
+ * Validates that the input `boundingBox` is a valid bounding box inside the tile grid's bounding box
+ * @param boundingBox the bounding box to validate
+ * @param referenceTileGrid the tile grid to validate the `boundingBox` against its own bounding box
  */
-export function validateBboxByGrid(bbox: BoundingBox, referenceTileGrid: TileGrid): void {
-  validateBoundingBox(bbox);
+export function validateBoundingBoxByGrid(boundingBox: BoundingBox, referenceTileGrid: TileGrid): void {
+  validateBoundingBox(boundingBox);
 
-  validateGeoPoint(bbox.min, referenceTileGrid);
-  validateGeoPoint(bbox.max, referenceTileGrid);
+  validateGeoPoint(boundingBox.min, referenceTileGrid);
+  validateGeoPoint(boundingBox.max, referenceTileGrid);
 }
 
 /**
  * Validates that the input `geoPoint` is valid
- * @param geoPoint the longtitude and latitudes to validate
+ * @param geoPoint a point with longitude and latitude to validate
  * @param referenceTileGrid the tile grid to validate the `geoPoint` against
  */
 export function validateGeoPoint(geoPoint: GeoPoint, referenceTileGrid: TileGrid): void {
