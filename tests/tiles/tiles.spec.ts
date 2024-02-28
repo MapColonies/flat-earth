@@ -624,7 +624,7 @@ describe('#geometryToTiles', () => {
 
   it('generates expected tiles from none bbox polygon', () => {
     // this is a polygon of a triangle
-    const polygon = new Polygon([new Point(-45, 0), new Point(0, 45), new Point(45, 0), new Point(-45, 0)]);
+    const polygon = new Polygon([[new Point(-45, 0), new Point(0, 45), new Point(45, 0), new Point(-45, 0)]]);
 
     const tileRanges = geometryToTiles(polygon, 2);
     const tiles = tileRanges.flatMap((tileRange) => tileRange.tiles());
@@ -635,7 +635,7 @@ describe('#geometryToTiles', () => {
 
   it('generates expected tiles from none bbox polygon in higher zoom', () => {
     // this is a polygon of a triangle
-    const polygon = new Polygon([new Point(-45, 0), new Point(0, 45), new Point(45, 0), new Point(-45, 0)]);
+    const polygon = new Polygon([[new Point(-45, 0), new Point(0, 45), new Point(45, 0), new Point(-45, 0)]]);
 
     const tileRanges = geometryToTiles(polygon, 3);
     const expectedTileRanges = [
@@ -699,12 +699,7 @@ describe('#geometryToTiles', () => {
   it('Should return a list of tiles for polygon in a specific zoom 1', () => {
     // Polygon looks like a house
     const polygon = new Polygon([
-      new Point(-90, -90),
-      new Point(90, -90),
-      new Point(90, 0),
-      new Point(0, 45),
-      new Point(-90, 0),
-      new Point(-90, -90),
+      [new Point(-90, -90), new Point(90, -90), new Point(90, 0), new Point(0, 45), new Point(-90, 0), new Point(-90, -90)],
     ]);
     const tileRanges = geometryToTiles(polygon, 2);
     const expectedTiles = [
@@ -728,15 +723,17 @@ describe('#geometryToTiles', () => {
 
   it('should take minimal zoom even if the polygon is small', () => {
     const polygon = new Polygon([
-      new Point(34.80117503043931, 31.72186022095839),
-      new Point(34.72650598377592, 31.687080518522365),
-      new Point(34.73943749465019, 31.660099528252445),
-      new Point(34.75654046064636, 31.660454592172286),
-      new Point(34.77239199010512, 31.679626028688716),
-      new Point(34.75278615103656, 31.685305694287223),
-      new Point(34.77197484459302, 31.690630065179775),
-      new Point(34.77239199010512, 31.69985825112292),
-      new Point(34.80117503043931, 31.72186022095839),
+      [
+        new Point(34.80117503043931, 31.72186022095839),
+        new Point(34.72650598377592, 31.687080518522365),
+        new Point(34.73943749465019, 31.660099528252445),
+        new Point(34.75654046064636, 31.660454592172286),
+        new Point(34.77239199010512, 31.679626028688716),
+        new Point(34.75278615103656, 31.685305694287223),
+        new Point(34.77197484459302, 31.690630065179775),
+        new Point(34.77239199010512, 31.69985825112292),
+        new Point(34.80117503043931, 31.72186022095839),
+      ],
     ]);
     // Polygon bounding box is smaller than the minimal zoom (in this example this bounding box
     // size match zoom 11,but we ask here to parse in zoom 10, so we need to make sure to take the smallest of the two.
@@ -747,18 +744,46 @@ describe('#geometryToTiles', () => {
   it('Should return a list of tiles for polygon in a specific zoom 2', () => {
     // Polygon looks like a house
     const polygon = new Polygon([
-      new Point(34.80117503043931, 31.72186022095839),
-      new Point(34.72650598377592, 31.687080518522365),
-      new Point(34.73943749465019, 31.660099528252445),
-      new Point(34.75654046064636, 31.660454592172286),
-      new Point(34.77239199010512, 31.679626028688716),
-      new Point(34.75278615103656, 31.685305694287223),
-      new Point(34.77197484459302, 31.690630065179775),
-      new Point(34.77239199010512, 31.69985825112292),
-      new Point(34.80117503043931, 31.72186022095839),
+      [
+        new Point(34.80117503043931, 31.72186022095839),
+        new Point(34.72650598377592, 31.687080518522365),
+        new Point(34.73943749465019, 31.660099528252445),
+        new Point(34.75654046064636, 31.660454592172286),
+        new Point(34.77239199010512, 31.679626028688716),
+        new Point(34.75278615103656, 31.685305694287223),
+        new Point(34.77197484459302, 31.690630065179775),
+        new Point(34.77239199010512, 31.69985825112292),
+        new Point(34.80117503043931, 31.72186022095839),
+      ],
     ]);
     const tileRanges = geometryToTiles(polygon, 18);
 
     expect(tileRanges).toHaveLength(807);
+  });
+
+  it.only('Should return a list of tiles for polygon with a hole', () => {
+    const polygon = new Polygon([
+      [new Point(0, -90), new Point(180, -90), new Point(180, 90), new Point(0, 90), new Point(0, -90)],
+      [new Point(10, -80), new Point(170, -80), new Point(170, 80), new Point(10, 80), new Point(10, -80)],
+    ]);
+    const tileRanges = geometryToTiles(polygon, 2);
+
+    const expectedTiles = [
+      new Tile(4, 0, 2, 1),
+      new Tile(5, 0, 2, 1),
+      new Tile(6, 0, 2, 1),
+      new Tile(7, 0, 2, 1),
+      new Tile(4, 1, 2, 1),
+      new Tile(7, 1, 2, 1),
+      new Tile(4, 2, 2, 1),
+      new Tile(7, 2, 2, 1),
+      new Tile(4, 3, 2, 1),
+      new Tile(5, 3, 2, 1),
+      new Tile(6, 3, 2, 1),
+      new Tile(7, 3, 2, 1),
+    ];
+
+    const tiles = tileRanges.flatMap((tileRange) => tileRange.tiles());
+    expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
   });
 });

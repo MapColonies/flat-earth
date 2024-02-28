@@ -28,7 +28,7 @@ export function convertGeometryToFeature(geometry: Geometry): Feature<LineString
 }
 
 export function polygonToTurfPolygon(polygon: Polygon): Feature<TurfPolygon> {
-  return turfPolygon([polygon.points.map((point) => [point.coordinates.lon, point.coordinates.lat])]);
+  return turfPolygon(polygon.points.map((ring) => ring.map((point) => [point.coordinates.lon, point.coordinates.lat])));
 }
 
 export function lineToTurfLine(line: Line): Feature<LineString> {

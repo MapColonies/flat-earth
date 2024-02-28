@@ -10,7 +10,7 @@ export abstract class Geometry {
  * Points must be ordered counterclockwise.
  */
 export class Polygon extends Geometry {
-  public constructor(public points: Point[] = []) {
+  public constructor(public points: Point[][] = []) {
     super('Polygon');
   }
 }
