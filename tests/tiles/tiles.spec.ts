@@ -761,7 +761,7 @@ describe('#geometryToTiles', () => {
     expect(tileRanges).toHaveLength(807);
   });
 
-  it.only('Should return a list of tiles for polygon with a hole', () => {
+  it('Should return a list of tiles for polygon with a hole', () => {
     const polygon = new Polygon([
       [new Point(0, -90), new Point(180, -90), new Point(180, 90), new Point(0, 90), new Point(0, -90)],
       [new Point(10, -80), new Point(170, -80), new Point(170, 80), new Point(10, 80), new Point(10, -80)],
