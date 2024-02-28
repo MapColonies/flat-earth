@@ -611,6 +611,14 @@ describe('Find minimal zoom that can contain bounding box in one tile', () => {
     const expectedZoom = 1;
     expect(minimalZoom).toEqual(expectedZoom);
   });
+
+  it('should return null if bounding box could not be contained in any zoom level', () => {
+    const boundingBox = new BoundingBox(-170, -60, 170, -5);
+
+    const minimalZoom = findMinimalZoom(boundingBox);
+
+    expect(minimalZoom).toBeNull();
+  });
 });
 
 describe('#geometryToTiles', () => {

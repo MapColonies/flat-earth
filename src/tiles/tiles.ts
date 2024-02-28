@@ -51,7 +51,7 @@ function tileEffectiveWidth(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_W
 
 function polygonToTiles(polygon: Polygon, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   const boundingBox = geometryToBoundingBox(polygon);
-  const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
+  const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid) ?? 0;
   const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), 1, referenceTileGrid);
   return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
 }
@@ -285,9 +285,9 @@ export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom
  * Find the minimal zoom where a bounding box can be contained in a single tile (the tile may still intersect a tile boundary)
  * @param boundingBox bounding box
  * @param referenceTileGrid tile grid
- * @returns minimal zoom that may contain the bounding box in a single tile
+ * @returns minimal zoom that may contain the bounding box in a single tile or null if it could not be contained in any zoom level
  */
-export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Zoom {
+export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Zoom | null {
   validateBoundingBox(boundingBox);
   validateTileGrid(referenceTileGrid);
   validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
@@ -303,7 +303,8 @@ export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: Til
     Math.log2((referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) / (referenceTileGrid.numberOfMinLevelTilesY * dy))
   );
 
-  return Math.min(minimalXZoom, minimalYZoom);
+  const minimalZoom = Math.min(minimalXZoom, minimalYZoom);
+  return minimalZoom >= 0 ? minimalZoom : null;
 }
 
 /**
