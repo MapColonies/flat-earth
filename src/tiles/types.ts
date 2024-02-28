@@ -15,7 +15,7 @@ export type Point2D = [number, number];
 /**
  * Text string with the language of the string identified as recommended in the XML 1.0 W3C Recommendation, section 2.12
  */
-export type LanguageString = {
+export interface LanguageString {
   /**
    * Human-language string
    */
@@ -24,23 +24,23 @@ export type LanguageString = {
    * Language (in {@link https://www.rfc-editor.org/rfc/rfc4646.txt | IETF RFC 4646} syntax) of the string
    */
   lang?: string;
-};
+}
 
 /**
  * Name or code with an (optional) authority
  */
-export type CodeType = {
+export interface CodeType {
   code: string;
   /**
    * Dictionary, thesaurus, or authority for the name or code, such as the organisation who assigned the value, or the dictionary from which it is taken
    */
   codeSpace?: URI;
-};
+}
 
 /**
  * Unordered list of one or more commonly used or formalised word(s) or phrase(s) used to describe the subject
  */
-export type Keyword = {
+export interface Keyword {
   /**
    * Unordered list of one or more commonly used or formalized word(s) or phrase(s) used to describe a dataset
    */
@@ -49,7 +49,7 @@ export type Keyword = {
    * Type of the keyword
    */
   type?: CodeType;
-};
+}
 
 /**
  * Coordinate Reference System (CRS)
@@ -81,7 +81,7 @@ export type CRS =
 /**
  * Minimum bounding rectangle surrounding a possibly 3D resource in the CRS indicated elsewhere
  */
-export type BoundingBox = {
+export interface BoundingBox {
   /**
    * Coordinates of bounding box corner at which the value of each coordinate normally is the algebraic minimum within this bounding box
    */
@@ -98,12 +98,12 @@ export type BoundingBox = {
    * Ordered list of names of the dimensions defined in the CRS
    */
   orderedAxes?: [string, string, string?];
-};
+}
 
 /**
  * Minimum bounding rectangle surrounding a 2D resource in the CRS indicated elsewhere
  */
-export type BoundingBox2D = {
+export interface BoundingBox2D {
   /**
    * Coordinates of bounding box corner at which the value of each coordinate normally is the algebraic minimum within this bounding box
    */
@@ -120,12 +120,12 @@ export type BoundingBox2D = {
    * Ordered list of names of the dimensions defined in the CRS
    */
   orderedAxes?: [string, string];
-};
+}
 
 /**
  * Variable Matrix Width data structure
  */
-export type VariableMatrixWidth = {
+export interface VariableMatrixWidth {
   /**
    * Number of tiles in width that coalesce in a single tile for these rows
    */
@@ -138,7 +138,7 @@ export type VariableMatrixWidth = {
    * Last tile row where the coalescence factor applies for this tilematrix
    */
   maxTileRow: number;
-};
+}
 
 /**
  * The corner of the tile matrix (_topLeft_ or _bottomLeft_) used as the origin for numbering tile rows and columns. This corner is also a corner of the (0, 0) tile
@@ -148,7 +148,7 @@ export type CornerOfOriginCode = (typeof cornerOfOriginCode)[number];
 /**
  * A tile matrix, usually corresponding to a particular zoom level of a TileMatrixSet
  */
-export type TileMatrix = {
+export interface TileMatrix {
   /**
    * Title of this tile matrix, normally used for display to a human
    */
@@ -201,12 +201,19 @@ export type TileMatrix = {
    * Describes the rows that has variable matrix width
    */
   variableMatrixWidths?: VariableMatrixWidth[];
-};
+}
+
+/**
+ * JSON encoding for TileMatrix. described in https://docs.ogc.org/is/17-083r4/17-083r4.html#toc18
+ */
+export interface TileMatrixJSON extends Omit<TileMatrix, 'identifier'> {
+  id: string;
+}
 
 /**
  * A definition of a tile matrix set following the Tile Matrix Set standard
  */
-export type TileMatrixSet = {
+export interface TileMatrixSet {
   /**
    * Title of this tile matrix set, normally used for display to a human
    */
@@ -247,12 +254,13 @@ export type TileMatrixSet = {
    * Describes scale levels and its tile matrices
    */
   tileMatrices: TileMatrix[];
-};
+}
 
 /**
  * JSON encoding for TileMatrixSet. described in https://docs.ogc.org/is/17-083r4/17-083r4.html#toc18
  */
-export type TileMatrixSetJSON = Omit<TileMatrixSet, 'title' | 'description' | 'keywords' | 'identifier' | 'crs' | 'boundingBox' | 'tileMatrices'> & {
+export interface TileMatrixSetJSON
+  extends Omit<TileMatrixSet, 'title' | 'description' | 'keywords' | 'identifier' | 'crs' | 'boundingBox' | 'tileMatrices'> {
   /**
    * Title of this tile matrix set, normally used for display to a human
    */
@@ -280,5 +288,5 @@ export type TileMatrixSetJSON = Omit<TileMatrixSet, 'title' | 'description' | 'k
   /**
    * Describes scale levels and its tile matrices
    */
-  tileMatrices: (Omit<TileMatrix, 'identifier'> & { id: string })[];
-};
+  tileMatrices: TileMatrixJSON[];
+}
