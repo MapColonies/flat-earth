@@ -29,5 +29,5 @@ export function boundingBoxToPolygon(boundingBox: BoundingBox): Polygon {
   points.push(new Point(boundingBox.max.lon, boundingBox.max.lat));
   points.push(new Point(boundingBox.min.lon, boundingBox.max.lat));
   points.push(new Point(boundingBox.min.lon, boundingBox.min.lat));
-  return new Polygon(points);
+  return new Polygon([points]);
 }

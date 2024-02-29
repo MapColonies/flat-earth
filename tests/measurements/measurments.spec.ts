@@ -24,7 +24,7 @@ test('Area of Australia polygon', () => {
   points.push(new Point(154, -27));
   points.push(new Point(144, -15));
   points.push(new Point(125, -15));
-  const polygon = new Polygon(points);
+  const polygon = new Polygon([points]);
   expect(Math.round(measurements.area(polygon))).toBe(7748891609977);
 });
 
@@ -38,7 +38,7 @@ test('Polygon geometry to bounding box', () => {
   points.push(new Point(154, -27));
   points.push(new Point(144, -15));
   points.push(new Point(125, -15));
-  const polygon = new Polygon(points);
+  const polygon = new Polygon([points]);
   const bbox = geometryToBoundingBox(polygon);
   expect(bbox.min.lon).toBe(113);
   expect(bbox.min.lat).toBe(-39);
@@ -70,10 +70,10 @@ test('Line geometry to bounding box', () => {
 test('Bounding box to polygon', () => {
   const bbox = new BoundingBox(113, -39, 154, -15);
   const polygon = boundingBoxToPolygon(bbox);
-  expect(polygon.points).toHaveLength(5);
-  expect(polygon.points[0]).toStrictEqual(new Point(113, -39));
-  expect(polygon.points[1]).toStrictEqual(new Point(154, -39));
-  expect(polygon.points[2]).toStrictEqual(new Point(154, -15));
-  expect(polygon.points[3]).toStrictEqual(new Point(113, -15));
-  expect(polygon.points[4]).toStrictEqual(new Point(113, -39));
+  expect(polygon.points[0]).toHaveLength(5);
+  expect(polygon.points[0][0]).toStrictEqual(new Point(113, -39));
+  expect(polygon.points[0][1]).toStrictEqual(new Point(154, -39));
+  expect(polygon.points[0][2]).toStrictEqual(new Point(154, -15));
+  expect(polygon.points[0][3]).toStrictEqual(new Point(113, -15));
+  expect(polygon.points[0][4]).toStrictEqual(new Point(113, -39));
 });
