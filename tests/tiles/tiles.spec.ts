@@ -1,9 +1,9 @@
 import {
   boundingBoxToTileRange,
   expandBoundingBoxToTileGrid,
-  findMinimalZoom,
   geometryToTiles,
   geoPointZoomToTile,
+  minimalBoundingTile,
   tileToBoundingBox,
   tileToTileRange,
   zoomShift,
@@ -590,34 +590,66 @@ describe('Snap a bounding box to tile grid', () => {
   });
 });
 
-describe('Find minimal zoom that can contain bounding box in one tile', () => {
-  it('should return correct zoom starting at zoom 2 and moving to 1', () => {
+describe('#minimalBoundingTile', () => {
+  it('should return correct tile starting lookup at zoom 1 and moving to 0', () => {
     const boundingBox = new BoundingBox(-135, -45, -45, 45);
-    const minimalZoom = findMinimalZoom(boundingBox);
-    const expectedZoom = 1;
-    expect(minimalZoom).toEqual(expectedZoom);
+    const expectedTile = new Tile(0, 0, 0, 1);
+
+    const tile = minimalBoundingTile(boundingBox);
+
+    expect(tile).toStrictEqual(expectedTile);
   });
 
-  it('should return correct zoom', () => {
+  it('should return correct tile starting at lookup at zoom 2 and moving to 0', () => {
+    const boundingBox = new BoundingBox(160, -5, 170, 5);
+    const expectedTile = new Tile(1, 0, 0, 1);
+
+    const tile = minimalBoundingTile(boundingBox);
+
+    expect(tile).toStrictEqual(expectedTile);
+  });
+
+  it('should return correct tile', () => {
     const boundingBox = new BoundingBox(10, 10, 30, 30);
-    const minimalZoom = findMinimalZoom(boundingBox);
-    const expectedZoom = 3;
-    expect(minimalZoom).toEqual(expectedZoom);
+    const expectedTile = new Tile(4, 1, 2, 1);
+
+    const tile = minimalBoundingTile(boundingBox);
+
+    expect(tile).toStrictEqual(expectedTile);
   });
 
-  it('Small bounding box located on the edge of minimal tiles should go one level up', () => {
-    const boundingBox = new BoundingBox(-100, -60, -45, -5);
-    const minimalZoom = findMinimalZoom(boundingBox);
-    const expectedZoom = 1;
-    expect(minimalZoom).toEqual(expectedZoom);
+  it("should return correct tile even if the bounding box is touching the tile's edge", () => {
+    const boundingBox = new BoundingBox(25, 10, 45, 30);
+    const expectedTile = new Tile(4, 1, 2, 1);
+
+    const tile = minimalBoundingTile(boundingBox);
+
+    expect(tile).toStrictEqual(expectedTile);
+  });
+
+  it('bounding box located on the edge of a tile grid should go one zoom level up', () => {
+    const boundingBox = new BoundingBox(45, 10, 65, 30);
+    const expectedTile = new Tile(5, 1, 2, 1);
+
+    const tile = minimalBoundingTile(boundingBox);
+
+    expect(tile).toStrictEqual(expectedTile);
   });
 
   it('should return null if bounding box could not be contained in any zoom level', () => {
     const boundingBox = new BoundingBox(-170, -60, 170, -5);
 
-    const minimalZoom = findMinimalZoom(boundingBox);
+    const tile = minimalBoundingTile(boundingBox);
 
-    expect(minimalZoom).toBeNull();
+    expect(tile).toBeNull();
+  });
+
+  it('should return null if bounding box could not be contained in any zoom level for small bounding box intersecting tile grid at zoom 0', () => {
+    const boundingBox = new BoundingBox(-1, -1, 1, 1);
+
+    const tile = minimalBoundingTile(boundingBox);
+
+    expect(tile).toBeNull();
   });
 });
 
