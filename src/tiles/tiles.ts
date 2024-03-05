@@ -313,7 +313,7 @@ export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: Til
  * @param referenceTileGrid tile grid
  * @returns tile range in the given zoom level
  */
-export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+export function geometryToTileRanges(geometry: Geometry, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   // TODO: a validation is missing to check if the geometry is within the tile grid
   validateTileGrid(referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);

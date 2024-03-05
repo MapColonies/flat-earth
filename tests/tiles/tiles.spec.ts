@@ -1,16 +1,16 @@
+import { BoundingBox, GeoPoint, Point, Polygon } from '../../src/classes';
 import {
   boundingBoxToTileRange,
   expandBoundingBoxToTileGrid,
   findMinimalZoom,
-  geometryToTiles,
+  geometryToTileRanges,
   geoPointZoomToTile,
   tileToBoundingBox,
   tileToTileRange,
   zoomShift,
 } from '../../src/tiles/tiles';
-import { CRS_CRS84, SCALESET_GOOGLE_CRS84_QUAD_MODIFIED, TILEGRID_WEB_MERCATOR, TILEGRID_WORLD_CRS84 } from '../../src/tiles/tiles_constants';
-import { BoundingBox, GeoPoint, Point, Polygon } from '../../src/classes';
 import { Tile, TileGrid, TileRange } from '../../src/tiles/tiles_classes';
+import { CRS_CRS84, SCALESET_GOOGLE_CRS84_QUAD_MODIFIED, TILEGRID_WEB_MERCATOR, TILEGRID_WORLD_CRS84 } from '../../src/tiles/tiles_constants';
 import type { Zoom } from '../../src/types';
 
 const tileGridTests = [
@@ -613,10 +613,10 @@ describe('Find minimal zoom that can contain bounding box in one tile', () => {
   });
 });
 
-describe('#geometryToTiles', () => {
+describe('#geometryToTileRanges', () => {
   it('generates expected tiles from bbox', () => {
     const boundingBox = new BoundingBox(-45, -45, 0, 0);
-    const tileRanges = geometryToTiles(boundingBox, 2);
+    const tileRanges = geometryToTileRanges(boundingBox, 2);
     const expectedTiles = [new Tile(3, 2, 2, 1)];
     const tiles = tileRanges.flatMap((tileRange) => tileRange.tiles());
     expect(tiles).toEqual(expectedTiles);
@@ -626,7 +626,7 @@ describe('#geometryToTiles', () => {
     // this is a polygon of a triangle
     const polygon = new Polygon([[new Point(-45, 0), new Point(0, 45), new Point(45, 0), new Point(-45, 0)]]);
 
-    const tileRanges = geometryToTiles(polygon, 2);
+    const tileRanges = geometryToTileRanges(polygon, 2);
     const tiles = tileRanges.flatMap((tileRange) => tileRange.tiles());
     const expectedTiles = [new Tile(3, 1, 2, 1), new Tile(4, 1, 2, 1)];
 
@@ -637,7 +637,7 @@ describe('#geometryToTiles', () => {
     // this is a polygon of a triangle
     const polygon = new Polygon([[new Point(-45, 0), new Point(0, 45), new Point(45, 0), new Point(-45, 0)]]);
 
-    const tileRanges = geometryToTiles(polygon, 3);
+    const tileRanges = geometryToTileRanges(polygon, 3);
     const expectedTileRanges = [
       new TileRange(7, 2, 7, 2, 3),
       new TileRange(7, 3, 7, 3, 3),
@@ -701,7 +701,7 @@ describe('#geometryToTiles', () => {
     const polygon = new Polygon([
       [new Point(-90, -90), new Point(90, -90), new Point(90, 0), new Point(0, 45), new Point(-90, 0), new Point(-90, -90)],
     ]);
-    const tileRanges = geometryToTiles(polygon, 2);
+    const tileRanges = geometryToTileRanges(polygon, 2);
     const expectedTiles = [
       new Tile(2, 1, 2, 1),
       new Tile(3, 1, 2, 1),
@@ -737,7 +737,7 @@ describe('#geometryToTiles', () => {
     ]);
     // Polygon bounding box is smaller than the minimal zoom (in this example this bounding box
     // size match zoom 11,but we ask here to parse in zoom 10, so we need to make sure to take the smallest of the two.
-    const tileRanges = geometryToTiles(polygon, 10);
+    const tileRanges = geometryToTileRanges(polygon, 10);
     expect(tileRanges).toHaveLength(1);
   });
 
@@ -756,7 +756,7 @@ describe('#geometryToTiles', () => {
         new Point(34.80117503043931, 31.72186022095839),
       ],
     ]);
-    const tileRanges = geometryToTiles(polygon, 18);
+    const tileRanges = geometryToTileRanges(polygon, 18);
 
     expect(tileRanges).toHaveLength(807);
   });
@@ -766,7 +766,7 @@ describe('#geometryToTiles', () => {
       [new Point(0, -90), new Point(180, -90), new Point(180, 90), new Point(0, 90), new Point(0, -90)],
       [new Point(10, -80), new Point(170, -80), new Point(170, 80), new Point(10, 80), new Point(10, -80)],
     ]);
-    const tileRanges = geometryToTiles(polygon, 2);
+    const tileRanges = geometryToTileRanges(polygon, 2);
 
     const expectedTiles = [
       new Tile(4, 0, 2, 1),
