@@ -786,4 +786,30 @@ describe('#geometryToTileRanges', () => {
     const tiles = tileRanges.flatMap((tileRange) => tileRange.tiles());
     expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
   });
+
+  it('Should return a list of tiles for polygon with a hole and non default metatile (2)', () => {
+    const polygon = new Polygon([
+      [new Point(0, -90), new Point(180, -90), new Point(180, 90), new Point(0, 90), new Point(0, -90)],
+      [new Point(10, -80), new Point(170, -80), new Point(170, 80), new Point(10, 80), new Point(10, -80)],
+    ]);
+    const tileRanges = geometryToTileRanges(polygon, 3, 2);
+
+    const expectedTiles = [
+      new Tile(4, 0, 3, 2),
+      new Tile(5, 0, 3, 2),
+      new Tile(6, 0, 3, 2),
+      new Tile(7, 0, 3, 2),
+      new Tile(4, 1, 3, 2),
+      new Tile(7, 1, 3, 2),
+      new Tile(4, 2, 3, 2),
+      new Tile(7, 2, 3, 2),
+      new Tile(4, 3, 3, 2),
+      new Tile(5, 3, 3, 2),
+      new Tile(6, 3, 3, 2),
+      new Tile(7, 3, 3, 2),
+    ];
+
+    const tiles = tileRanges.flatMap((tileRange) => tileRange.tiles());
+    expect(tiles).toEqual(expect.arrayContaining(expectedTiles));
+  });
 });
