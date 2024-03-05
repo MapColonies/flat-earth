@@ -51,7 +51,7 @@ function tileEffectiveWidth(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_W
 
 function polygonToTiles(polygon: Polygon, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   const boundingBox = geometryToBoundingBox(polygon);
-  const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
+  const minimalZoom = minimalBoundingTile(boundingBox, referenceTileGrid)?.z ?? 0;
   const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), 1, referenceTileGrid);
   return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
 }
@@ -282,12 +282,12 @@ export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom
 }
 
 /**
- * Find the minimal zoom where a bounding box can be contained in a single tile (the tile may still intersect a tile boundary)
+ * Find the minimal bounding tile containing the bounding box
  * @param boundingBox bounding box
  * @param referenceTileGrid tile grid
- * @returns minimal zoom that may contain the bounding box in a single tile
+ * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
  */
-export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Zoom {
+export function minimalBoundingTile(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile | null {
   validateBoundingBox(boundingBox);
   validateTileGrid(referenceTileGrid);
   validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
@@ -303,7 +303,18 @@ export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: Til
     Math.log2((referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) / (referenceTileGrid.numberOfMinLevelTilesY * dy))
   );
 
-  return Math.min(minimalXZoom, minimalYZoom);
+  const minimalZoom = Math.min(minimalXZoom, minimalYZoom);
+
+  for (let zoom = minimalZoom; zoom >= 0; zoom--) {
+    const minTile = geoCoordsToTile(boundingBox.min, zoom, true);
+    const maxTile = geoCoordsToTile(boundingBox.max, zoom, true);
+
+    if (minTile.x === maxTile.x && minTile.y === maxTile.y) {
+      return minTile;
+    }
+  }
+
+  return null;
 }
 
 /**
