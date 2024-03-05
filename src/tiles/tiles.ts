@@ -137,12 +137,12 @@ function snapMaxPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: Tile
 }
 
 /**
- * Creates a generator function which calculates a tile within a bounding box
+ * Creates a generator function which calculates tiles that intersect the bounding box
  * @param boundingBox the bounding box
  * @param zoom the zoom level
  * @param metatile the size of a metatile
  * @param referenceTileGrid a tile grid which the calculated tile belongs to
- * @returns generator function which calculates tiles within the `boundingBox`
+ * @returns generator function which calculates tiles that intersect the `boundingBox`
  */
 export function boundingBoxToTileRange(
   boundingBox: BoundingBox,
