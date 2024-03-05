@@ -49,10 +49,10 @@ function tileEffectiveWidth(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_W
   );
 }
 
-function polygonToTiles(polygon: Polygon, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+function polygonToTiles(polygon: Polygon, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   const boundingBox = geometryToBoundingBox(polygon);
   const minimalZoom = findMinimalZoom(boundingBox, referenceTileGrid);
-  const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), 1, referenceTileGrid);
+  const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), metatile, referenceTileGrid);
   return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
 }
 
@@ -321,19 +321,20 @@ export function findMinimalZoom(boundingBox: BoundingBox, referenceTileGrid: Til
  * Convert a geometry to a set of tile ranges in the given zoom level
  * @param geometry geometry to compute tile ranges for
  * @param zoom target zoom level
+ * @param metatile size of a metatile
  * @param referenceTileGrid tile grid
  * @returns tile range in the given zoom level
  */
-export function geometryToTileRanges(geometry: Geometry, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+export function geometryToTileRanges(geometry: Geometry, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   // TODO: a validation is missing to check if the geometry is within the tile grid
   validateTileGrid(referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
 
   switch (geometry.type) {
     case 'Polygon':
-      return polygonToTiles(geometry as Polygon, zoom, referenceTileGrid);
+      return polygonToTiles(geometry as Polygon, zoom, metatile, referenceTileGrid);
     case 'BoundingBox':
-      return [boundingBoxToTileRange(geometry as BoundingBox, zoom, 1, referenceTileGrid)];
+      return [boundingBoxToTileRange(geometry as BoundingBox, zoom, metatile, referenceTileGrid)];
     default:
       throw new Error(`Unsupported geometry type: ${geometry.type}`);
   }
