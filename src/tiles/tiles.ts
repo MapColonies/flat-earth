@@ -246,20 +246,24 @@ export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILE
  * This method will help find what tiles are needed to cover a given tile at a different zoom level
  * @param tile
  * @param zoom target tile range zoom
- * @returns the first tile of the tile range and the last tile of the tile range
+ * @param referenceTileGrid tile grid
+ * @returns tile range at the given zoom level
  */
-export function tileToTileRange(tile: Tile, zoom: Zoom): TileRange {
+export function tileToTileRange(tile: Tile, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange {
   if (zoom < tile.z) {
     throw new Error(`Target zoom level ${zoom} must be higher or equal to the tile's zoom level ${tile.z}`);
   }
 
   const dz = zoom - tile.z;
-  const scaleFactorBetweenTwoLevels = Math.pow(SCALE_FACTOR, dz);
-  const minX = tile.x * scaleFactorBetweenTwoLevels;
-  const minY = tile.y * scaleFactorBetweenTwoLevels;
-  const maxX = (tile.x + 1) * scaleFactorBetweenTwoLevels - 1;
-  const maxY = (tile.y + 1) * scaleFactorBetweenTwoLevels - 1;
-  return new TileRange(minX, minY, maxX, maxY, zoom);
+  const scaleFactorBetweenTwoLevels = SCALE_FACTOR ** dz;
+  const tileGridMaxX = Math.ceil((referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom) / (tile.metatile ?? 1)) - 1;
+  const tileGridMaxY = Math.ceil((referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom) / (tile.metatile ?? 1)) - 1;
+  const minX = Math.max(tile.x * scaleFactorBetweenTwoLevels, 0);
+  const minY = Math.max(tile.y * scaleFactorBetweenTwoLevels, 0);
+  const maxX = Math.min((tile.x + 1) * scaleFactorBetweenTwoLevels - 1, tileGridMaxX);
+  const maxY = Math.min((tile.y + 1) * scaleFactorBetweenTwoLevels - 1, tileGridMaxY);
+
+  return new TileRange(minX, minY, maxX, maxY, zoom, tile.metatile);
 }
 
 /**
