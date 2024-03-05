@@ -59,21 +59,28 @@ function polygonToTiles(polygon: Polygon, zoom: Zoom, referenceTileGrid: TileGri
 function polygonToTileRanges(polygon: Polygon, tileRange: TileRange, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   const tileRanges: TileRange[] = [];
   const partialTiles: Tile[] = [];
+
   for (const tile of tileRange.tileGenerator()) {
     const tileIntersectionType = polygonTileIntersection(polygon, tile);
-    if (tileIntersectionType === TileIntersectionType.FULL) {
-      tileRanges.push(tileToTileRange(tile, zoom));
-    } else if (tileIntersectionType === TileIntersectionType.PARTIAL) {
-      if (tile.z === zoom) {
-        tileRanges.push(tileToTileRange(tile, zoom));
-      } else {
-        partialTiles.push(tile);
-      }
+
+    switch (tileIntersectionType) {
+      case TileIntersectionType.FULL:
+        tileRanges.push(tileToTileRange(tile, zoom, referenceTileGrid));
+        break;
+      case TileIntersectionType.PARTIAL:
+        if (tile.z === zoom) {
+          tileRanges.push(tileToTileRange(tile, zoom, referenceTileGrid));
+        } else {
+          partialTiles.push(tile);
+        }
+        break;
+      case TileIntersectionType.NONE:
+        break;
     }
   }
 
   for (const tile of partialTiles) {
-    tileRanges.push(...polygonToTileRanges(polygon, tileToTileRange(tile, tile.z + 1), zoom, referenceTileGrid));
+    tileRanges.push(...polygonToTileRanges(polygon, tileToTileRange(tile, tile.z + 1, referenceTileGrid), zoom, referenceTileGrid));
   }
 
   return tileRanges;
