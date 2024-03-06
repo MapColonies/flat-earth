@@ -6,7 +6,9 @@ import { geometryToTurfBbox } from './turf/turf_converters';
  * @param geometry
  */
 export function geometryToBoundingBox(geometry: Geometry): BoundingBox {
-  if (geometry instanceof BoundingBox) return geometry;
+  if (geometry instanceof BoundingBox) {
+    return geometry;
+  }
 
   if (geometry instanceof Point) {
     return new BoundingBox(geometry.coordinates.lon, geometry.coordinates.lat, geometry.coordinates.lon, geometry.coordinates.lat);
