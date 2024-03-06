@@ -4,6 +4,45 @@ import { SCALE_FACTOR } from '../tiles/tiles_constants';
 import { Zoom } from '../types';
 
 /**
+ * Validates that the input `boundingBox` is valid
+ * @param boundingBox the bounding box to validate
+ */
+export function validateBoundingBox(boundingBox: BoundingBox): void {
+  if (boundingBox.max.lon <= boundingBox.min.lon) {
+    throw new Error("bounding box's max.lon must be larger than min.lon");
+  }
+
+  if (boundingBox.max.lat <= boundingBox.min.lat) {
+    throw new Error("bounding box's max.lat must be larger than min.lat");
+  }
+}
+
+/**
+ * Validates that the input `geoPoint` is valid
+ * @param geoPoint a point with longitude and latitude to validate
+ * @param referenceTileGrid the tile grid to validate the `geoPoint` against
+ */
+export function validateGeoPoint(geoPoint: GeoPoint, referenceTileGrid: TileGrid): void {
+  if (geoPoint.lon < referenceTileGrid.boundingBox.min.lon || geoPoint.lon > referenceTileGrid.boundingBox.max.lon) {
+    throw new RangeError(`longitude ${geoPoint.lon} is out of range of tile grid's bounding box`);
+  }
+
+  if (geoPoint.lat < referenceTileGrid.boundingBox.min.lat || geoPoint.lat > referenceTileGrid.boundingBox.max.lat) {
+    throw new RangeError(`latitude ${geoPoint.lat} is out of range of tile grid's bounding box`);
+  }
+}
+
+/**
+ * Validates that the input `metatile` is valid
+ * @param metatile the metatile size
+ */
+export function validateMetatile(metatile: number): void {
+  if (metatile <= 0) {
+    throw new Error('metatile must be larger than 0');
+  }
+}
+
+/**
  * Validates that the input `scaleSet` is valid
  * @param scaleSet the scale set to validate
  */
@@ -46,20 +85,6 @@ export function validateTileGrid(tileGrid: TileGrid): void {
 }
 
 /**
- * Validates that the input `boundingBox` is valid
- * @param boundingBox the bounding box to validate
- */
-export function validateBoundingBox(boundingBox: BoundingBox): void {
-  if (boundingBox.max.lon <= boundingBox.min.lon) {
-    throw new Error("bounding box's max.lon must be larger than min.lon");
-  }
-
-  if (boundingBox.max.lat <= boundingBox.min.lat) {
-    throw new Error("bounding box's max.lat must be larger than min.lat");
-  }
-}
-
-/**
  * Validates that the input `boundingBox` is a valid bounding box inside the tile grid's bounding box
  * @param boundingBox the bounding box to validate
  * @param referenceTileGrid the tile grid to validate the `boundingBox` against its own bounding box
@@ -69,32 +94,6 @@ export function validateBoundingBoxByGrid(boundingBox: BoundingBox, referenceTil
 
   validateGeoPoint(boundingBox.min, referenceTileGrid);
   validateGeoPoint(boundingBox.max, referenceTileGrid);
-}
-
-/**
- * Validates that the input `geoPoint` is valid
- * @param geoPoint a point with longitude and latitude to validate
- * @param referenceTileGrid the tile grid to validate the `geoPoint` against
- */
-export function validateGeoPoint(geoPoint: GeoPoint, referenceTileGrid: TileGrid): void {
-  if (geoPoint.lon < referenceTileGrid.boundingBox.min.lon || geoPoint.lon > referenceTileGrid.boundingBox.max.lon) {
-    throw new RangeError(`longitude ${geoPoint.lon} is out of range of tile grid's bounding box`);
-  }
-
-  if (geoPoint.lat < referenceTileGrid.boundingBox.min.lat || geoPoint.lat > referenceTileGrid.boundingBox.max.lat) {
-    throw new RangeError(`latitude ${geoPoint.lat} is out of range of tile grid's bounding box`);
-  }
-}
-
-/**
- * Validates that the input `zoom` is valid
- * @param zoom the zoom level to validate
- * @param referenceTileGrid the tile grid to validate the `zoom` against
- */
-export function validateZoomByGrid(zoom: Zoom, referenceTileGrid: TileGrid): void {
-  if (!referenceTileGrid.wellKnownScaleSet.scaleDenominators.has(zoom)) {
-    throw new Error('zoom level is not part of the given well known scale set');
-  }
 }
 
 /**
@@ -118,11 +117,12 @@ export function validateTileByGrid(tile: Tile, referenceTileGrid: TileGrid): voi
 }
 
 /**
- * Validates that the input `metatile` is valid
- * @param metatile the metatile size
+ * Validates that the input `zoom` is valid
+ * @param zoom the zoom level to validate
+ * @param referenceTileGrid the tile grid to validate the `zoom` against
  */
-export function validateMetatile(metatile: number): void {
-  if (metatile <= 0) {
-    throw new Error('metatile must be larger than 0');
+export function validateZoomByGrid(zoom: Zoom, referenceTileGrid: TileGrid): void {
+  if (!referenceTileGrid.wellKnownScaleSet.scaleDenominators.has(zoom)) {
+    throw new Error('zoom level is not part of the given well known scale set');
   }
 }
