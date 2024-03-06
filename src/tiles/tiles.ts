@@ -5,6 +5,7 @@ import {
   validateBoundingBox,
   validateBoundingBoxByGrid,
   validateGeoPoint,
+  validateGeometryByGrid,
   validateMetatile,
   validateTileByGrid,
   validateTileGrid,
@@ -325,8 +326,8 @@ export function minimalBoundingTile(boundingBox: BoundingBox, referenceTileGrid:
  * @returns tile range in the given zoom level
  */
 export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
-  // TODO: a validation is missing to check if the geometry is within the tile grid
   validateTileGrid(referenceTileGrid);
+  validateGeometryByGrid(geometry, referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
 
   switch (geometry.type) {
@@ -347,8 +348,8 @@ export function geometryToTiles(geometry: Geometry, zoom: Zoom, referenceTileGri
  * @returns intersection type between the geometry and the tile
  */
 export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
-  // TODO: a validation is missing to check if the polygon is within the tile grid
   validateTileGrid(referenceTileGrid);
+  validateGeometryByGrid(polygon, referenceTileGrid);
   validateTileByGrid(tile, referenceTileGrid);
 
   const turfGeometry = polygonToTurfPolygon(polygon);

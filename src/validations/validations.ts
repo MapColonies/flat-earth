@@ -1,4 +1,5 @@
-import { BoundingBox, GeoPoint } from '../classes';
+import { BoundingBox, GeoPoint, type Geometry } from '../classes';
+import { geometryToBoundingBox } from '../converters/geometry_converters';
 import { ScaleSet, Tile, TileGrid } from '../tiles/tiles_classes';
 import { SCALE_FACTOR } from '../tiles/tiles_constants';
 import { Zoom } from '../types';
@@ -94,6 +95,16 @@ export function validateBoundingBoxByGrid(boundingBox: BoundingBox, referenceTil
 
   validateGeoPoint(boundingBox.min, referenceTileGrid);
   validateGeoPoint(boundingBox.max, referenceTileGrid);
+}
+
+/**
+ * Validates that the input `geometry` is a valid geometry
+ * @param geometry
+ * @param referenceTileGrid
+ */
+export function validateGeometryByGrid(geometry: Geometry, referenceTileGrid: TileGrid): void {
+  const boundingBox = geometryToBoundingBox(geometry);
+  validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
 }
 
 /**
