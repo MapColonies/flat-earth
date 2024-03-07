@@ -265,8 +265,8 @@ export function tileToTileRange(tile: Tile, zoom: Zoom, referenceTileGrid: TileG
   const scaleFactorBetweenTwoLevels = SCALE_FACTOR ** dz;
   const tileGridMaxX = Math.ceil((referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom) / (tile.metatile ?? 1)) - 1;
   const tileGridMaxY = Math.ceil((referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom) / (tile.metatile ?? 1)) - 1;
-  const minX = Math.max(tile.x * scaleFactorBetweenTwoLevels, 0);
-  const minY = Math.max(tile.y * scaleFactorBetweenTwoLevels, 0);
+  const minX = tile.x * scaleFactorBetweenTwoLevels;
+  const minY = tile.y * scaleFactorBetweenTwoLevels;
   const maxX = Math.min((tile.x + 1) * scaleFactorBetweenTwoLevels - 1, tileGridMaxX);
   const maxY = Math.min((tile.y + 1) * scaleFactorBetweenTwoLevels - 1, tileGridMaxY);
 

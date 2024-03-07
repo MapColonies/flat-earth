@@ -1,5 +1,6 @@
 import { BoundingBox } from '../classes';
 import type { Zoom } from '../types';
+import { validateMetatile } from '../validations/validations';
 
 /**
  * An interface for a well known scale set. {link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#56|OGC spec}
@@ -42,7 +43,15 @@ export class Tile {
     public y: number,
     public z: number,
     public metatile?: number
-  ) {}
+  ) {
+    if (x < 0 || y < 0 || z < 0) {
+      throw new Error('tile indices must be non-negative integers');
+    }
+
+    if (metatile) {
+      validateMetatile(metatile);
+    }
+  }
 }
 
 /**
