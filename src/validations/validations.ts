@@ -19,11 +19,11 @@ export function validateBoundingBox(boundingBox: BoundingBox): void {
 }
 
 /**
- * Validates that the input `geoPoint` is valid
+ * Validates that the input `geoPoint` is valid for the given tile grid
  * @param geoPoint a point with longitude and latitude to validate
  * @param referenceTileGrid the tile grid to validate the `geoPoint` against
  */
-export function validateGeoPoint(geoPoint: GeoPoint, referenceTileGrid: TileGrid): void {
+export function validateGeoPointByGrid(geoPoint: GeoPoint, referenceTileGrid: TileGrid): void {
   if (geoPoint.lon < referenceTileGrid.boundingBox.min.lon || geoPoint.lon > referenceTileGrid.boundingBox.max.lon) {
     throw new RangeError(`longitude ${geoPoint.lon} is out of range of tile grid's bounding box`);
   }
@@ -93,8 +93,8 @@ export function validateTileGrid(tileGrid: TileGrid): void {
 export function validateBoundingBoxByGrid(boundingBox: BoundingBox, referenceTileGrid: TileGrid): void {
   validateBoundingBox(boundingBox);
 
-  validateGeoPoint(boundingBox.min, referenceTileGrid);
-  validateGeoPoint(boundingBox.max, referenceTileGrid);
+  validateGeoPointByGrid(boundingBox.min, referenceTileGrid);
+  validateGeoPointByGrid(boundingBox.max, referenceTileGrid);
 }
 
 /**
