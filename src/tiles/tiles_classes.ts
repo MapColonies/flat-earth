@@ -48,7 +48,7 @@ export class Tile {
       throw new Error('tile indices must be non-negative integers');
     }
 
-    if (metatile) {
+    if (metatile !== undefined) {
       validateMetatile(metatile);
     }
   }

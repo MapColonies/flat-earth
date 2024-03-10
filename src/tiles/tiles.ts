@@ -108,15 +108,31 @@ function geoCoordsToTile(
   const y = (referenceTileGrid.boundingBox.max.lat - geoPoint.lat) / height;
 
   // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
-  // or in cases when lon/lat is on the edge of the grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  if (reverseIntersectionPolicy || isPointOnEdgeOfTileGrid(geoPoint, referenceTileGrid)) {
+  if (reverseIntersectionPolicy) {
     const tileX = Math.ceil(x) - 1;
     const tileY = Math.ceil(y) - 1;
     return new Tile(tileX, tileY, zoom, metatile);
   }
 
-  const tileX = Math.floor(x);
-  const tileY = Math.floor(y);
+  let tileX = Math.floor(x);
+  let tileY = Math.floor(y);
+  // When longitude/latitude is on the maximum edge of the tile grid (e.g. lon = 180 lat = 90 on the WG84 grid)
+  const onTileGridEdge = isPointOnEdgeOfTileGrid(geoPoint, referenceTileGrid);
+
+  switch (onTileGridEdge) {
+    case 'XY':
+      tileX = x - 1;
+      tileY = y - 1;
+      break;
+    case 'X':
+      tileX = x - 1;
+      break;
+    case 'Y':
+      tileY = y - 1;
+      break;
+    default:
+  }
+
   return new Tile(tileX, tileY, zoom, metatile);
 }
 
@@ -315,10 +331,12 @@ export function minimalBoundingTile(boundingBox: BoundingBox, referenceTileGrid:
   );
 
   const minimalZoom = Math.min(minimalXZoom, minimalYZoom);
+  const minPoint = new GeoPoint(boundingBox.min.lon, boundingBox.max.lat);
+  const maxPoint = new GeoPoint(boundingBox.max.lon, boundingBox.min.lat);
 
   for (let zoom = minimalZoom; zoom >= 0; zoom--) {
-    const minTile = geoCoordsToTile(boundingBox.min, zoom, true);
-    const maxTile = geoCoordsToTile(boundingBox.max, zoom, true);
+    const minTile = geoCoordsToTile(minPoint, zoom, false);
+    const maxTile = geoCoordsToTile(maxPoint, zoom, true);
 
     if (minTile.x === maxTile.x && minTile.y === maxTile.y) {
       return minTile;

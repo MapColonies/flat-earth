@@ -614,7 +614,7 @@ const goodMinimalBoundingTileTests = [
   {
     testCaseName: 'when the bounding box is located on the edge of a tile grid, should go one zoom level up',
     boundingBox: new BoundingBox(45, 10, 65, 30),
-    expectedTile: new Tile(2, 0, 1, 1),
+    expectedTile: new Tile(5, 1, 2, 1),
   },
 ];
 
