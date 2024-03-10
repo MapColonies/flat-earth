@@ -4,7 +4,7 @@ import { Geometry, LineString, MultiLineString, Polygon, MultiPolygon, Feature, 
 import { TileGrid } from '../tiles/tiles_classes';
 import { TILEGRID_WORLD_CRS84 } from '../tiles/tiles_constants';
 import { GeoPoint } from '../classes';
-import { validateGeoPoint } from './validations';
+import { validateGeoPointByGrid } from './validations';
 import { ValidationIssue, ValidationIssueType, ValidationResult } from './validation_classes';
 
 const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'GeometryCollection'];
@@ -46,7 +46,7 @@ function innerValidateGeoJsonInGrid(geoJsonObject: Geometry, tileGrid: TileGrid)
 
 function isPointInGrid(x: number, y: number, tileGrid: TileGrid): ValidationResult {
   try {
-    validateGeoPoint(new GeoPoint(x, y), tileGrid);
+    validateGeoPointByGrid(new GeoPoint(x, y), tileGrid);
   } catch (error) {
     return new ValidationResult(false, [
       new ValidationIssue(`Point lon: ${x} lat: ${y} is not inside the grid`, ValidationIssueType.GEOJSON_NOT_IN_GRID),

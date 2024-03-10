@@ -1,20 +1,21 @@
-import { area as turfArea, featureCollection, intersect } from '@turf/turf';
-import { BoundingBox, Geometry, GeoPoint, Polygon } from '../classes';
+import { featureCollection, intersect, area as turfArea } from '@turf/turf';
+import { BoundingBox, GeoPoint, Geometry, Polygon } from '../classes';
+import { geometryToBoundingBox } from '../converters/geometry_converters';
+import { boundingBoxToTurfBbox, polygonToTurfPolygon } from '../converters/turf/turf_converters';
 import type { Zoom } from '../types';
 import {
   validateBoundingBox,
   validateBoundingBoxByGrid,
-  validateGeoPoint,
+  validateGeoPointByGrid,
+  validateGeometryByGrid,
   validateMetatile,
   validateTileByGrid,
   validateTileGrid,
   validateZoomByGrid,
 } from '../validations/validations';
-import { geometryToBoundingBox } from '../converters/geometry_converters';
-import { boundingBoxToTurfBbox, polygonToTurfPolygon } from '../converters/turf/turf_converters';
-import { SCALE_FACTOR, TILEGRID_WORLD_CRS84 } from './tiles_constants';
-import { Tile, TileGrid, TileIntersectionType, TileRange } from './tiles_classes';
 import { isPointOnEdgeOfTileGrid } from './tile_grids';
+import { Tile, TileGrid, TileIntersectionType, TileRange } from './tiles_classes';
+import { SCALE_FACTOR, TILEGRID_WORLD_CRS84 } from './tiles_constants';
 
 function avoidNegativeZero(value: number): number {
   if (value === 0) {
@@ -223,7 +224,7 @@ export function geoPointZoomToTile(geoPoint: GeoPoint, zoom: Zoom, metatile = 1,
   validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
-  validateGeoPoint(geoPoint, referenceTileGrid);
+  validateGeoPointByGrid(geoPoint, referenceTileGrid);
 
   return geoCoordsToTile(geoPoint, zoom, false, metatile, referenceTileGrid);
 }
@@ -357,6 +358,7 @@ export function minimalBoundingTile(boundingBox: BoundingBox, referenceTileGrid:
 export function geometryToTileRanges(geometry: Geometry, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   // TODO: a validation is missing to check if the geometry is within the tile grid
   validateTileGrid(referenceTileGrid);
+  validateGeometryByGrid(geometry, referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
 
   switch (geometry.type) {
@@ -377,8 +379,8 @@ export function geometryToTileRanges(geometry: Geometry, zoom: Zoom, metatile = 
  * @returns intersection type between the geometry and the tile
  */
 export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
-  // TODO: a validation is missing to check if the polygon is within the tile grid
   validateTileGrid(referenceTileGrid);
+  validateGeometryByGrid(polygon, referenceTileGrid);
   validateTileByGrid(tile, referenceTileGrid);
 
   const turfGeometry = polygonToTurfPolygon(polygon);
