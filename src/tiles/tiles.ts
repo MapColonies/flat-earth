@@ -13,7 +13,6 @@ import {
   validateTileGrid,
   validateZoomByGrid,
 } from '../validations/validations';
-import { isPointOnEdgeOfTileGrid } from './tile_grids';
 import { Tile, TileGrid, TileIntersectionType, TileRange } from './tiles_classes';
 import { SCALE_FACTOR, TILEGRID_WORLD_CRS84 } from './tiles_constants';
 
@@ -115,24 +114,9 @@ function geoCoordsToTile(
     return new Tile(tileX, tileY, zoom, metatile);
   }
 
-  let tileX = Math.floor(x);
-  let tileY = Math.floor(y);
   // When longitude/latitude is on the maximum edge of the tile grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  const onTileGridEdge = isPointOnEdgeOfTileGrid(geoPoint, referenceTileGrid);
-
-  switch (onTileGridEdge) {
-    case 'XY':
-      tileX = x - 1;
-      tileY = y - 1;
-      break;
-    case 'X':
-      tileX = x - 1;
-      break;
-    case 'Y':
-      tileY = y - 1;
-      break;
-    default:
-  }
+  let tileX = Math.floor(x) - (geoPoint.lon === referenceTileGrid.boundingBox.max.lon ? 1 : 0);
+  let tileY = Math.floor(y) - (geoPoint.lat === referenceTileGrid.boundingBox.min.lat ? 1 : 0);
 
   return new Tile(tileX, tileY, zoom, metatile);
 }
