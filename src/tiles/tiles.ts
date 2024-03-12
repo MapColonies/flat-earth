@@ -115,8 +115,11 @@ function geoCoordsToTile(
   }
 
   // When longitude/latitude is on the maximum edge of the tile grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  const tileX = Math.floor(x) - (geoPoint.lon === referenceTileGrid.boundingBox.max.lon ? 1 : 0);
-  const tileY = Math.floor(y) - (geoPoint.lat === referenceTileGrid.boundingBox.min.lat ? 1 : 0);
+  const OnEdgeXTranslation = geoPoint.lon === referenceTileGrid.boundingBox.max.lon ? 1 : 0;
+  const OnEdgeYTranslation = geoPoint.lat === referenceTileGrid.boundingBox.min.lat ? 1 : 0;
+
+  const tileX = Math.floor(x) - OnEdgeXTranslation;
+  const tileY = Math.floor(y) - OnEdgeYTranslation;
 
   return new Tile(tileX, tileY, zoom, metatile);
 }
