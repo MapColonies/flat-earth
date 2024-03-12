@@ -602,6 +602,24 @@ const goodMinimalBoundingTileTests = [
     expectedTile: new Tile(1, 0, 0, 1),
   },
   {
+    testCaseName: 'for non-default metatile (2)',
+    boundingBox: new BoundingBox(5, 5, 35, 35),
+    metatile: 2,
+    expectedTile: new Tile(4, 1, 3, 2),
+  },
+  {
+    testCaseName: 'for non-default metatile (2) with a large bounding box intersecting tile grid at zoom 0',
+    boundingBox: new BoundingBox(-180, -90, 180, 90),
+    metatile: 2,
+    expectedTile: new Tile(0, 0, 0, 2),
+  },
+  {
+    testCaseName: 'for non-default metatile (2), should go one zoom level up',
+    boundingBox: new BoundingBox(35, 35, 55, 55),
+    metatile: 2,
+    expectedTile: new Tile(2, 0, 2, 2),
+  },
+  {
     testCaseName: '',
     boundingBox: new BoundingBox(10, 10, 30, 30),
     expectedTile: new Tile(4, 1, 2, 1),
@@ -630,8 +648,8 @@ const badMinimalBoundingTileTests = [
 ];
 
 describe('#minimalBoundingTile', () => {
-  it.each(goodMinimalBoundingTileTests)('should return minimal bounding tile $testCaseName', ({ boundingBox, expectedTile }) => {
-    const tile = minimalBoundingTile(boundingBox);
+  it.each(goodMinimalBoundingTileTests)('should return minimal bounding tile $testCaseName', ({ boundingBox, expectedTile, metatile }) => {
+    const tile = minimalBoundingTile(boundingBox, metatile);
 
     expect(tile).toStrictEqual(expectedTile);
   });
