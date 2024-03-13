@@ -51,7 +51,7 @@ function tileEffectiveWidth(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_W
 
 function polygonToTiles(polygon: Polygon, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
   const boundingBox = geometryToBoundingBox(polygon);
-  const minimalZoom = minimalBoundingTile(boundingBox, referenceTileGrid)?.z ?? 0;
+  const minimalZoom = minimalBoundingTile(boundingBox, metatile, referenceTileGrid)?.z ?? 0;
   const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), metatile, referenceTileGrid);
   return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
 }
@@ -302,8 +302,9 @@ export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom
  * @param referenceTileGrid tile grid
  * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
  */
-export function minimalBoundingTile(boundingBox: BoundingBox, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile | null {
+export function minimalBoundingTile(boundingBox: BoundingBox, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile | null {
   validateBoundingBox(boundingBox);
+  validateMetatile(metatile);
   validateTileGrid(referenceTileGrid);
   validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
 
@@ -311,11 +312,15 @@ export function minimalBoundingTile(boundingBox: BoundingBox, referenceTileGrid:
   const dy = boundingBox.max.lat - boundingBox.min.lat;
 
   const minimalXZoom = Math.floor(
-    Math.log2((referenceTileGrid.boundingBox.max.lon - referenceTileGrid.boundingBox.min.lon) / (referenceTileGrid.numberOfMinLevelTilesX * dx))
+    Math.log2(
+      ((referenceTileGrid.boundingBox.max.lon - referenceTileGrid.boundingBox.min.lon) * metatile) / (referenceTileGrid.numberOfMinLevelTilesX * dx)
+    )
   );
 
   const minimalYZoom = Math.floor(
-    Math.log2((referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) / (referenceTileGrid.numberOfMinLevelTilesY * dy))
+    Math.log2(
+      ((referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) * metatile) / (referenceTileGrid.numberOfMinLevelTilesY * dy)
+    )
   );
 
   const minimalZoom = Math.min(minimalXZoom, minimalYZoom);
@@ -323,8 +328,8 @@ export function minimalBoundingTile(boundingBox: BoundingBox, referenceTileGrid:
   const maxPoint = new GeoPoint(boundingBox.max.lon, boundingBox.min.lat);
 
   for (let zoom = minimalZoom; zoom >= 0; zoom--) {
-    const minTile = geoCoordsToTile(minPoint, zoom, false);
-    const maxTile = geoCoordsToTile(maxPoint, zoom, true);
+    const minTile = geoCoordsToTile(minPoint, zoom, false, metatile);
+    const maxTile = geoCoordsToTile(maxPoint, zoom, true, metatile);
 
     if (minTile.x === maxTile.x && minTile.y === maxTile.y) {
       return minTile;
