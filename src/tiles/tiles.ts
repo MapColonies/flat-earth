@@ -1,7 +1,7 @@
 import { area, featureCollection, intersect } from '@turf/turf';
 import { BoundingBox, GeoPoint, Geometry, Polygon } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
-import { convertGeometryToFeature } from '../converters/turf/turf_converters';
+import { geometryToFeature } from '../converters/turf/turf_converters';
 import type { GeoJSONGeometry, Zoom } from '../types';
 import {
   validateBoundingBox,
@@ -380,8 +380,8 @@ export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceT
   validateGeometryByGrid(polygon, referenceTileGrid);
   validateTileByGrid(tile, referenceTileGrid);
 
-  const featurePolygon = convertGeometryToFeature(polygon);
-  const featureBoundingBox = convertGeometryToFeature(tileToBoundingBox(tile, referenceTileGrid));
+  const featurePolygon = geometryToFeature(polygon);
+  const featureBoundingBox = geometryToFeature(tileToBoundingBox(tile, referenceTileGrid));
   const features = featureCollection([featurePolygon, featureBoundingBox]);
   const intersectionResult = intersect(features);
 

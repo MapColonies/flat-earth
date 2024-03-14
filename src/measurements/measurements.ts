@@ -1,7 +1,7 @@
 import { booleanEqual, area as turfArea, distance as turfDistance, type Units } from '@turf/turf';
 import { Geodesic } from 'geographiclib-geodesic';
 import { Geometry, Point, Polygon } from '../classes';
-import { convertGeometryToFeature } from '../converters/turf/turf_converters';
+import { geometryToFeature } from '../converters/turf/turf_converters';
 import type { GeoJSONGeometry } from '../types';
 
 const geod = Geodesic.WGS84;
@@ -12,7 +12,7 @@ const geod = Geodesic.WGS84;
  * @returns polygon's area in square meters
  */
 export function area(polygon: Polygon): number {
-  const feature = convertGeometryToFeature(polygon);
+  const feature = geometryToFeature(polygon);
   return turfArea(feature);
 }
 
@@ -51,7 +51,7 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * @returns true/false if two geometries are equal
  */
 export function geometriesEqual<G extends GeoJSONGeometry>(geometry1: Geometry<G>, geometry2: Geometry<G>): boolean {
-  const feature1 = convertGeometryToFeature(geometry1);
-  const feature2 = convertGeometryToFeature(geometry2);
+  const feature1 = geometryToFeature(geometry1);
+  const feature2 = geometryToFeature(geometry2);
   return booleanEqual(feature1, feature2);
 }
