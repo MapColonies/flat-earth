@@ -1,4 +1,4 @@
-import { booleanEqual, area as turfArea, distance as turfDistance } from '@turf/turf';
+import { booleanEqual, area as turfArea, distance as turfDistance, type Units } from '@turf/turf';
 import { Geodesic } from 'geographiclib-geodesic';
 import { Geometry, Point, Polygon } from '../classes';
 import { convertGeometryToFeature } from '../converters/turf/turf_converters';
@@ -22,11 +22,11 @@ export function area(polygon: Polygon): number {
  * up to 0.5% of the actual distance.
  * @param from origin point
  * @param to destination point
+ * @param options object specifying units for distance output
  * @returns distance in meters
  */
-//TODO: add options
-export function distance(from: Point, to: Point): number {
-  return turfDistance(from, to, { units: 'meters' });
+export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number {
+  return turfDistance(from, to, options);
 }
 
 /**
