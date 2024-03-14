@@ -54,13 +54,3 @@ export function geometriesEqual(geometry1: Geometry, geometry2: Geometry): boole
   const feature2 = convertGeometryToFeature(geometry2);
   return booleanEqual(feature1, feature2);
 }
-
-/**
- * Check if a geometry equals it's bounding box
- * @param geometry
- * @returns true/false if geometry equals it's bounding box
- */
-export function geometryEqualsBoundingBox(geometry: Geometry): boolean {
-  const boundingBox = geometryToBoundingBox(geometry);
-  return geometriesEqual(geometry, boundingBox);
-}
