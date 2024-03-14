@@ -149,7 +149,7 @@ export const SCALESET_GOOGLE_CRS84_QUAD_MODIFIED: ScaleSet = new ScaleSet(
 export const TILEGRID_WORLD_CRS84: TileGrid = new TileGrid(
   'WorldCRS84Quad',
   'CRS84 for the World',
-  new BoundingBox(-180, -90, 180, 90),
+  new BoundingBox([-180, -90, 180, 90]),
   CRS_CRS84,
   SCALESET_GOOGLE_CRS84_QUAD_MODIFIED,
   2,
@@ -164,7 +164,7 @@ export const TILEGRID_WORLD_CRS84: TileGrid = new TileGrid(
 export const TILEGRID_WEB_MERCATOR: TileGrid = new TileGrid(
   'WebMercatorQuad',
   'Google Maps Compatible for the World',
-  new BoundingBox(-180, -85.05112877980659, 180, 85.05112877980659),
+  new BoundingBox([-180, -85.05112877980659, 180, 85.05112877980659]),
   CRS_3857,
   SCALESET_GOOGLE_MAPS_COMPATIBLE,
   1,

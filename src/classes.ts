@@ -1,7 +1,16 @@
-import type { Latitude, Longitude } from './types';
+import type { BBox, LineString as GeoJSONLineString, Point as GeoJSONPoint, Polygon as GeoJSONPolygon, Position } from 'geojson';
+import type { GeoJSONGeometry, Latitude, Longitude } from './types';
 
-export abstract class Geometry {
-  protected constructor(public type: string) {}
+export abstract class Geometry<G extends GeoJSONGeometry> {
+  public type: G['type'];
+
+  protected constructor(protected readonly geometry: G) {
+    this.type = geometry.type;
+  }
+
+  public getGeoJSON(): G {
+    return this.geometry;
+  }
 }
 
 /**
@@ -9,33 +18,40 @@ export abstract class Geometry {
  * The first and last points of a ring must be the same.
  * Points must be ordered counterclockwise.
  */
-export class Polygon extends Geometry {
-  public constructor(public points: Point[][] = []) {
-    super('Polygon');
+export class Polygon extends Geometry<GeoJSONPolygon> {
+  public constructor(public readonly coordinates: Position[][] = []) {
+    super({ type: 'Polygon', coordinates });
   }
 }
 
-export class Line extends Geometry {
-  public constructor(public points: Point[] = []) {
-    super('Line');
+export class Line extends Geometry<GeoJSONLineString> {
+  public constructor(public readonly coordinates: Position[] = []) {
+    super({ type: 'LineString', coordinates });
   }
 }
 
-export class Point extends Geometry {
-  public coordinates: GeoPoint;
-  public constructor(lon: Longitude, lat: Latitude) {
-    super('Point');
-    this.coordinates = { lon, lat };
+export class Point extends Geometry<GeoJSONPoint> {
+  public constructor(public readonly coordinates: Position) {
+    super({ type: 'Point', coordinates });
   }
 }
 
-export class BoundingBox extends Geometry {
-  public min: GeoPoint;
-  public max: GeoPoint;
-  public constructor(minLon: Longitude, minLat: Latitude, maxLon: Longitude, maxLat: Latitude) {
-    super('BoundingBox');
-    this.min = { lon: minLon, lat: minLat };
-    this.max = { lon: maxLon, lat: maxLat };
+export class BoundingBox extends Polygon {
+  public readonly min: GeoPoint;
+  public readonly max: GeoPoint;
+  public constructor(boundingBox: BBox) {
+    super([
+      [
+        [boundingBox[0], boundingBox[1]],
+        [boundingBox[2], boundingBox[1]],
+        [boundingBox[2], boundingBox[3]],
+        [boundingBox[0], boundingBox[3]],
+        [boundingBox[0], boundingBox[1]],
+      ],
+    ]);
+
+    this.min = new GeoPoint(boundingBox[0], boundingBox[1]);
+    this.max = new GeoPoint(boundingBox[2], boundingBox[3]);
   }
 }
 

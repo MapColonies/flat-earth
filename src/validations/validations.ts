@@ -2,7 +2,7 @@ import { BoundingBox, GeoPoint, type Geometry } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
 import { ScaleSet, Tile, TileGrid } from '../tiles/tiles_classes';
 import { SCALE_FACTOR } from '../tiles/tiles_constants';
-import { Zoom } from '../types';
+import { Zoom, type GeoJSONGeometry } from '../types';
 
 /**
  * Validates that the input `boundingBox` is valid
@@ -102,7 +102,7 @@ export function validateBoundingBoxByGrid(boundingBox: BoundingBox, referenceTil
  * @param geometry
  * @param referenceTileGrid
  */
-export function validateGeometryByGrid(geometry: Geometry, referenceTileGrid: TileGrid): void {
+export function validateGeometryByGrid<G extends GeoJSONGeometry>(geometry: Geometry<G>, referenceTileGrid: TileGrid): void {
   const boundingBox = geometryToBoundingBox(geometry);
   validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
 }
