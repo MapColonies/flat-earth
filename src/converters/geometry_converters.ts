@@ -1,4 +1,4 @@
-import { BoundingBox, Geometry, Polygon } from '../classes';
+import { BoundingBox, Geometry } from '../classes';
 import type { GeoJSONGeometry } from '../types';
 import { geometryToTurfBbox } from './turf/turf_converters';
 
