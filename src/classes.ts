@@ -2,7 +2,7 @@ import type { BBox, LineString as GeoJSONLineString, Point as GeoJSONPoint, Poly
 import type { GeoJSONGeometry, Latitude, Longitude } from './types';
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
-  public type: G['type'];
+  public readonly type: G['type'];
 
   protected constructor(protected readonly geometry: G) {
     this.type = geometry.type;
