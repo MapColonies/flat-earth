@@ -26,6 +26,7 @@ export function area(polygon: Polygon): number {
  * @returns distance in meters
  */
 export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number {
+  // TODO: only a single distance function should exist for distance calculated on the surface of an ellipsoid
   return turfDistance(from, to, options);
 }
 
