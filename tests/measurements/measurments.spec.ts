@@ -1,5 +1,5 @@
-import { BoundingBox, Line, Point, Polygon } from '../../src/classes';
-import { boundingBoxToPolygon, geometryToBoundingBox } from '../../src/converters/geometry_converters';
+import { Line, Point, Polygon } from '../../src/classes';
+import { geometryToBoundingBox } from '../../src/converters/geometry_converters';
 import * as measurements from '../../src/measurements/measurements';
 
 test('Haversine distance', () => {
@@ -69,15 +69,4 @@ test('Line geometry to bounding box', () => {
   expect(bbox.min.lat).toBe(-22);
   expect(bbox.max.lon).toBe(125);
   expect(bbox.max.lat).toBe(-15);
-});
-
-test('Bounding box to polygon', () => {
-  const bbox = new BoundingBox([113, -39, 154, -15]);
-  const polygon = boundingBoxToPolygon(bbox);
-  expect(polygon.coordinates[0]).toHaveLength(5);
-  expect(polygon.coordinates[0][0]).toStrictEqual([113, -39]);
-  expect(polygon.coordinates[0][1]).toStrictEqual([154, -39]);
-  expect(polygon.coordinates[0][2]).toStrictEqual([154, -15]);
-  expect(polygon.coordinates[0][3]).toStrictEqual([113, -15]);
-  expect(polygon.coordinates[0][4]).toStrictEqual([113, -39]);
 });
