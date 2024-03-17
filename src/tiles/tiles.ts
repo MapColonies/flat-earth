@@ -1,8 +1,8 @@
-import { featureCollection, intersect, area as turfArea } from '@turf/turf';
+import { area, featureCollection, intersect } from '@turf/turf';
 import { BoundingBox, GeoPoint, Geometry, Polygon } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
-import { boundingBoxToTurfBbox, polygonToTurfPolygon } from '../converters/turf/turf_converters';
-import type { Zoom } from '../types';
+import { geometryToFeature } from '../converters/turf/turf_converters';
+import type { GeoJSONGeometry, Zoom } from '../types';
 import {
   validateBoundingBox,
   validateBoundingBoxByGrid,
@@ -231,22 +231,22 @@ export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILE
   const width = tileEffectiveWidth(tile.z, referenceTileGrid) * metatile;
   const height = tileEffectiveHeight(tile.z, referenceTileGrid) * metatile;
 
-  const boundingBox: BoundingBox = new BoundingBox(
+  const boundingBox: BoundingBox = new BoundingBox([
     referenceTileGrid.boundingBox.min.lon + tile.x * width,
     referenceTileGrid.boundingBox.max.lat - (tile.y + 1) * height,
     referenceTileGrid.boundingBox.min.lon + (tile.x + 1) * width,
-    referenceTileGrid.boundingBox.max.lat - tile.y * height
-  );
+    referenceTileGrid.boundingBox.max.lat - tile.y * height,
+  ]);
 
   if (clamp) {
     // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
     // of the tile grid
-    return new BoundingBox(
+    return new BoundingBox([
       clampValues(boundingBox.min.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
       clampValues(boundingBox.min.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat),
       clampValues(boundingBox.max.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
-      clampValues(boundingBox.max.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat)
-    );
+      clampValues(boundingBox.max.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat),
+    ]);
   }
 
   return boundingBox;
@@ -293,7 +293,7 @@ export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom
   const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
   const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
 
-  return new BoundingBox(minPoint.lon, minPoint.lat, maxPoint.lon, maxPoint.lat);
+  return new BoundingBox([minPoint.lon, minPoint.lat, maxPoint.lon, maxPoint.lat]);
 }
 
 /**
@@ -347,17 +347,22 @@ export function minimalBoundingTile(boundingBox: BoundingBox, metatile = 1, refe
  * @param referenceTileGrid tile grid
  * @returns tile range in the given zoom level
  */
-export function geometryToTileRanges(geometry: Geometry, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+export function geometryToTileRanges<G extends GeoJSONGeometry>(
+  geometry: Geometry<G>,
+  zoom: Zoom,
+  metatile = 1,
+  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
+): TileRange[] {
   // TODO: a validation is missing to check if the geometry is within the tile grid
   validateTileGrid(referenceTileGrid);
   validateGeometryByGrid(geometry, referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
 
-  switch (geometry.type) {
-    case 'Polygon':
-      return polygonToTiles(geometry as Polygon, zoom, metatile, referenceTileGrid);
-    case 'BoundingBox':
-      return [boundingBoxToTileRange(geometry as BoundingBox, zoom, metatile, referenceTileGrid)];
+  switch (true) {
+    case geometry instanceof BoundingBox:
+      return [boundingBoxToTileRange(geometry, zoom, metatile, referenceTileGrid)];
+    case geometry instanceof Polygon:
+      return polygonToTiles(geometry, zoom, metatile, referenceTileGrid);
     default:
       throw new Error(`Unsupported geometry type: ${geometry.type}`);
   }
@@ -375,15 +380,16 @@ export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceT
   validateGeometryByGrid(polygon, referenceTileGrid);
   validateTileByGrid(tile, referenceTileGrid);
 
-  const turfGeometry = polygonToTurfPolygon(polygon);
-  const turfBoundingBox = boundingBoxToTurfBbox(tileToBoundingBox(tile, referenceTileGrid));
-  const features = featureCollection([turfGeometry, turfBoundingBox]);
+  const featurePolygon = geometryToFeature(polygon);
+  const featureBoundingBox = geometryToFeature(tileToBoundingBox(tile, referenceTileGrid));
+  const features = featureCollection([featurePolygon, featureBoundingBox]);
   const intersectionResult = intersect(features);
+
   if (intersectionResult === null) {
     return TileIntersectionType.NONE;
   } else {
-    const intArea = turfArea(intersectionResult);
-    const hashArea = turfArea(turfBoundingBox);
+    const intArea = area(intersectionResult);
+    const hashArea = area(featureBoundingBox);
     if (intArea === hashArea) {
       return TileIntersectionType.FULL;
     }

@@ -1,8 +1,8 @@
-import { area as turfArea, booleanEqual, distance as turfDistance, point } from '@turf/turf';
+import { booleanEqual, area as turfArea, distance as turfDistance, type Units } from '@turf/turf';
 import { Geodesic } from 'geographiclib-geodesic';
 import { Geometry, Point, Polygon } from '../classes';
-import { convertGeometryToFeature } from '../converters/turf/turf_converters';
-import { geometryToBoundingBox } from '../converters/geometry_converters';
+import { geometryToFeature } from '../converters/turf/turf_converters';
+import type { GeoJSONGeometry } from '../types';
 
 const geod = Geodesic.WGS84;
 
@@ -12,7 +12,7 @@ const geod = Geodesic.WGS84;
  * @returns polygon's area in square meters
  */
 export function area(polygon: Polygon): number {
-  const feature = convertGeometryToFeature(polygon);
+  const feature = geometryToFeature(polygon);
   return turfArea(feature);
 }
 
@@ -22,13 +22,12 @@ export function area(polygon: Polygon): number {
  * up to 0.5% of the actual distance.
  * @param from origin point
  * @param to destination point
+ * @param options object specifying units for distance output
  * @returns distance in meters
  */
-//TODO: add options
-export function distance(from: Point, to: Point): number {
-  const turfFrom = point([from.coordinates.lon, from.coordinates.lat]);
-  const turfTo = point([to.coordinates.lon, to.coordinates.lat]);
-  return turfDistance(turfFrom, turfTo, { units: 'meters' });
+export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number {
+  // TODO: only a single distance function should exist for distance calculated on the surface of an ellipsoid
+  return turfDistance(from, to, options);
 }
 
 /**
@@ -39,7 +38,10 @@ export function distance(from: Point, to: Point): number {
  * @returns distance in meters
  */
 export function geodesicDistance(from: Point, to: Point): number | undefined {
-  const r = geod.Inverse(from.coordinates.lat, from.coordinates.lon, to.coordinates.lat, to.coordinates.lon);
+  const [fromLon, fromLat] = from.coordinates;
+  const [toLon, toLat] = to.coordinates;
+
+  const r = geod.Inverse(fromLat, fromLon, toLat, toLon);
   return r.s12;
 }
 
@@ -49,18 +51,8 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * @param geometry2
  * @returns true/false if two geometries are equal
  */
-export function geometriesEqual(geometry1: Geometry, geometry2: Geometry): boolean {
-  const feature1 = convertGeometryToFeature(geometry1);
-  const feature2 = convertGeometryToFeature(geometry2);
+export function geometriesEqual<G extends GeoJSONGeometry>(geometry1: Geometry<G>, geometry2: Geometry<G>): boolean {
+  const feature1 = geometryToFeature(geometry1);
+  const feature2 = geometryToFeature(geometry2);
   return booleanEqual(feature1, feature2);
-}
-
-/**
- * Check if a geometry equals it's bounding box
- * @param geometry
- * @returns true/false if geometry equals it's bounding box
- */
-export function geometryEqualsBoundingBox(geometry: Geometry): boolean {
-  const boundingBox = geometryToBoundingBox(geometry);
-  return geometriesEqual(geometry, boundingBox);
 }
