@@ -28,7 +28,7 @@ export abstract class BaseGeometry<G extends GeoJSONBaseGeometry> extends Geomet
 }
 
 export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
-  public constructor(private readonly geometries: GeoJSONGeometry[]) {
+  public constructor(public readonly geometries: GeoJSONGeometry[]) {
     super('GeometryCollection');
   }
 
