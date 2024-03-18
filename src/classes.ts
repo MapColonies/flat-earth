@@ -1,15 +1,42 @@
-import type { BBox, LineString as GeoJSONLineString, Point as GeoJSONPoint, Polygon as GeoJSONPolygon, Position } from 'geojson';
-import type { GeoJSONGeometry, Latitude, Longitude } from './types';
+import type {
+  BBox,
+  GeometryCollection as GeoJSONGeometryCollection,
+  LineString as GeoJSONLineString,
+  Point as GeoJSONPoint,
+  Polygon as GeoJSONPolygon,
+  Position,
+} from 'geojson';
+import type { GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
-  public readonly type: G['type'];
+  protected constructor(public readonly type: G['type']) {}
+  public abstract getGeoJSON(): G;
+}
 
-  protected constructor(protected readonly geometry: G) {
-    this.type = geometry.type;
+export abstract class BaseGeometry<G extends GeoJSONBaseGeometry> extends Geometry<G> {
+  public constructor(private readonly geometry: G) {
+    super(geometry.type);
+  }
+
+  public get coordinates(): G['coordinates'] {
+    return this.geometry.coordinates;
   }
 
   public getGeoJSON(): G {
     return this.geometry;
+  }
+}
+
+export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
+  public constructor(private readonly geometries: GeoJSONGeometry[]) {
+    super('GeometryCollection');
+  }
+
+  public getGeoJSON(): GeoJSONGeometryCollection {
+    return {
+      type: this.type,
+      geometries: this.geometries,
+    };
   }
 }
 
@@ -18,20 +45,20 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
  * The first and last points of a ring must be the same.
  * Points must be ordered counterclockwise.
  */
-export class Polygon extends Geometry<GeoJSONPolygon> {
-  public constructor(public readonly coordinates: Position[][] = []) {
+export class Polygon extends BaseGeometry<GeoJSONPolygon> {
+  public constructor(coordinates: Position[][] = []) {
     super({ type: 'Polygon', coordinates });
   }
 }
 
-export class Line extends Geometry<GeoJSONLineString> {
-  public constructor(public readonly coordinates: Position[] = []) {
+export class Line extends BaseGeometry<GeoJSONLineString> {
+  public constructor(coordinates: Position[] = []) {
     super({ type: 'LineString', coordinates });
   }
 }
 
-export class Point extends Geometry<GeoJSONPoint> {
-  public constructor(public readonly coordinates: Position) {
+export class Point extends BaseGeometry<GeoJSONPoint> {
+  public constructor(coordinates: Position) {
     super({ type: 'Point', coordinates });
   }
 }
