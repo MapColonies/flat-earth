@@ -84,7 +84,7 @@ export class BoundingBox extends Polygon {
 
 export class GeoPoint {
   public constructor(
-    public lon: Longitude,
-    public lat: Latitude
+    public readonly lon: Longitude,
+    public readonly lat: Latitude
   ) {}
 }
