@@ -1,8 +1,10 @@
 import { area, featureCollection, intersect } from '@turf/turf';
-import { BoundingBox, GeoPoint, Geometry, Polygon } from '../classes';
+import type { Polygon as GeoJSONPolygon } from 'geojson';
+import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
 import { geometryToFeature } from '../converters/turf/turf_converters';
 import type { GeoJSONGeometry, Zoom } from '../types';
+import { flatGeometryCollection } from '../utilities';
 import {
   validateBoundingBox,
   validateBoundingBoxByGrid,
@@ -362,6 +364,18 @@ export function geometryToTileRanges<G extends GeoJSONGeometry>(
       return [boundingBoxToTileRange(geometry, zoom, metatile, referenceTileGrid)];
     case geometry instanceof Polygon:
       return polygonToTiles(geometry, zoom, metatile, referenceTileGrid);
+    case geometry instanceof GeometryCollection: {
+      // tile ranges may overlap for overlapping geometries inside geometry collection
+      const tileRanges = geometry.geometries
+        .flatMap(flatGeometryCollection)
+        .filter((geometry): geometry is GeoJSONPolygon => geometry.type === 'Polygon' && Array.isArray(geometry.coordinates))
+        .flatMap((geoJSONPolygon) => {
+          const polygon = new Polygon(geoJSONPolygon.coordinates);
+          const tileRanges = polygonToTiles(polygon, zoom, metatile, referenceTileGrid);
+          return tileRanges;
+        });
+      return tileRanges;
+    }
     default:
       throw new Error(`Unsupported geometry type: ${geometry.type}`);
   }
