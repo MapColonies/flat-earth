@@ -1,4 +1,4 @@
-import { area, featureCollection, intersect } from '@turf/turf';
+import { area, dissolve, feature, featureCollection, intersect } from '@turf/turf';
 import type { Polygon as GeoJSONPolygon } from 'geojson';
 import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
@@ -365,15 +365,15 @@ export function geometryToTileRanges<G extends GeoJSONGeometry>(
     case geometry instanceof Polygon:
       return polygonToTiles(geometry, zoom, metatile, referenceTileGrid);
     case geometry instanceof GeometryCollection: {
-      // tile ranges may overlap for overlapping geometries inside geometry collection
-      const tileRanges = geometry.geometries
+      const featurePolygons = geometry.geometries
         .flatMap(flatGeometryCollection)
         .filter((geometry): geometry is GeoJSONPolygon => geometry.type === 'Polygon' && Array.isArray(geometry.coordinates))
-        .flatMap((geoJSONPolygon) => {
-          const polygon = new Polygon(geoJSONPolygon.coordinates);
-          const tileRanges = polygonToTiles(polygon, zoom, metatile, referenceTileGrid);
-          return tileRanges;
-        });
+        .map((polygon) => feature(polygon));
+      const dissolvedPolygons = dissolve(featureCollection(featurePolygons));
+      const tileRanges = dissolvedPolygons.features.flatMap((geoJSONPolygonFeature) => {
+        const polygon = new Polygon(geoJSONPolygonFeature.geometry.coordinates);
+        return polygonToTiles(polygon, zoom, metatile, referenceTileGrid);
+      });
       return tileRanges;
     }
     default:
