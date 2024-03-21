@@ -1,8 +1,10 @@
-import { area, featureCollection, intersect } from '@turf/turf';
-import { BoundingBox, GeoPoint, Geometry, Polygon } from '../classes';
+import { area, dissolve, feature, featureCollection, intersect } from '@turf/turf';
+import type { Polygon as GeoJSONPolygon } from 'geojson';
+import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
 import { geometryToFeature } from '../converters/turf/turf_converters';
 import type { GeoJSONGeometry, Zoom } from '../types';
+import { flatGeometryCollection } from '../utilities';
 import {
   validateBoundingBox,
   validateBoundingBoxByGrid,
@@ -353,7 +355,6 @@ export function geometryToTileRanges<G extends GeoJSONGeometry>(
   metatile = 1,
   referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
 ): TileRange[] {
-  // TODO: a validation is missing to check if the geometry is within the tile grid
   validateTileGrid(referenceTileGrid);
   validateGeometryByGrid(geometry, referenceTileGrid);
   validateZoomByGrid(zoom, referenceTileGrid);
@@ -363,6 +364,18 @@ export function geometryToTileRanges<G extends GeoJSONGeometry>(
       return [boundingBoxToTileRange(geometry, zoom, metatile, referenceTileGrid)];
     case geometry instanceof Polygon:
       return polygonToTiles(geometry, zoom, metatile, referenceTileGrid);
+    case geometry instanceof GeometryCollection: {
+      const featurePolygons = geometry.geometries
+        .flatMap(flatGeometryCollection)
+        .filter((geometry): geometry is GeoJSONPolygon => geometry.type === 'Polygon' && Array.isArray(geometry.coordinates))
+        .map((polygon) => feature(polygon));
+      const dissolvedPolygons = dissolve(featureCollection(featurePolygons));
+      const tileRanges = dissolvedPolygons.features.flatMap((geoJSONPolygonFeature) => {
+        const polygon = new Polygon(geoJSONPolygonFeature.geometry.coordinates);
+        return polygonToTiles(polygon, zoom, metatile, referenceTileGrid);
+      });
+      return tileRanges;
+    }
     default:
       throw new Error(`Unsupported geometry type: ${geometry.type}`);
   }

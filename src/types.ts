@@ -15,4 +15,5 @@ export type Latitude = number;
  */
 export type Zoom = number;
 
-export type GeoJSONGeometry = Exclude<Geometry, GeometryCollection>;
+export type GeoJSONBaseGeometry = Exclude<Geometry, GeometryCollection>;
+export type GeoJSONGeometry = Geometry;
