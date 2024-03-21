@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
 import { BoundingBox } from '../classes';
+import { TileMatrixSet } from './classes/tileMatrixSet';
+import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from './tileMatrixSets/WorldCRS84Quad';
 import { CoordinateReferenceSystem, Ellipsoid, ScaleSet, TileGrid } from './tiles_classes';
 
 /**
@@ -157,6 +159,7 @@ export const TILEGRID_WORLD_CRS84: TileGrid = new TileGrid(
   256,
   256
 );
+
 /**
  * some tile grid parameters are taken from https://docs.opengeospatial.org/is/17-083r2/17-083r2.html
  * @category Tile Grid
@@ -172,3 +175,9 @@ export const TILEGRID_WEB_MERCATOR: TileGrid = new TileGrid(
   256,
   256
 );
+
+/**
+ * Tile Matrix Set World CRS84 Quad, This Tile Matrix Set defines tiles in the Equirectangular Plate Carrée projection in the CRS84 CRS for the whole world - https://docs.ogc.org/is/17-083r4/17-083r4.html#toc50
+ * @category Tile Matrix Set
+ */
+export const TILEMATRIXSET_WORLD_CRS84_QUAD = new TileMatrixSet(TILEMATRIXSETJSON_WORLD_CRS84_QUAD);
