@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-magic-numbers */
 import type { TileMatrixSetJSON } from '../types';
 
 /**
