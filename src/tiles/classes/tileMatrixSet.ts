@@ -1,9 +1,62 @@
-import type { TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../types';
+import type {
+  BoundingBox2D,
+  CRS,
+  CodeType,
+  Keyword,
+  LanguageString,
+  TileMatrix,
+  TileMatrixSetJSON,
+  TileMatrixSet as TileMatrixSetType,
+} from '../types';
 
 export class TileMatrixSet {
   private readonly options: TileMatrixSetType;
   public constructor(private readonly tileMatrixSetJSON: TileMatrixSetJSON) {
     this.options = this.decodeFromJSON(tileMatrixSetJSON);
+  }
+
+  public get title(): LanguageString | undefined {
+    return this.options.title;
+  }
+
+  public get description(): LanguageString | undefined {
+    return this.options.description;
+  }
+
+  public get keywords(): Keyword[] | undefined {
+    return this.options.keywords;
+  }
+
+  public get identifier(): CodeType | undefined {
+    return this.options.identifier;
+  }
+
+  public get uri(): string | undefined {
+    return this.options.uri;
+  }
+
+  public get orderedAxes(): [string, string] | undefined {
+    return this.options.orderedAxes;
+  }
+
+  public get crs(): CRS {
+    return this.options.crs;
+  }
+
+  public get wellKnownScaleSet(): string | undefined {
+    return this.options.wellKnownScaleSet;
+  }
+
+  public get boundingBox(): BoundingBox2D | undefined {
+    return this.options.boundingBox;
+  }
+
+  public get tileMatrices(): TileMatrix[] {
+    return this.options.tileMatrices;
+  }
+
+  public toJSON(): TileMatrixSetJSON {
+    return this.tileMatrixSetJSON;
   }
 
   private decodeFromJSON(tileMatrixSetJSON: TileMatrixSetJSON): TileMatrixSetType {
@@ -33,14 +86,14 @@ export class TileMatrixSet {
       ...(boundingBoxJSON && {
         boundingBox: { lowerLeft: [boundingBoxJSON[0], boundingBoxJSON[1]], upperRight: [boundingBoxJSON[2], boundingBoxJSON[3]] },
       }),
-      ...(descriptionJSON && { description: { value: descriptionJSON } }),
-      ...(idJSON && { identifier: { code: idJSON } }),
+      ...(descriptionJSON !== undefined && { description: { value: descriptionJSON } }),
+      ...(idJSON !== undefined && { identifier: { code: idJSON } }),
       ...(keywordsJSON && {
         keywords: keywordsJSON.map((keyword) => {
           return { keyword: [{ value: keyword }] };
         }),
       }),
-      ...(titleJSON && { title: { value: titleJSON } }),
+      ...(titleJSON !== undefined && { title: { value: titleJSON } }),
       ...otherProps,
     };
   }
@@ -63,56 +116,12 @@ export class TileMatrixSet {
     return {
       crs: crsJSON,
       tileMatrices: tileMatricesJSON,
-      ...(boundingBox && { boundingBox: boundingBox && [...boundingBox?.lowerLeft, ...boundingBox?.upperRight] }),
-      ...(description && { description: description?.value }),
-      ...(identifier && { id: identifier?.code }),
+      ...(boundingBox && { boundingBox: [...boundingBox.lowerLeft, ...boundingBox.upperRight] }),
+      ...(description && { description: description.value }),
+      ...(identifier && { id: identifier.code }),
       ...(keywords && { keywords: keywordsJSON }),
-      ...(title && { title: title?.value }),
+      ...(title && { title: title.value }),
       ...otherProps,
     };
-  }
-
-  get title() {
-    return this.options.title;
-  }
-
-  get description() {
-    return this.options.description;
-  }
-
-  get keywords() {
-    return this.options.keywords;
-  }
-
-  get identifier() {
-    return this.options.identifier;
-  }
-
-  get uri() {
-    return this.options.uri;
-  }
-
-  get orderedAxes() {
-    return this.options.orderedAxes;
-  }
-
-  get crs() {
-    return this.options.crs;
-  }
-
-  get wellKnownScaleSet() {
-    return this.options.wellKnownScaleSet;
-  }
-
-  get boundingBox() {
-    return this.options.boundingBox;
-  }
-
-  get tileMatrices() {
-    return this.options.tileMatrices;
-  }
-
-  public toJSON(): TileMatrixSetJSON {
-    return this.tileMatrixSetJSON;
   }
 }
