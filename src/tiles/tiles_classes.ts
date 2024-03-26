@@ -81,7 +81,19 @@ export class TileRange {
     public maxY: number,
     public zoom: number,
     public metatile = 1
-  ) {}
+  ) {
+    {
+      if (minX < 0 || minY < 0) {
+        throw new Error('tile indices must be non-negative integers');
+      }
+
+      if (minX > maxX || minY > maxY) {
+        throw new Error('max tile indices must be equal or larger than min tile indices');
+      }
+
+      validateMetatile(metatile);
+    }
+  }
 
   public *tileGenerator(): Generator<Tile, void, void> {
     for (let y = this.minY; y <= this.maxY; y++) {
