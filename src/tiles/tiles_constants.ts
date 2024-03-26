@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-magic-numbers */
-import { BoundingBox } from '../classes';
 import { TileMatrixSet } from './classes/tileMatrixSet';
+import { TILEMATRIXSETJSON_WEB_MERCATOR_QUAD } from './tileMatrixSets/WebMercatorQuad';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from './tileMatrixSets/WorldCRS84Quad';
-import { CoordinateReferenceSystem, Ellipsoid, ScaleSet, TileGrid } from './tiles_classes';
 
 /**
  * Size of a pixel in meters
@@ -181,3 +180,10 @@ export const TILEGRID_WEB_MERCATOR: TileGrid = new TileGrid(
  * @category Tile Matrix Set
  */
 export const TILEMATRIXSET_WORLD_CRS84_QUAD = new TileMatrixSet(TILEMATRIXSETJSON_WORLD_CRS84_QUAD);
+
+/**
+ * Tile Matrix Set Web Mercator Quad, This Tile Matrix Set defines tiles based on a spherical Mercator instead of an ellipsoid - https://docs.ogc.org/is/17-083r4/17-083r4.html#toc49
+ * @
+ * @category Tile Matrix Set
+ */
+export const TILEMATRIXSET_WEB_MERCATOR_QUAD = new TileMatrixSet(TILEMATRIXSETJSON_WEB_MERCATOR_QUAD);
