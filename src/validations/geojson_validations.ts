@@ -12,9 +12,9 @@ const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineSt
 
 function innerValidateGeoJsonInTileMatrixSet(geoJsonObject: Geometry, tileMatrixSet: TileMatrixSet): ValidationResult {
   if (geoJsonObject.type === 'Point') {
-    const x = geoJsonObject.coordinates[0];
-    const y = geoJsonObject.coordinates[1];
-    const validationResult = isPointInTileMatrixSet(x, y, tileMatrixSet);
+    const lon = geoJsonObject.coordinates[0];
+    const lat = geoJsonObject.coordinates[1];
+    const validationResult = isPointInTileMatrixSet(lon, lat, tileMatrixSet);
     if (!validationResult.isValid) {
       return validationResult;
     }
@@ -22,9 +22,9 @@ function innerValidateGeoJsonInTileMatrixSet(geoJsonObject: Geometry, tileMatrix
   if (geoJsonObject.type === 'Polygon') {
     const coordinates = geoJsonObject.coordinates[0];
     for (const coordinate of coordinates) {
-      const x = coordinate[0];
-      const y = coordinate[1];
-      const validationResult = isPointInTileMatrixSet(x, y, tileMatrixSet);
+      const lon = coordinate[0];
+      const lat = coordinate[1];
+      const validationResult = isPointInTileMatrixSet(lon, lat, tileMatrixSet);
       if (!validationResult.isValid) {
         return validationResult;
       }
@@ -33,9 +33,9 @@ function innerValidateGeoJsonInTileMatrixSet(geoJsonObject: Geometry, tileMatrix
     const polygons = geoJsonObject.coordinates;
     for (const polygon of polygons) {
       for (const coordinate of polygon[0]) {
-        const x = coordinate[0];
-        const y = coordinate[1];
-        const validationResult = isPointInTileMatrixSet(x, y, tileMatrixSet);
+        const lon = coordinate[0];
+        const lat = coordinate[1];
+        const validationResult = isPointInTileMatrixSet(lon, lat, tileMatrixSet);
         if (!validationResult.isValid) {
           return validationResult;
         }
@@ -45,12 +45,12 @@ function innerValidateGeoJsonInTileMatrixSet(geoJsonObject: Geometry, tileMatrix
   return new ValidationResult(true);
 }
 
-function isPointInTileMatrixSet(x: Longitude, y: Latitude, tileMatrixSet: TileMatrixSet): ValidationResult {
+function isPointInTileMatrixSet(lon: Longitude, lat: Latitude, tileMatrixSet: TileMatrixSet): ValidationResult {
   try {
-    validateGeoPointByTileMatrixSet(new GeoPoint(x, y), tileMatrixSet);
+    validateGeoPointByTileMatrixSet(new GeoPoint(lon, lat), tileMatrixSet);
   } catch (error) {
     return new ValidationResult(false, [
-      new ValidationIssue(`Point lon: ${x} lat: ${y} is not inside the tile matrix set`, ValidationIssueType.GEOJSON_NOT_IN_TILEMATRIXSET),
+      new ValidationIssue(`Point lon: ${lon} lat: ${lat} is not inside the tile matrix set`, ValidationIssueType.GEOJSON_NOT_IN_TILEMATRIXSET),
     ]);
   }
 
