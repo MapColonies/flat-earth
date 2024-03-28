@@ -66,19 +66,23 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
 export class BoundingBox extends Polygon {
   public readonly min: GeoPoint;
   public readonly max: GeoPoint;
-  public constructor(boundingBox: BBox) {
+
+  public constructor([minX, minY, maxX, maxY]: BBox) {
+    if (maxY < minY) {
+      throw new Error('invalid bounding box input: minimum latitude must be lower than the maximum latitude');
+    }
     super([
       [
-        [boundingBox[0], boundingBox[1]],
-        [boundingBox[2], boundingBox[1]],
-        [boundingBox[2], boundingBox[3]],
-        [boundingBox[0], boundingBox[3]],
-        [boundingBox[0], boundingBox[1]],
+        [minX, minY],
+        [maxX, minY],
+        [maxX, maxY],
+        [minX, maxY],
+        [minX, minY],
       ],
     ]);
 
-    this.min = new GeoPoint(boundingBox[0], boundingBox[1]);
-    this.max = new GeoPoint(boundingBox[2], boundingBox[3]);
+    this.min = new GeoPoint(minX, minY);
+    this.max = new GeoPoint(maxX, maxY);
   }
 }
 

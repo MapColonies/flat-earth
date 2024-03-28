@@ -1,22 +1,22 @@
-import { area, dissolve, feature, featureCollection, intersect } from '@turf/turf';
+import { bbox, booleanContains, dissolve, feature, featureCollection, flatten, intersect } from '@turf/turf';
 import type { Polygon as GeoJSONPolygon } from 'geojson';
 import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
 import { geometryToFeature } from '../converters/turf/turf_converters';
-import type { GeoJSONGeometry, Zoom } from '../types';
+import type { ArrayElement, Comparison, GeoJSONGeometry, TileMatrixId } from '../types';
 import { flatGeometryCollection } from '../utilities';
 import {
   validateBoundingBox,
-  validateBoundingBoxByGrid,
-  validateGeoPointByGrid,
-  validateGeometryByGrid,
+  validateBoundingBoxByTileMatrix,
+  validateGeoPointByTileMatrix,
+  validateGeometryByTileMatrix,
   validateMetatile,
-  validateTileByGrid,
-  validateTileGrid,
-  validateZoomByGrid,
+  validateTileByTileMatrix,
+  validateTileMatrix,
 } from '../validations/validations';
-import { Tile, TileGrid, TileIntersectionType, TileRange } from './tiles_classes';
-import { SCALE_FACTOR, TILEGRID_WORLD_CRS84 } from './tiles_constants';
+import type { TileMatrixSet } from './classes/tileMatrixSet';
+import { Tile, TileRange } from './tiles_classes';
+import type { TileMatrix } from './types';
 
 function avoidNegativeZero(value: number): number {
   if (value === 0) {
@@ -37,217 +37,98 @@ function clampValues(value: number, minValue: number, maxValue: number): number 
   return value;
 }
 
-function tileEffectiveHeight(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): number {
-  return (
-    (referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) /
-    (referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom)
-  );
+function tileEffectiveHeight(tileMatrix: TileMatrix): number {
+  const { cellSize, matrixHeight, tileHeight } = tileMatrix;
+  return (cellSize * tileHeight) / matrixHeight;
 }
 
-function tileEffectiveWidth(zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): number {
-  return (
-    (referenceTileGrid.boundingBox.max.lon - referenceTileGrid.boundingBox.min.lon) /
-    (referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom)
-  );
+function tileEffectiveWidth(tileMatrix: TileMatrix): number {
+  const { cellSize, matrixWidth, tileWidth } = tileMatrix;
+  return (cellSize * tileWidth) / matrixWidth;
 }
 
-function polygonToTiles(polygon: Polygon, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
+function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T>[] {
+  const tileRanges: TileRange<T>[] = [];
   const boundingBox = geometryToBoundingBox(polygon);
-  const minimalZoom = minimalBoundingTile(boundingBox, metatile, referenceTileGrid)?.z ?? 0;
-  const tileRange = boundingBoxToTileRange(boundingBox, Math.min(minimalZoom, zoom), metatile, referenceTileGrid);
-  return polygonToTileRanges(polygon, tileRange, zoom, referenceTileGrid);
-}
+  const {
+    identifier: { code: tileMatrixId },
+  } = tileMatrix;
 
-function polygonToTileRanges(polygon: Polygon, tileRange: TileRange, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange[] {
-  const tileRanges: TileRange[] = [];
-  const partialTiles: Tile[] = [];
+  const { min: minBoundingBoxTile, max: maxBoundingBoxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
 
-  for (const tile of tileRange.tileGenerator()) {
-    const tileIntersectionType = polygonTileIntersection(polygon, tile);
+  const width = maxBoundingBoxTile.col - minBoundingBoxTile.col;
+  const height = maxBoundingBoxTile.row - minBoundingBoxTile.row;
 
-    switch (tileIntersectionType) {
-      case TileIntersectionType.FULL:
-        tileRanges.push(tileToTileRange(tile, zoom, referenceTileGrid));
-        break;
-      case TileIntersectionType.PARTIAL:
-        if (tile.z === zoom) {
-          tileRanges.push(tileToTileRange(tile, zoom, referenceTileGrid));
-        } else {
-          partialTiles.push(tile);
-        }
-        break;
-      case TileIntersectionType.NONE:
-        break;
+  const [minTileIndex, maxTileIndex]: [number, number] =
+    width > height ? [minBoundingBoxTile.row, maxBoundingBoxTile.row] : [minBoundingBoxTile.col, maxBoundingBoxTile.col];
+
+  for (let tileIndex = minTileIndex; tileIndex <= maxTileIndex; tileIndex += 1) {
+    const [minTileCol, minTileRow, maxTileCol, maxTileRow] =
+      width > height
+        ? [minBoundingBoxTile.col, tileIndex, maxBoundingBoxTile.col, tileIndex]
+        : [tileIndex, minBoundingBoxTile.row, tileIndex, maxBoundingBoxTile.row];
+
+    const movingTileRange = new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixId, metatile);
+
+    const movingTileRangeBoundingBox = geometryToFeature(tileRangeToBoundingBox(movingTileRange, tileMatrix, true));
+    const intersections = intersect(featureCollection([geometryToFeature(polygon), movingTileRangeBoundingBox]));
+
+    if (intersections === null) {
+      return [];
     }
-  }
 
-  for (const tile of partialTiles) {
-    tileRanges.push(...polygonToTileRanges(polygon, tileToTileRange(tile, tile.z + 1, referenceTileGrid), zoom, referenceTileGrid));
+    const intersectingPolygons = flatten(intersections);
+    intersectingPolygons.features.map((polygon) => {
+      const boundingBox = new BoundingBox(bbox(polygon.geometry));
+      const { min: minTile, max: maxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
+      tileRanges.push(new TileRange(minTile.col, minTile.row, maxTile.col, maxTile.row, tileMatrixId, metatile));
+    });
   }
 
   return tileRanges;
 }
 
-/**
- * Calculates a tile for a longitude, latitude and zoom
- * @param geoPoint a point with longitude and latitude
- * @param zoom zoom level
- * @param reverseIntersectionPolicy a boolean whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
- * @param metatile size of a metatile
- * @param referenceTileGrid a tile grid which the calculated tile belongs to
- */
-function geoCoordsToTile(
-  geoPoint: GeoPoint,
-  zoom: Zoom,
-  reverseIntersectionPolicy: boolean,
-  metatile = 1,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): Tile {
-  const width = tileEffectiveWidth(zoom, referenceTileGrid) * metatile;
-  const height = tileEffectiveHeight(zoom, referenceTileGrid) * metatile;
+function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
+  const { col, row, metatile = 1 } = tile;
+  const width = tileEffectiveWidth(tileMatrix) * metatile;
+  const height = tileEffectiveHeight(tileMatrix) * metatile;
 
-  const x = (geoPoint.lon - referenceTileGrid.boundingBox.min.lon) / width;
-  const y = (referenceTileGrid.boundingBox.max.lat - geoPoint.lat) / height;
+  const {
+    pointOfOrigin: [originX, originY],
+    cornerOfOrigin = 'topLeft',
+  } = tileMatrix;
 
-  // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
-  if (reverseIntersectionPolicy) {
-    const tileX = Math.ceil(x) - 1;
-    const tileY = Math.ceil(y) - 1;
-    return new Tile(tileX, tileY, zoom, metatile);
-  }
+  const lon = originX + col * width;
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+  const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
-  // When longitude/latitude is on the maximum edge of the tile grid (e.g. lon = 180 lat = 90 on the WG84 grid)
-  const onEdgeXTranslation = geoPoint.lon === referenceTileGrid.boundingBox.max.lon ? 1 : 0;
-  const onEdgeYTranslation = geoPoint.lat === referenceTileGrid.boundingBox.min.lat ? 1 : 0;
-
-  const tileX = Math.floor(x) - onEdgeXTranslation;
-  const tileY = Math.floor(y) - onEdgeYTranslation;
-
-  return new Tile(tileX, tileY, zoom, metatile);
+  return new GeoPoint(lon, lat);
 }
 
-function snapMinPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
-  const width = tileEffectiveWidth(zoom, referenceTileGrid);
-  const minLon = Math.floor(point.lon / width) * width;
-  const height = tileEffectiveHeight(zoom, referenceTileGrid);
-  const minLat = Math.floor(point.lat / height) * height;
-  return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
-}
+function tileRangeToBoundingBox<T extends TileMatrixSet>(
+  tileRange: TileRange<T>,
+  tileMatrix: ArrayElement<T['tileMatrices']>,
+  clamp = false
+): BoundingBox {
+  const { maxCol, maxRow, metatile, minCol, minRow, tileMatrixId } = tileRange;
 
-function snapMaxPointToGrid(point: GeoPoint, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): GeoPoint {
-  const width = tileEffectiveWidth(zoom, referenceTileGrid);
-  const maxLon = Math.ceil(point.lon / width) * width;
-  const height = tileEffectiveHeight(zoom, referenceTileGrid);
-  const maxLat = Math.ceil(point.lat / height) * height;
-  return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
-}
+  const { lon, lat } = tileToGeoCoords(new Tile(minCol, minRow, tileMatrixId), tileMatrix);
 
-/**
- * Creates a generator function which calculates tiles that intersect the bounding box
- * @param boundingBox the bounding box
- * @param zoom the zoom level
- * @param metatile the size of a metatile
- * @param referenceTileGrid a tile grid which the calculated tile belongs to
- * @returns generator function which calculates tiles that intersect the `boundingBox`
- */
-export function boundingBoxToTileRange(
-  boundingBox: BoundingBox,
-  zoom: Zoom,
-  metatile = 1,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): TileRange {
-  validateMetatile(metatile);
-  validateTileGrid(referenceTileGrid);
-  validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
-  validateZoomByGrid(zoom, referenceTileGrid);
-
-  const firstTile = geoCoordsToTile(new GeoPoint(boundingBox.min.lon, boundingBox.max.lat), zoom, false, metatile, referenceTileGrid);
-  const lastTile = geoCoordsToTile(new GeoPoint(boundingBox.max.lon, boundingBox.min.lat), zoom, true, metatile, referenceTileGrid);
-
-  return new TileRange(firstTile.x, firstTile.y, lastTile.x, lastTile.y, zoom, metatile);
-}
-
-/**
- * Calculates the matching zoom level between tile grids
- * @param zoom the zoom level
- * @param referenceTileGrid a source tile grid
- * @param targetTileGrid a target tile grid
- * @throws Error when there is no matching scales for equivalent zooms
- * @returns a matching zoom level
- */
-export function zoomShift(zoom: Zoom, referenceTileGrid: TileGrid, targetTileGrid: TileGrid): Zoom {
-  validateTileGrid(referenceTileGrid);
-  validateTileGrid(targetTileGrid);
-  validateZoomByGrid(zoom, referenceTileGrid);
-
-  const scale = referenceTileGrid.wellKnownScaleSet.scaleDenominators.get(zoom);
-  if (scale === undefined) {
-    // the value is validated before so this should be unreachable
-    throw new Error('zoom level is not part of the given well known scale set');
-  }
-
-  let matchingZoom: Zoom | undefined;
-  for (const [targetZoom, targetScaleDenominator] of targetTileGrid.wellKnownScaleSet.scaleDenominators) {
-    if (targetScaleDenominator === scale) {
-      matchingZoom = targetZoom;
-      break;
-    }
-  }
-
-  if (matchingZoom === undefined) {
-    throw new Error('no matching target scale found for the given zoom level');
-  }
-
-  return matchingZoom;
-}
-
-/**
- * Calculates a tile for longitude, latitude and zoom
- * @param geoPoint a point with longitude and latitude
- * @param zoom the zoom level
- * @param metatile the size of a metatile
- * @param referenceTileGrid a tile grid which the calculated tile belongs to
- * @returns tile within the tile grid
- */
-export function geoPointZoomToTile(geoPoint: GeoPoint, zoom: Zoom, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile {
-  validateMetatile(metatile);
-  validateTileGrid(referenceTileGrid);
-  validateZoomByGrid(zoom, referenceTileGrid);
-  validateGeoPointByGrid(geoPoint, referenceTileGrid);
-
-  return geoCoordsToTile(geoPoint, zoom, false, metatile, referenceTileGrid);
-}
-
-/**
- * Calculates a bounding box of a tile
- * @param tile the input tile
- * @param referenceTileGrid a tile grid which this tile belongs to
- * @param clamp a boolean whether to clamp the calculated bounding box to the tile grid's bounding box
- * @returns bounding box of the input `tile`
- */
-export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84, clamp = false): BoundingBox {
-  validateTileGrid(referenceTileGrid);
-  validateTileByGrid(tile, referenceTileGrid);
-  const metatile = tile.metatile ?? 1;
-
-  const width = tileEffectiveWidth(tile.z, referenceTileGrid) * metatile;
-  const height = tileEffectiveHeight(tile.z, referenceTileGrid) * metatile;
-
-  const boundingBox: BoundingBox = new BoundingBox([
-    referenceTileGrid.boundingBox.min.lon + tile.x * width,
-    referenceTileGrid.boundingBox.max.lat - (tile.y + 1) * height,
-    referenceTileGrid.boundingBox.min.lon + (tile.x + 1) * width,
-    referenceTileGrid.boundingBox.max.lat - tile.y * height,
-  ]);
+  const boundingBox = tileMatrixToBoundingBox(
+    { ...tileMatrix, pointOfOrigin: [lon, lat] },
+    (maxRow - minRow) * metatile + 1,
+    (maxCol - minCol) * metatile + 1
+  );
 
   if (clamp) {
     // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
-    // of the tile grid
+    // of the tile matrix
+    const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
     return new BoundingBox([
-      clampValues(boundingBox.min.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
-      clampValues(boundingBox.min.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat),
-      clampValues(boundingBox.max.lon, referenceTileGrid.boundingBox.min.lon, referenceTileGrid.boundingBox.max.lon),
-      clampValues(boundingBox.max.lat, referenceTileGrid.boundingBox.min.lat, referenceTileGrid.boundingBox.max.lat),
+      clampValues(boundingBox.min.lon, tileMatrixBoundingBoxMin.lon, tileMatrixBoundingBoxMax.lon),
+      clampValues(boundingBox.min.lat, tileMatrixBoundingBoxMin.lat, tileMatrixBoundingBoxMax.lat),
+      clampValues(boundingBox.max.lon, tileMatrixBoundingBoxMin.lon, tileMatrixBoundingBoxMax.lon),
+      clampValues(boundingBox.max.lat, tileMatrixBoundingBoxMin.lat, tileMatrixBoundingBoxMax.lat),
     ]);
   }
 
@@ -255,45 +136,293 @@ export function tileToBoundingBox(tile: Tile, referenceTileGrid: TileGrid = TILE
 }
 
 /**
- * Converts tile to tile range in a higher zoom level
- * This method will help find what tiles are needed to cover a given tile at a different zoom level
- * @param tile
- * @param zoom target tile range zoom
- * @param referenceTileGrid tile grid
- * @returns tile range at the given zoom level
+ * Calculates a tile for a longitude, latitude and tile matrix
+ * @param geoPoint point with longitude and latitude
+ * @param tileMatrix tile matrix which the calculated tile belongs to
+ * @param reverseIntersectionPolicy boolean value whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
+ * @param metatile size of a metatile
  */
-export function tileToTileRange(tile: Tile, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileRange {
-  if (zoom < tile.z) {
-    throw new Error(`Target zoom level ${zoom} must be higher or equal to the tile's zoom level ${tile.z}`);
+function geoCoordsToTile<T extends TileMatrixSet>(
+  geoPoint: GeoPoint,
+  tileMatrix: ArrayElement<T['tileMatrices']>,
+  reverseIntersectionPolicy: boolean,
+  metatile = 1
+): Tile<T> {
+  const width = tileEffectiveWidth(tileMatrix) * metatile;
+  const height = tileEffectiveHeight(tileMatrix) * metatile;
+
+  const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
+
+  const {
+    identifier: { code: tileMatrixId },
+    cornerOfOrigin = 'topLeft',
+  } = tileMatrix;
+
+  const x = (geoPoint.lon - tileMatrixBoundingBoxMin.lon) / width;
+  const y = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMax.lat - geoPoint.lat : geoPoint.lat - tileMatrixBoundingBoxMin.lat) / height;
+
+  // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
+  if (reverseIntersectionPolicy) {
+    const tileCol = Math.ceil(x) - 1;
+    const tileRow = Math.ceil(y) - 1;
+    return new Tile(tileCol, tileRow, tileMatrixId, metatile);
   }
 
-  const dz = zoom - tile.z;
-  const scaleFactorBetweenTwoLevels = SCALE_FACTOR ** dz;
-  const tileGridMaxX = Math.ceil((referenceTileGrid.numberOfMinLevelTilesX * SCALE_FACTOR ** zoom) / (tile.metatile ?? 1)) - 1;
-  const tileGridMaxY = Math.ceil((referenceTileGrid.numberOfMinLevelTilesY * SCALE_FACTOR ** zoom) / (tile.metatile ?? 1)) - 1;
-  const minX = tile.x * scaleFactorBetweenTwoLevels;
-  const minY = tile.y * scaleFactorBetweenTwoLevels;
-  const maxX = Math.min((tile.x + 1) * scaleFactorBetweenTwoLevels - 1, tileGridMaxX);
-  const maxY = Math.min((tile.y + 1) * scaleFactorBetweenTwoLevels - 1, tileGridMaxY);
+  // When longitude/latitude is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90)
+  const onEdgeXTranslation = geoPoint.lon === tileMatrixBoundingBoxMax.lon ? 1 : 0;
+  const onEdgeYTranslation = geoPoint.lat === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMin.lat : tileMatrixBoundingBoxMax.lat) ? 1 : 0;
 
-  return new TileRange(minX, minY, maxX, maxY, zoom, tile.metatile);
+  const tileCol = Math.floor(x) - onEdgeXTranslation;
+  const tileRow = Math.floor(y) - onEdgeYTranslation;
+
+  return new Tile(tileCol, tileRow, tileMatrixId, metatile);
+}
+
+function snapMinPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoPoint {
+  const width = tileEffectiveWidth(tileMatrix);
+  const minLon = Math.floor(point.lon / width) * width;
+  const height = tileEffectiveHeight(tileMatrix);
+  const minLat = Math.floor(point.lat / height) * height;
+  return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
+}
+
+function snapMaxPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoPoint {
+  const width = tileEffectiveWidth(tileMatrix);
+  const maxLon = Math.ceil(point.lon / width) * width;
+  const height = tileEffectiveHeight(tileMatrix);
+  const maxLat = Math.ceil(point.lat / height) * height;
+  return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
+}
+
+function boundingBoxToTileBounds<T extends TileMatrixSet>(
+  boundingBox: BoundingBox,
+  tileMatrix: ArrayElement<T['tileMatrices']>,
+  metatile = 1
+): { min: Tile<T>; max: Tile<T> } {
+  const { cornerOfOrigin } = tileMatrix;
+
+  const minTilePoint = new GeoPoint(boundingBox.min.lon, cornerOfOrigin === 'topLeft' ? boundingBox.max.lat : boundingBox.min.lat);
+  const maxTilePoint = new GeoPoint(boundingBox.max.lon, cornerOfOrigin === 'topLeft' ? boundingBox.min.lat : boundingBox.max.lat);
+
+  return {
+    min: geoCoordsToTile(minTilePoint, tileMatrix, false, metatile),
+    max: geoCoordsToTile(maxTilePoint, tileMatrix, true, metatile),
+  };
 }
 
 /**
- * Expands bounding box to the containing grid at a given zoom level
- * @param boundingBox bounding box to expand
- * @param zoom zoom level for the tile grid
- * @param referenceTileGrid tile grid
- * @returns bounding box that contains the input `boundingBox` and snapped to the tile grid
+ * extracts a tile matrix from a tile matrix set
+ * @param tileMatrixId identifier of a tile matrix inside `tileMatrixSet`
+ * @param tileMatrixSet tile matrix set
+ * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
  */
-export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): BoundingBox {
-  validateBoundingBox(boundingBox);
-  validateZoomByGrid(zoom, referenceTileGrid);
-  validateTileGrid(referenceTileGrid);
-  validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
+export function getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): TileMatrix | undefined {
+  return tileMatrixSet.tileMatrices.find(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId);
+}
 
-  const minPoint = snapMinPointToGrid(boundingBox.min, zoom, referenceTileGrid);
-  const maxPoint = snapMaxPointToGrid(boundingBox.max, zoom, referenceTileGrid);
+/**
+ * Calculates tile range that covers the bounding box
+ * @param boundingBox bounding box
+ * @param tileMatrix tile matrix
+ * @param metatile size of a metatile
+ * @returns tile range that covers the `boundingBox`
+ */
+export function boundingBoxToTileRange<T extends TileMatrixSet>(
+  boundingBox: BoundingBox,
+  tileMatrix: ArrayElement<T['tileMatrices']>,
+  metatile = 1
+): TileRange<T> {
+  validateMetatile(metatile);
+  validateTileMatrix(tileMatrix);
+  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
+
+  const { min: minTile, max: maxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
+  return new TileRange(minTile.col, minTile.row, maxTile.col, maxTile.row, tileMatrix.identifier.code, metatile);
+}
+
+/**
+ * Finds the matching tile matrix in target tile matrix set based on the selected comparison method
+ * @param tileMatrix source tile matrix
+ * @param targetTileMatrixSet target tile matrix set
+ * @param comparison comparison method
+ * @throws error when matching scale could not be found
+ * @returns matching tile matrix
+ */
+export function findMatchingTileMatrix<T extends TileMatrixSet>(
+  tileMatrix: TileMatrix,
+  targetTileMatrixSet: T,
+  comparison: Comparison = 'equal'
+): TileMatrixId<T> {
+  validateTileMatrix(tileMatrix);
+  // validateTileMatrixSet(targetTileMatrixSet); // TODO: currently not implemented
+
+  const { scaleDenominator } = tileMatrix;
+
+  const { tileMatrixId, diff } = targetTileMatrixSet.tileMatrices
+    .sort((a, b) => b.scaleDenominator - a.scaleDenominator)
+    .map(({ identifier: { code: tileMatrixId }, scaleDenominator: targetScaleDenominator }) => {
+      return { tileMatrixId, diff: targetScaleDenominator - scaleDenominator };
+    })
+    .reduce((prevValue, { tileMatrixId, diff }) => {
+      const { diff: prevDiff } = prevValue;
+
+      switch (comparison) {
+        case 'equal':
+          if (diff === 0) {
+            return { tileMatrixId, diff };
+          }
+          break;
+        case 'closest':
+          if (Math.abs(diff) < Math.abs(prevDiff)) {
+            return { tileMatrixId, diff };
+          }
+          break;
+        case 'lower':
+          if (diff > 0 && diff < prevDiff) {
+            return { tileMatrixId, diff };
+          }
+          break;
+        case 'higher':
+          if (diff < 0 && Math.abs(diff) < Math.abs(prevDiff)) {
+            return { tileMatrixId, diff };
+          }
+          break;
+      }
+
+      return prevValue;
+    });
+
+  if (comparison === 'equal' && diff !== 0) {
+    throw new Error('could not find an exact match for a target scale denominator of a tile matrix');
+  }
+
+  if (comparison === 'lower' && diff < 0) {
+    throw new Error('could not find lower match for tile matrix id');
+  }
+
+  if (comparison === 'higher' && diff > 0) {
+    throw new Error('could not find higher match for tile matrix id');
+  }
+
+  return tileMatrixId;
+}
+
+/**
+ * Calculates a tile for longitude, latitude and tile matrix
+ * @param geoPoint point with longitude and latitude
+ * @param tileMatrix tile matrix which the calculated tile belongs to
+ * @param metatile size of a metatile
+ * @returns tile within the tile matrix
+ */
+export function geoPointToTile<T extends TileMatrixSet>(geoPoint: GeoPoint, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): Tile<T> {
+  validateMetatile(metatile);
+  validateTileMatrix(tileMatrix);
+  validateGeoPointByTileMatrix(geoPoint, tileMatrix);
+
+  return geoCoordsToTile(geoPoint, tileMatrix, false, metatile);
+}
+
+/**
+ * Calculates bounding box for a tile matrix and input height and width
+ * @param tileMatrix tile matrix
+ * @param matrixHeight tile matrix height
+ * @param matrixWidth tile matrix width
+ * @returns bounding box
+ */
+export function tileMatrixToBoundingBox(
+  tileMatrix: TileMatrix,
+  matrixHeight: number = tileMatrix.matrixHeight,
+  matrixWidth: number = tileMatrix.matrixWidth
+): BoundingBox {
+  validateTileMatrix(tileMatrix);
+
+  if (matrixHeight < 0 || matrixWidth < 0) {
+    throw new Error('tile matrix dimensions must be non-negative integers');
+  }
+
+  const { cellSize, pointOfOrigin, tileHeight, tileWidth, cornerOfOrigin = 'topLeft' } = tileMatrix;
+  const [lonOrigin, latOrigin] = pointOfOrigin; // TODO: currently the axis order is assumed and not calculated
+  const tileMatrixHeight = cellSize * tileHeight * matrixHeight;
+  const tileMatrixWidth = cellSize * tileWidth * matrixWidth;
+  return cornerOfOrigin === 'topLeft'
+    ? new BoundingBox([lonOrigin, latOrigin - tileMatrixHeight, lonOrigin + tileMatrixWidth, latOrigin])
+    : new BoundingBox([lonOrigin, latOrigin, lonOrigin + tileMatrixWidth, latOrigin + tileMatrixHeight]);
+}
+
+/**
+ * Calculates a point with longitude and latitude for a tile in a tile matrix
+ * @param tile tile within the tile matrix
+ * @param tileMatrix tile matrix which the tile belongs to
+ * @returns point with longitude and latitude of the origin of the tile, determined by `cornerOfOrigin` property of the tile matrix
+ */
+export function tileToGeoPoint<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
+  validateTileMatrix(tileMatrix);
+  validateTileByTileMatrix(tile, tileMatrix);
+
+  const geoPoint = tileToGeoCoords(tile, tileMatrix);
+  return geoPoint;
+}
+
+/**
+ * Calculates a bounding box of a tile
+ * @param tile the input tile
+ * @param tileMatrixSet a tile matrix containing the tile
+ * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
+ * @returns bounding box of the input `tile`
+ */
+export function tileToBoundingBox<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
+  validateTileMatrix(tileMatrix);
+  validateTileByTileMatrix(tile, tileMatrix);
+
+  const { col, row, tileMatrixId, metatile = 1 } = tile;
+  const tileRange = new TileRange(col, row, col, row, tileMatrixId, metatile);
+  const tileBoundingBox = tileRangeToBoundingBox(tileRange, tileMatrix, clamp);
+
+  return tileBoundingBox;
+}
+
+/**
+ * Converts tile to tile range in any tile matrix
+ * This method will help find what tiles are needed to cover a given tile at a different tile matrix
+ * @param tile tile
+ * @param tileMatrix tile matrix
+ * @param targetTileMatrix target tile matrix
+ * @returns tile range at the given tile matrix
+ */
+export function tileToTileRange<T extends TileMatrixSet>(
+  tile: Tile<T>,
+  tileMatrix: ArrayElement<T['tileMatrices']>,
+  targetTileMatrix: ArrayElement<T['tileMatrices']>
+): TileRange<T> {
+  validateTileMatrix(tileMatrix);
+  validateTileMatrix(targetTileMatrix);
+
+  const { metatile = 1 } = tile;
+  const {
+    identifier: { code: targetTileMatrixId },
+  } = targetTileMatrix;
+
+  const { min: minTilePoint, max: maxTilePoint } = tileToBoundingBox(tile, tileMatrix);
+
+  const { col: minCol, row: minRow } = geoCoordsToTile(minTilePoint, targetTileMatrix, false, metatile);
+  const { col: maxCol, row: maxRow } = geoCoordsToTile(maxTilePoint, targetTileMatrix, true, metatile);
+
+  return new TileRange(minCol, minRow, maxCol, maxRow, targetTileMatrixId, metatile);
+}
+
+/**
+ * Expands bounding box to the containing tile matrix
+ * @param boundingBox bounding box to expand
+ * @param tileMatrix tile matrix
+ * @returns bounding box that contains the input `boundingBox` snapped to the tile matrix tiles
+ */
+export function expandBoundingBoxToTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): BoundingBox {
+  validateBoundingBox(boundingBox);
+  validateTileMatrix(tileMatrix);
+  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
+
+  const minPoint = snapMinPointToTileMatrix(boundingBox.min, tileMatrix);
+  const maxPoint = snapMaxPointToTileMatrix(boundingBox.max, tileMatrix);
 
   return new BoundingBox([minPoint.lon, minPoint.lat, maxPoint.lon, maxPoint.lat]);
 }
@@ -301,69 +430,67 @@ export function expandBoundingBoxToTileGrid(boundingBox: BoundingBox, zoom: Zoom
 /**
  * Find the minimal bounding tile containing the bounding box
  * @param boundingBox bounding box
- * @param referenceTileGrid tile grid
+ * @param tileMatrixSet tile matrix set for the containing tile lookup
+ * @param metatile size of a metatile
  * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
  */
-export function minimalBoundingTile(boundingBox: BoundingBox, metatile = 1, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): Tile | null {
+export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: BoundingBox, tileMatrixSet: TileMatrixSet, metatile = 1): Tile<T> | null {
   validateBoundingBox(boundingBox);
   validateMetatile(metatile);
-  validateTileGrid(referenceTileGrid);
-  validateBoundingBoxByGrid(boundingBox, referenceTileGrid);
 
-  const dx = boundingBox.max.lon - boundingBox.min.lon;
-  const dy = boundingBox.max.lat - boundingBox.min.lat;
+  const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
+    const boundingBoxFeature = geometryToFeature(boundingBox);
+    const tileMatrixBoundingBoxFeature = geometryToFeature(tileMatrixToBoundingBox(tileMatrix));
 
-  const minimalXZoom = Math.floor(
-    Math.log2(
-      ((referenceTileGrid.boundingBox.max.lon - referenceTileGrid.boundingBox.min.lon) * metatile) / (referenceTileGrid.numberOfMinLevelTilesX * dx)
-    )
-  );
-
-  const minimalYZoom = Math.floor(
-    Math.log2(
-      ((referenceTileGrid.boundingBox.max.lat - referenceTileGrid.boundingBox.min.lat) * metatile) / (referenceTileGrid.numberOfMinLevelTilesY * dy)
-    )
-  );
-
-  const minimalZoom = Math.min(minimalXZoom, minimalYZoom);
-  const minPoint = new GeoPoint(boundingBox.min.lon, boundingBox.max.lat);
-  const maxPoint = new GeoPoint(boundingBox.max.lon, boundingBox.min.lat);
-
-  for (let zoom = minimalZoom; zoom >= 0; zoom--) {
-    const minTile = geoCoordsToTile(minPoint, zoom, false, metatile);
-    const maxTile = geoCoordsToTile(maxPoint, zoom, true, metatile);
-
-    if (minTile.x === maxTile.x && minTile.y === maxTile.y) {
-      return minTile;
+    if (!booleanContains(boundingBoxFeature, tileMatrixBoundingBoxFeature)) {
+      return null;
     }
+
+    const { min: minTile, max: maxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
+    const { scaleDenominator } = tileMatrix;
+
+    if (minTile.col === maxTile.col && minTile.row === maxTile.row) {
+      return { tile: minTile, scaleDenominator };
+    }
+
+    return null;
+  });
+
+  const boundingTiles = possibleBoundingTiles.filter(
+    <T extends ArrayElement<typeof possibleBoundingTiles>>(value: T): value is NonNullable<T> => value !== null
+  );
+
+  if (boundingTiles.length === 0) {
+    return null;
   }
 
-  return null;
+  const { tile } = boundingTiles.reduce((prevPossibleBoundingTile, possibleBoundingTile) => {
+    return possibleBoundingTile.scaleDenominator < prevPossibleBoundingTile.scaleDenominator ? possibleBoundingTile : prevPossibleBoundingTile;
+  });
+  return tile;
 }
 
 /**
- * Convert a geometry to a set of tile ranges in the given zoom level
+ * Convert geometry to a set of tile ranges in the given tile matrix
  * @param geometry geometry to compute tile ranges for
- * @param zoom target zoom level
+ * @param tileMatrix tile matrix
  * @param metatile size of a metatile
- * @param referenceTileGrid tile grid
- * @returns tile range in the given zoom level
+ * @returns tile range in `tileMatrix`
  */
-export function geometryToTileRanges<G extends GeoJSONGeometry>(
+export function geometryToTileRanges<G extends GeoJSONGeometry, T extends TileMatrixSet>(
   geometry: Geometry<G>,
-  zoom: Zoom,
-  metatile = 1,
-  referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84
-): TileRange[] {
-  validateTileGrid(referenceTileGrid);
-  validateGeometryByGrid(geometry, referenceTileGrid);
-  validateZoomByGrid(zoom, referenceTileGrid);
+  tileMatrix: ArrayElement<T['tileMatrices']>,
+  metatile = 1
+): TileRange<T>[] {
+  validateTileMatrix(tileMatrix);
+  validateMetatile(metatile);
+  validateGeometryByTileMatrix(geometry, tileMatrix);
 
   switch (true) {
     case geometry instanceof BoundingBox:
-      return [boundingBoxToTileRange(geometry, zoom, metatile, referenceTileGrid)];
+      return [boundingBoxToTileRange(geometry, tileMatrix, metatile)];
     case geometry instanceof Polygon:
-      return polygonToTiles(geometry, zoom, metatile, referenceTileGrid);
+      return polygonToTileRanges(geometry, tileMatrix, metatile);
     case geometry instanceof GeometryCollection: {
       const featurePolygons = geometry.geometries
         .flatMap(flatGeometryCollection)
@@ -372,40 +499,11 @@ export function geometryToTileRanges<G extends GeoJSONGeometry>(
       const dissolvedPolygons = dissolve(featureCollection(featurePolygons));
       const tileRanges = dissolvedPolygons.features.flatMap((geoJSONPolygonFeature) => {
         const polygon = new Polygon(geoJSONPolygonFeature.geometry.coordinates);
-        return polygonToTiles(polygon, zoom, metatile, referenceTileGrid);
+        return polygonToTileRanges(polygon, tileMatrix, metatile);
       });
       return tileRanges;
     }
     default:
-      throw new Error(`Unsupported geometry type: ${geometry.type}`);
-  }
-}
-
-/**
- * Identifies the intersection type between a polygon and a tile from a tile grid
- * @param polygon polygon to identify intersections with
- * @param tile target tile
- * @param referenceTileGrid tile grid
- * @returns intersection type between the geometry and the tile
- */
-export function polygonTileIntersection(polygon: Polygon, tile: Tile, referenceTileGrid: TileGrid = TILEGRID_WORLD_CRS84): TileIntersectionType {
-  validateTileGrid(referenceTileGrid);
-  validateGeometryByGrid(polygon, referenceTileGrid);
-  validateTileByGrid(tile, referenceTileGrid);
-
-  const featurePolygon = geometryToFeature(polygon);
-  const featureBoundingBox = geometryToFeature(tileToBoundingBox(tile, referenceTileGrid));
-  const features = featureCollection([featurePolygon, featureBoundingBox]);
-  const intersectionResult = intersect(features);
-
-  if (intersectionResult === null) {
-    return TileIntersectionType.NONE;
-  } else {
-    const intArea = area(intersectionResult);
-    const hashArea = area(featureBoundingBox);
-    if (intArea === hashArea) {
-      return TileIntersectionType.FULL;
-    }
-    return TileIntersectionType.PARTIAL;
+      throw new Error(`unsupported geometry type: ${geometry.type}`);
   }
 }
