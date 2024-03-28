@@ -266,7 +266,6 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
     .reduce((prevValue, { tileMatrixId, diff }) => {
       const { diff: prevDiff } = prevValue;
 
-      console.log(diff, prevDiff);
       switch (comparison) {
         case 'equal':
           if (diff === 0) {
