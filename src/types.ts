@@ -1,6 +1,8 @@
 import type { Geometry, GeometryCollection } from 'geojson';
 import type { TileMatrixSet } from './tiles/classes/tileMatrixSet';
 
+export type ArrayElement<T> = T extends (infer U)[] ? U : never;
+
 export type Comparison = 'equal' | 'closest' | 'lower' | 'higher';
 
 /**
@@ -20,5 +22,3 @@ export type TileMatrixId<T extends TileMatrixSet> = ArrayElement<T['tileMatrices
 
 export type GeoJSONBaseGeometry = Exclude<Geometry, GeometryCollection>;
 export type GeoJSONGeometry = Geometry;
-
-export type ArrayElement<T> = T extends (infer U)[] ? U : never;
