@@ -32,11 +32,15 @@ export function validateGeoPointByTileMatrixSet(geoPoint: GeoPoint, tileMatrixSe
     const { min: tileMatrixSetBoundingBoxMin, max: tileMatrixSetBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
 
     if (geoPoint.lon < tileMatrixSetBoundingBoxMin.lon || geoPoint.lon > tileMatrixSetBoundingBoxMax.lon) {
-      throw new RangeError(`longitude ${geoPoint.lon} is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`);
+      throw new RangeError(
+        `longitude ${geoPoint.lon} is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
+      );
     }
 
     if (geoPoint.lat < tileMatrixSetBoundingBoxMin.lat || geoPoint.lat > tileMatrixSetBoundingBoxMax.lat) {
-      throw new RangeError(`latitude ${geoPoint.lat} is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`);
+      throw new RangeError(
+        `latitude ${geoPoint.lat} is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
+      );
     }
   }
 }
