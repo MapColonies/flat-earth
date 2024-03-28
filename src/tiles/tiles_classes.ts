@@ -1,4 +1,4 @@
-import type { Zoom } from '../types';
+import type { TileMatrixId } from '../types';
 import { validateMetatile } from '../validations/validations';
 import type { TileMatrixSet } from './classes/tileMatrixSet';
 
@@ -9,7 +9,7 @@ export class Tile<T extends TileMatrixSet> {
   public constructor(
     public x: number,
     public y: number,
-    public z: Zoom<T>,
+    public tileMatrixId: TileMatrixId<T>,
     public metatile?: number
   ) {
     if (x < 0 || y < 0) {
@@ -28,7 +28,7 @@ export class TileRange<T extends TileMatrixSet> {
     public minY: number,
     public maxX: number,
     public maxY: number,
-    public zoom: Zoom<T>,
+    public tileMatrixId: TileMatrixId<T>,
     public metatile = 1
   ) {
     {
@@ -47,7 +47,7 @@ export class TileRange<T extends TileMatrixSet> {
   public *tileGenerator(): Generator<Tile<T>, void, void> {
     for (let y = this.minY; y <= this.maxY; y++) {
       for (let x = this.minX; x <= this.maxX; x++) {
-        yield new Tile(x, y, this.zoom, this.metatile);
+        yield new Tile(x, y, this.tileMatrixId, this.metatile);
       }
     }
   }

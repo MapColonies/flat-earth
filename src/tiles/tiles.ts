@@ -3,7 +3,7 @@ import type { Polygon as GeoJSONPolygon } from 'geojson';
 import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry_converters';
 import { geometryToFeature } from '../converters/turf/turf_converters';
-import type { ArrayElement, Comparison, GeoJSONGeometry, Zoom } from '../types';
+import type { ArrayElement, Comparison, GeoJSONGeometry, TileMatrixId } from '../types';
 import { flatGeometryCollection } from '../utilities';
 import {
   validateBoundingBox,
@@ -12,7 +12,7 @@ import {
   validateGeometryByTileMatrix,
   validateMetatile,
   validateTileByTileMatrix,
-  validateTileMatrix
+  validateTileMatrix,
 } from '../validations/validations';
 import type { TileMatrixSet } from './classes/tileMatrixSet';
 import { Tile, TileRange } from './tiles_classes';
@@ -110,9 +110,9 @@ function tileRangeToBoundingBox<T extends TileMatrixSet>(
   tileMatrix: ArrayElement<T['tileMatrices']>,
   clamp = false
 ): BoundingBox {
-  const { maxX, maxY, metatile, minX, minY, zoom } = tileRange;
+  const { maxX, maxY, metatile, minX, minY, tileMatrixId } = tileRange;
 
-  const { lon, lat } = tileToGeoCoords(new Tile(minX, minY, zoom), tileMatrix);
+  const { lon, lat } = tileToGeoCoords(new Tile(minX, minY, tileMatrixId), tileMatrix);
 
   const boundingBox = tileMatrixToBoundingBox(
     { ...tileMatrix, pointOfOrigin: [lon, lat] },
@@ -136,7 +136,7 @@ function tileRangeToBoundingBox<T extends TileMatrixSet>(
 }
 
 /**
- * Calculates a tile for a longitude, latitude and zoom
+ * Calculates a tile for a longitude, latitude and tile matrix
  * @param geoPoint point with longitude and latitude
  * @param tileMatrix tile matrix which the calculated tile belongs to
  * @param reverseIntersectionPolicy boolean value whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
@@ -154,7 +154,7 @@ function geoCoordsToTile<T extends TileMatrixSet>(
   const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
 
   const {
-    identifier: { code: zoom },
+    identifier: { code: tileMatrixId },
     cornerOfOrigin = 'topLeft',
   } = tileMatrix;
 
@@ -165,7 +165,7 @@ function geoCoordsToTile<T extends TileMatrixSet>(
   if (reverseIntersectionPolicy) {
     const tileX = Math.ceil(x) - 1;
     const tileY = Math.ceil(y) - 1;
-    return new Tile(tileX, tileY, zoom, metatile);
+    return new Tile(tileX, tileY, tileMatrixId, metatile);
   }
 
   // When longitude/latitude is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90)
@@ -175,7 +175,7 @@ function geoCoordsToTile<T extends TileMatrixSet>(
   const tileX = Math.floor(x) - onEdgeXTranslation;
   const tileY = Math.floor(y) - onEdgeYTranslation;
 
-  return new Tile(tileX, tileY, zoom, metatile);
+  return new Tile(tileX, tileY, tileMatrixId, metatile);
 }
 
 function snapMinPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoPoint {
@@ -212,12 +212,12 @@ function boundingBoxToTileBounds<T extends TileMatrixSet>(
 
 /**
  * extracts a tile matrix from a tile matrix set
- * @param identifier identifier of a tile matrix inside `tileMatrixSet`
+ * @param tileMatrixId identifier of a tile matrix inside `tileMatrixSet`
  * @param tileMatrixSet tile matrix set
  * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
  */
-export function getTileMatrix<T extends TileMatrixSet>(identifier: Zoom<T>, tileMatrixSet: T): TileMatrix | undefined {
-  return tileMatrixSet.tileMatrices.find((tileMatrix) => tileMatrix.identifier.code === identifier);
+export function getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): TileMatrix | undefined {
+  return tileMatrixSet.tileMatrices.find(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId);
 }
 
 /**
@@ -241,51 +241,51 @@ export function boundingBoxToTileRange<T extends TileMatrixSet>(
 }
 
 /**
- * Finds the matching zoom level in target tile matrix set based on the selected comparison method
+ * Finds the matching tile matrix in target tile matrix set based on the selected comparison method
  * @param tileMatrix source tile matrix
  * @param targetTileMatrixSet target tile matrix set
  * @param comparison comparison method
  * @throws error when matching scale could not be found
- * @returns matching zoom level
+ * @returns matching tile matrix
  */
-export function findMatchingZoomLevel<T extends TileMatrixSet>(
+export function findMatchingTileMatrix<T extends TileMatrixSet>(
   tileMatrix: TileMatrix,
   targetTileMatrixSet: T,
   comparison: Comparison = 'equal'
-): Zoom<T> {
+): TileMatrixId<T> {
   validateTileMatrix(tileMatrix);
   // validateTileMatrixSet(targetTileMatrixSet); // TODO: currently not implemented
 
   const { scaleDenominator } = tileMatrix;
 
-  const { code, diff } = targetTileMatrixSet.tileMatrices
+  const { tileMatrixId, diff } = targetTileMatrixSet.tileMatrices
     .sort((a, b) => b.scaleDenominator - a.scaleDenominator)
-    .map(({ identifier: { code }, scaleDenominator: targetScaleDenominator }) => {
-      return { code, diff: targetScaleDenominator - scaleDenominator };
+    .map(({ identifier: { code: tileMatrixId }, scaleDenominator: targetScaleDenominator }) => {
+      return { tileMatrixId, diff: targetScaleDenominator - scaleDenominator };
     })
-    .reduce((prevValue, { code, diff }) => {
+    .reduce((prevValue, { tileMatrixId, diff }) => {
       const { diff: prevDiff } = prevValue;
 
       console.log(diff, prevDiff);
       switch (comparison) {
         case 'equal':
           if (diff === 0) {
-            return { code, diff };
+            return { tileMatrixId, diff };
           }
           break;
         case 'closest':
           if (Math.abs(diff) < Math.abs(prevDiff)) {
-            return { code, diff };
+            return { tileMatrixId, diff };
           }
           break;
         case 'lower':
           if (diff > 0 && diff < prevDiff) {
-            return { code, diff };
+            return { tileMatrixId, diff };
           }
           break;
         case 'higher':
           if (diff < 0 && Math.abs(diff) < Math.abs(prevDiff)) {
-            return { code, diff };
+            return { tileMatrixId, diff };
           }
           break;
       }
@@ -294,18 +294,18 @@ export function findMatchingZoomLevel<T extends TileMatrixSet>(
     });
 
   if (comparison === 'equal' && diff !== 0) {
-    throw new Error('could not find an exact match for zoom level');
+    throw new Error('could not find an exact match for a target scale denominator');
   }
 
   if (comparison === 'lower' && diff < 0) {
-    throw new Error('could not find lower matching for zoom level')
+    throw new Error('could not find lower match for tile matrix id');
   }
 
   if (comparison === 'higher' && diff > 0) {
-    throw new Error('could not find higher matching for zoom level')
+    throw new Error('could not find higher match for tile matrix id');
   }
 
-  return code;
+  return tileMatrixId;
 }
 
 /**
@@ -375,16 +375,16 @@ export function tileToBoundingBox<T extends TileMatrixSet>(tile: Tile<T>, tileMa
   validateTileMatrix(tileMatrix);
   validateTileByTileMatrix(tile, tileMatrix);
 
-  const { x, y, z, metatile = 1 } = tile;
-  const tileRange = new TileRange(x, y, x, y, z, metatile);
+  const { x, y, tileMatrixId, metatile = 1 } = tile;
+  const tileRange = new TileRange(x, y, x, y, tileMatrixId, metatile);
   const tileBoundingBox = tileRangeToBoundingBox(tileRange, tileMatrix, clamp);
 
   return tileBoundingBox;
 }
 
 /**
- * Converts tile to tile range in any zoom level
- * This method will help find what tiles are needed to cover a given tile at a different zoom level
+ * Converts tile to tile range in any tile matrix
+ * This method will help find what tiles are needed to cover a given tile at a different tile matrix
  * @param tile tile
  * @param tileMatrix tile matrix
  * @param targetTileMatrix target tile matrix

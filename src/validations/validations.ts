@@ -4,7 +4,7 @@ import { TileMatrixSet } from '../tiles/classes/tileMatrixSet';
 import { getTileMatrix, tileMatrixToBoundingBox } from '../tiles/tiles';
 import { Tile } from '../tiles/tiles_classes';
 import type { TileMatrix } from '../tiles/types';
-import { Zoom, type ArrayElement, type GeoJSONGeometry } from '../types';
+import type { ArrayElement, GeoJSONGeometry, TileMatrixId } from '../types';
 
 /**
  * Validates that the input `boundingBox` is valid
@@ -125,12 +125,12 @@ export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry
  * @param tileMatrixSet tile matrix set to validate the `tile` against
  */
 export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): void {
-  const { x, y, z, metatile } = tile;
+  const { x, y, tileMatrixId, metatile } = tile;
   if (metatile !== undefined) {
     validateMetatile(metatile);
   }
 
-  if (z !== tileMatrix.identifier.code) {
+  if (tileMatrixId !== tileMatrix.identifier.code) {
     throw new Error('tile identifier is not equal to the tile matrix identifier');
   }
 
@@ -149,12 +149,12 @@ export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>,
  * @param tileMatrixSet tile matrix set to validate the `tile` against
  */
 export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<T>, tileMatrixSet: T): void {
-  const { x, y, z, metatile } = tile;
+  const { x, y, tileMatrixId, metatile } = tile;
   if (metatile !== undefined) {
     validateMetatile(metatile);
   }
 
-  const tileMatrix = getTileMatrix(z, tileMatrixSet);
+  const tileMatrix = getTileMatrix(tileMatrixId, tileMatrixSet);
   if (!tileMatrix) {
     throw new Error('tile could not be found inside tile matrix set');
   }
@@ -169,12 +169,12 @@ export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<
 }
 
 /**
- * Validates that the input `zoom` is valid with respect to `tileMatrixSet`
- * @param zoom the zoom level to validate
- * @param tileMatrixSet the tile matrix set to validate the `zoom` against
+ * Validates that the input `tileMatrixId` is valid with respect to `tileMatrixSet`
+ * @param tileMatrixId tile matrix id to validate
+ * @param tileMatrixSet the tile matrix set to validate the `tileMatrixId` against
  */
-export function validateZoomByTileMatrixSet<T extends TileMatrixSet>(zoom: Zoom<T>, tileMatrixSet: T): void {
-  if (tileMatrixSet.tileMatrices.findIndex(({ identifier: { code } }) => code === zoom) > 0) {
-    throw new Error('zoom level is not part of the given tile matrix set');
+export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): void {
+  if (tileMatrixSet.tileMatrices.findIndex(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId) > 0) {
+    throw new Error('tile matrix id is not part of the given tile matrix set');
   }
 }

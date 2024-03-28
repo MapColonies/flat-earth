@@ -14,9 +14,9 @@ export type Longitude = number;
 export type Latitude = number;
 
 /**
- * A zoom level
+ * Tile Matrix Id
  */
-export type Zoom<T extends TileMatrixSet> = ArrayElement<T['tileMatrices']>['identifier']['code'];
+export type TileMatrixId<T extends TileMatrixSet> = ArrayElement<T['tileMatrices']>['identifier']['code'];
 
 export type GeoJSONBaseGeometry = Exclude<Geometry, GeometryCollection>;
 export type GeoJSONGeometry = Geometry;
