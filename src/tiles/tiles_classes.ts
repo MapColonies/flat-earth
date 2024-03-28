@@ -7,12 +7,12 @@ import type { TileMatrixSet } from './classes/tileMatrixSet';
  */
 export class Tile<T extends TileMatrixSet> {
   public constructor(
-    public x: number,
-    public y: number,
+    public col: number,
+    public row: number,
     public tileMatrixId: TileMatrixId<T>,
     public metatile?: number
   ) {
-    if (x < 0 || y < 0) {
+    if (col < 0 || row < 0) {
       throw new Error('tile indices must be non-negative integers');
     }
 
@@ -24,19 +24,19 @@ export class Tile<T extends TileMatrixSet> {
 
 export class TileRange<T extends TileMatrixSet> {
   public constructor(
-    public minX: number,
-    public minY: number,
-    public maxX: number,
-    public maxY: number,
+    public minCol: number,
+    public minRow: number,
+    public maxCol: number,
+    public maxRow: number,
     public tileMatrixId: TileMatrixId<T>,
     public metatile = 1
   ) {
     {
-      if (minX < 0 || minY < 0) {
+      if (minCol < 0 || minRow < 0) {
         throw new Error('tile indices must be non-negative integers');
       }
 
-      if (minX > maxX || minY > maxY) {
+      if (minCol > maxCol || minRow > maxRow) {
         throw new Error('max tile indices must be equal or larger than min tile indices');
       }
 
@@ -45,9 +45,9 @@ export class TileRange<T extends TileMatrixSet> {
   }
 
   public *tileGenerator(): Generator<Tile<T>, void, void> {
-    for (let y = this.minY; y <= this.maxY; y++) {
-      for (let x = this.minX; x <= this.maxX; x++) {
-        yield new Tile(x, y, this.tileMatrixId, this.metatile);
+    for (let row = this.minRow; row <= this.maxRow; row++) {
+      for (let col = this.minCol; col <= this.maxCol; col++) {
+        yield new Tile(col, row, this.tileMatrixId, this.metatile);
       }
     }
   }

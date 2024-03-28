@@ -129,7 +129,7 @@ export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry
  * @param tileMatrixSet tile matrix set to validate the `tile` against
  */
 export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): void {
-  const { x, y, tileMatrixId, metatile } = tile;
+  const { col, row, tileMatrixId, metatile } = tile;
   if (metatile !== undefined) {
     validateMetatile(metatile);
   }
@@ -138,11 +138,11 @@ export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>,
     throw new Error('tile identifier is not equal to the tile matrix identifier');
   }
 
-  if (x < 0 || x >= tileMatrix.matrixWidth / (metatile ?? 1)) {
+  if (col < 0 || col >= tileMatrix.matrixWidth / (metatile ?? 1)) {
     throw new RangeError('tile matrix col index out of range of the tile matrix');
   }
 
-  if (y < 0 || y >= tileMatrix.matrixHeight / (metatile ?? 1)) {
+  if (row < 0 || row >= tileMatrix.matrixHeight / (metatile ?? 1)) {
     throw new RangeError('tile matrix row index out of range of the tile matrix');
   }
 }
@@ -153,7 +153,7 @@ export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>,
  * @param tileMatrixSet tile matrix set to validate the `tile` against
  */
 export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<T>, tileMatrixSet: T): void {
-  const { x, y, tileMatrixId, metatile } = tile;
+  const { col, row, tileMatrixId, metatile } = tile;
   if (metatile !== undefined) {
     validateMetatile(metatile);
   }
@@ -163,11 +163,11 @@ export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<
     throw new Error('tile could not be found inside tile matrix set');
   }
 
-  if (x < 0 || x >= tileMatrix.matrixWidth / (metatile ?? 1)) {
+  if (col < 0 || col >= tileMatrix.matrixWidth / (metatile ?? 1)) {
     throw new RangeError('tile matrix col index out of range of the tile matrix set');
   }
 
-  if (y < 0 || y >= tileMatrix.matrixHeight / (metatile ?? 1)) {
+  if (row < 0 || row >= tileMatrix.matrixHeight / (metatile ?? 1)) {
     throw new RangeError('tile matrix row index out of range of the tile matrix set');
   }
 }
