@@ -505,6 +505,6 @@ export function geometryToTileRanges<G extends GeoJSONGeometry, T extends TileMa
       return tileRanges;
     }
     default:
-      throw new Error(`Unsupported geometry type: ${geometry.type}`);
+      throw new Error(`unsupported geometry type: ${geometry.type}`);
   }
 }
