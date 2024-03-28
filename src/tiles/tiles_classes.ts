@@ -1,50 +1,18 @@
-import { BoundingBox } from '../classes';
 import type { Zoom } from '../types';
 import { validateMetatile } from '../validations/validations';
-
-/**
- * An interface for a well known scale set. {link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#56|OGC spec}
- */
-export class ScaleSet {
-  public constructor(
-    public identifier: string,
-    public scaleDenominators: Map<Zoom, number>
-  ) {}
-}
-
-/**
- * An interface for a coordinate reference system (CRS)
- */
-export class CoordinateReferenceSystem {
-  // partially implemented, currently unused
-  public constructor(
-    public identifier: string,
-    public name: string
-  ) {}
-}
-
-/**
- * An interface for an oblate ellipsoid
- */
-export class Ellipsoid {
-  public constructor(
-    public name: string,
-    public semiMajorAxis: number,
-    public inverseFlattening: number
-  ) {}
-}
+import type { TileMatrixSet } from './classes/tileMatrixSet';
 
 /**
  * An interface for a tile that supports a metatile definition
  */
-export class Tile {
+export class Tile<T extends TileMatrixSet> {
   public constructor(
     public x: number,
     public y: number,
-    public z: number,
+    public z: Zoom<T>,
     public metatile?: number
   ) {
-    if (x < 0 || y < 0 || z < 0) {
+    if (x < 0 || y < 0) {
       throw new Error('tile indices must be non-negative integers');
     }
 
@@ -54,32 +22,13 @@ export class Tile {
   }
 }
 
-/**
- * A class for a two-dimensional tile grid. See `TileMatrixSet2D` in {@link https://docs.opengeospatial.org/is/17-083r2/17-083r2.html#15|OGC spec}
- */
-export class TileGrid {
-  public constructor(
-    public identifier: string,
-    public title: string,
-    public boundingBox: BoundingBox,
-    public supportedCRS: CoordinateReferenceSystem,
-    public wellKnownScaleSet: ScaleSet,
-    public numberOfMinLevelTilesX: number,
-    public numberOfMinLevelTilesY: number,
-    public tileWidth: number,
-    public tileHeight: number,
-    public abstract?: string,
-    public keywords?: string
-  ) {}
-}
-
-export class TileRange {
+export class TileRange<T extends TileMatrixSet> {
   public constructor(
     public minX: number,
     public minY: number,
     public maxX: number,
     public maxY: number,
-    public zoom: number,
+    public zoom: Zoom<T>,
     public metatile = 1
   ) {
     {
@@ -95,7 +44,7 @@ export class TileRange {
     }
   }
 
-  public *tileGenerator(): Generator<Tile, void, void> {
+  public *tileGenerator(): Generator<Tile<T>, void, void> {
     for (let y = this.minY; y <= this.maxY; y++) {
       for (let x = this.minX; x <= this.maxX; x++) {
         yield new Tile(x, y, this.zoom, this.metatile);
@@ -103,7 +52,7 @@ export class TileRange {
     }
   }
 
-  public tiles(): Tile[] {
+  public tiles(): Tile<T>[] {
     const tilesGenerator = this.tileGenerator();
     const tiles = [];
     for (const tile of tilesGenerator) {
