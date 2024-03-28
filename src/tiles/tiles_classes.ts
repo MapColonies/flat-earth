@@ -61,9 +61,3 @@ export class TileRange<T extends TileMatrixSet> {
     return tiles;
   }
 }
-
-export enum TileIntersectionType {
-  FULL = 'FULL',
-  PARTIAL = 'PARTIAL',
-  NONE = 'NONE',
-}
