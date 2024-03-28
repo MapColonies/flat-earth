@@ -3,7 +3,7 @@ import { validateMetatile } from '../validations/validations';
 import type { TileMatrixSet } from './classes/tileMatrixSet';
 
 /**
- * An interface for a tile that supports a metatile definition
+ * Tile class that supports a metatile definition
  */
 export class Tile<T extends TileMatrixSet> {
   public constructor(
