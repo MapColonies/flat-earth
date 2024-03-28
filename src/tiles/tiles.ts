@@ -293,7 +293,7 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
     });
 
   if (comparison === 'equal' && diff !== 0) {
-    throw new Error('could not find an exact match for a target scale denominator');
+    throw new Error('could not find an exact match for a target scale denominator of a tile matrix');
   }
 
   if (comparison === 'lower' && diff < 0) {
