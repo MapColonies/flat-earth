@@ -1,6 +1,6 @@
 import { TileMatrixSet } from './tileMatrixSet';
-import { TILEMATRIXSETJSON_WEB_MERCATOR_QUAD } from './tileMatrixSets/WebMercatorQuad';
-import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from './tileMatrixSets/WorldCRS84Quad';
+import { TILEMATRIXSETJSON_WEB_MERCATOR_QUAD } from './tileMatrixSets/webMercatorQuad';
+import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from './tileMatrixSets/worldCRS84Quad';
 
 export const cornerOfOriginCode = ['topLeft', 'bottomLeft'] as const;
 
