@@ -3,7 +3,7 @@ import { kinks } from '@turf/turf';
 import type { Feature, FeatureCollection, Geometry, LineString, MultiLineString, MultiPolygon, Polygon } from 'geojson';
 import { GeoPoint } from '../classes';
 import type { TileMatrixSet } from '../tiles/classes/tileMatrixSet';
-import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/tiles_constants';
+import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { Latitude, Longitude } from '../types';
 import { ValidationIssue, ValidationIssueType, ValidationResult } from './validation_classes';
 import { validateGeoPointByTileMatrixSet } from './validations';

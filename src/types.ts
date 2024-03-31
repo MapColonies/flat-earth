@@ -1,5 +1,5 @@
 import type { Geometry, GeometryCollection } from 'geojson';
-import type { TileMatrixSet } from './tiles/classes/tileMatrixSet';
+import type { TileMatrixSet } from './tiles/tileMatrixSet';
 
 export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
