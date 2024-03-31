@@ -253,7 +253,7 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
   tileMatrix: TileMatrix,
   targetTileMatrixSet: T,
   comparison: Comparison = 'equal'
-): TileMatrixId<T> {
+): TileMatrixId<T> | undefined {
   validateTileMatrix(tileMatrix);
   // validateTileMatrixSet(targetTileMatrixSet); // TODO: currently not implemented
 
@@ -293,16 +293,9 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
       return prevValue;
     });
 
-  if (comparison === 'equal' && diff !== 0) {
-    throw new Error('could not find an exact match for a target scale denominator of a tile matrix');
-  }
-
-  if (comparison === 'lower' && diff < 0) {
-    throw new Error('could not find lower match for tile matrix id');
-  }
-
-  if (comparison === 'higher' && diff > 0) {
-    throw new Error('could not find higher match for tile matrix id');
+    if ((comparison === 'equal' && diff !== 0) || (comparison === 'lower' && diff < 0) || (comparison === 'higher' && diff > 0)) {
+    // could not find a match
+    return undefined;
   }
 
   return tileMatrixId;
