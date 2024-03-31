@@ -5,7 +5,7 @@ import { GeoPoint } from '../classes';
 import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { Latitude, Longitude } from '../types';
-import { ValidationIssue, ValidationIssueType, ValidationResult } from './validation_classes';
+import { ValidationIssue, ValidationIssueType, ValidationResult } from './classes';
 import { validateGeoPointByTileMatrixSet } from './validations';
 
 const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'GeometryCollection'];
