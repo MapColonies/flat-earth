@@ -1,7 +1,7 @@
 import { bbox, feature } from '@turf/turf';
 import type { BBox, Feature } from 'geojson';
-import { Geometry } from '../../classes';
-import type { GeoJSONGeometry } from '../../types';
+import { Geometry } from '../classes';
+import type { GeoJSONGeometry } from '../types';
 
 export function geometryToTurfBbox<G extends GeoJSONGeometry>(geometry: Geometry<G>): BBox {
   const feature = geometryToFeature(geometry);

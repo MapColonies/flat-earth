@@ -1,6 +1,6 @@
 import { BoundingBox, Geometry } from '../classes';
 import type { GeoJSONGeometry } from '../types';
-import { geometryToTurfBbox } from './turf/turf_converters';
+import { geometryToTurfBbox } from './turf';
 
 /**
  * Calculates the bounding box of a geometry

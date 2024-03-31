@@ -1,7 +1,7 @@
 import { booleanEqual, area as turfArea, distance as turfDistance, type Units } from '@turf/turf';
 import { Geodesic } from 'geographiclib-geodesic';
 import { Geometry, Point, Polygon } from '../classes';
-import { geometryToFeature } from '../converters/turf/turf_converters';
+import { geometryToFeature } from '../converters/turf';
 import type { GeoJSONGeometry } from '../types';
 
 const geod = Geodesic.WGS84;

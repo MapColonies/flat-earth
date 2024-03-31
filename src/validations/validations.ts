@@ -1,5 +1,5 @@
 import { BoundingBox, GeoPoint, type Geometry } from '../classes';
-import { geometryToBoundingBox } from '../converters/geometry_converters';
+import { geometryToBoundingBox } from '../converters/geometry';
 import { TileMatrixSet } from '../tiles/classes/tileMatrixSet';
 import { getTileMatrix, tileMatrixToBoundingBox } from '../tiles/tiles';
 import { Tile } from '../tiles/tiles_classes';

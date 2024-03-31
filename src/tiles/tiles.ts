@@ -1,8 +1,8 @@
 import { bbox, booleanContains, dissolve, feature, featureCollection, flatten, intersect } from '@turf/turf';
 import type { Polygon as GeoJSONPolygon } from 'geojson';
 import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
-import { geometryToBoundingBox } from '../converters/geometry_converters';
-import { geometryToFeature } from '../converters/turf/turf_converters';
+import { geometryToBoundingBox } from '../converters/geometry';
+import { geometryToFeature } from '../converters/turf';
 import type { ArrayElement, Comparison, GeoJSONGeometry, TileMatrixId } from '../types';
 import { flatGeometryCollection } from '../utilities';
 import {
