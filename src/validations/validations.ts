@@ -1,8 +1,8 @@
 import { BoundingBox, GeoPoint, type Geometry } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry';
-import { TileMatrixSet } from '../tiles/classes/tileMatrixSet';
+import { Tile } from '../tiles/tile';
+import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { getTileMatrix, tileMatrixToBoundingBox } from '../tiles/tiles';
-import { Tile } from '../tiles/tiles_classes';
 import type { TileMatrix } from '../tiles/types';
 import type { ArrayElement, GeoJSONGeometry, TileMatrixId } from '../types';
 

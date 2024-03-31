@@ -14,8 +14,9 @@ import {
   validateTileByTileMatrix,
   validateTileMatrix,
 } from '../validations/validations';
-import type { TileMatrixSet } from './classes/tileMatrixSet';
-import { Tile, TileRange } from './tiles_classes';
+import { Tile } from './tile';
+import type { TileMatrixSet } from './tileMatrixSet';
+import { TileRange } from './tileRange';
 import type { TileMatrix } from './types';
 
 function avoidNegativeZero(value: number): number {
