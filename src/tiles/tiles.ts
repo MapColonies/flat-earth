@@ -193,21 +193,6 @@ function snapMaxPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoP
 }
 
 /**
- * extracts a tile matrix from a tile matrix set
- * @param tileMatrixId identifier of a tile matrix inside `tileMatrixSet`
- * @param tileMatrixSet tile matrix set
- * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
- */
-export function getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): ArrayElement<T['tileMatrices']> | undefined {
-  return tileMatrixSet.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
-    const {
-      identifier: { code: comparedTileMatrixId },
-    } = tileMatrix;
-    return comparedTileMatrixId === tileMatrixId;
-  });
-}
-
-/**
  * Calculates tile range that covers the bounding box
  * @param boundingBox bounding box
  * @param tileMatrix tile matrix

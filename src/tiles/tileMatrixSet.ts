@@ -1,3 +1,4 @@
+import type { ArrayElement, TileMatrixId } from '../types';
 import type {
   BoundingBox2D,
   CRS,
@@ -58,6 +59,20 @@ export class TileMatrixSet {
 
   public toJSON(): TileMatrixSetJSON {
     return this.tileMatrixSetJSON;
+  }
+
+  /**
+   * extracts a tile matrix from a tile matrix set
+   * @param tileMatrixId identifier of a tile matrix inside `tileMatrixSet`
+   * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
+   */
+  public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> | undefined {
+    return this.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
+      const {
+        identifier: { code: comparedTileMatrixId },
+      } = tileMatrix;
+      return comparedTileMatrixId === tileMatrixId;
+    });
   }
 
   private decodeFromJSON(tileMatrixSetJSON: TileMatrixSetJSON): TileMatrixSetType {

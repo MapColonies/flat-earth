@@ -2,7 +2,7 @@ import { BoundingBox, GeoPoint, type Geometry } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry';
 import { Tile } from '../tiles/tile';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
-import { getTileMatrix, tileMatrixToBoundingBox } from '../tiles/tiles';
+import { tileMatrixToBoundingBox } from '../tiles/tiles';
 import type { TileMatrix } from '../tiles/types';
 import type { ArrayElement, GeoJSONGeometry, TileMatrixId } from '../types';
 
@@ -150,7 +150,7 @@ export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>,
  * @param tileMatrixSet tile matrix set to validate the `tile` against
  */
 export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<T>, tileMatrixSet: T): void {
-  const tileMatrix = getTileMatrix(tile.tileMatrixId, tileMatrixSet);
+  const tileMatrix = tileMatrixSet.getTileMatrix(tile.tileMatrixId);
 
   if (!tileMatrix) {
     throw new Error('tile could not be found inside tile matrix set');
