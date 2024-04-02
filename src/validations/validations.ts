@@ -12,10 +12,6 @@ import type { ArrayElement, GeoJSONGeometry, TileMatrixId } from '../types';
  * @param boundingBox the bounding box to validate
  */
 export function validateBoundingBox(boundingBox: BoundingBox): void {
-  if (boundingBox.max.lon <= boundingBox.min.lon) {
-    throw new Error("bounding box's max.lon must be larger than min.lon");
-  }
-
   if (boundingBox.max.lat <= boundingBox.min.lat) {
     throw new Error("bounding box's max.lat must be larger than min.lat");
   }
