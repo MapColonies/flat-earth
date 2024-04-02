@@ -5,7 +5,6 @@ import type { TileMatrixSet } from './tileMatrixSet';
 /**
  * Tile class that supports a metatile definition
  */
-
 export class Tile<T extends TileMatrixSet> {
   public constructor(
     public col: number,
