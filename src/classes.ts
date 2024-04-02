@@ -6,6 +6,7 @@ import type {
   Polygon as GeoJSONPolygon,
   Position,
 } from 'geojson';
+import { geometryToTurfBbox } from './converters/turf';
 import type { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
@@ -22,6 +23,16 @@ import {
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
   protected constructor(public readonly type: G['type']) {}
+
+  /**
+   * Calculates the bounding box of a geometry
+   * @param geometry
+   */
+  public toBoundingBox(): BoundingBox {
+    const bbox = geometryToTurfBbox(this);
+    return new BoundingBox(bbox);
+  }
+
   public abstract getGeoJSON(): G;
 }
 

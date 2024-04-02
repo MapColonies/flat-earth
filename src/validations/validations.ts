@@ -1,6 +1,5 @@
 import type { BBox } from 'geojson';
 import { BoundingBox, GeoPoint, type Geometry } from '../classes';
-import { geometryToBoundingBox } from '../converters/geometry';
 import { Tile } from '../tiles/tile';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
@@ -116,7 +115,7 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
  * @param tileMatrix tile matrix
  */
 export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry: Geometry<G>, tileMatrix: TileMatrix): void {
-  const boundingBox = geometryToBoundingBox(geometry);
+  const boundingBox = geometry.toBoundingBox();
   validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
 }
 

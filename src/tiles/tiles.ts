@@ -1,7 +1,6 @@
 import { bbox, booleanContains, dissolve, feature, featureCollection, flatten, intersect } from '@turf/turf';
 import type { Polygon as GeoJSONPolygon } from 'geojson';
 import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
-import { geometryToBoundingBox } from '../converters/geometry';
 import { geometryToFeature } from '../converters/turf';
 import type { ArrayElement, Comparison, GeoJSONGeometry, TileMatrixId } from '../types';
 import { flatGeometryCollection } from '../utilities';
@@ -13,7 +12,7 @@ import type { TileMatrix } from './types';
 
 function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T>[] {
   const tileRanges: TileRange<T>[] = [];
-  const boundingBox = geometryToBoundingBox(polygon);
+  const boundingBox = polygon.toBoundingBox();
   const {
     identifier: { code: tileMatrixId },
   } = tileMatrix;
