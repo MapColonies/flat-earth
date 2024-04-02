@@ -6,7 +6,11 @@ import type {
   Polygon as GeoJSONPolygon,
   Position,
 } from 'geojson';
-import type { GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
+import type { TileMatrixSet } from './tiles/tileMatrixSet';
+import { TileRange } from './tiles/tileRange';
+import { geoCoordsToTile } from './tiles/tiles';
+import type { ArrayElement, GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
+import { validateBoundingBoxByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
   protected constructor(public readonly type: G['type']) {}
@@ -83,6 +87,28 @@ export class BoundingBox extends Polygon {
 
     this.min = new GeoPoint(minX, minY);
     this.max = new GeoPoint(maxX, maxY);
+  }
+
+  /**
+   * Calculates tile range that covers the bounding box
+   * @param tileMatrix tile matrix
+   * @param metatile size of a metatile
+   * @returns tile range that covers the `boundingBox`
+   */
+  public toTileRange<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T> {
+    validateMetatile(metatile);
+    validateTileMatrix(tileMatrix);
+    validateBoundingBoxByTileMatrix(this, tileMatrix);
+
+    const { cornerOfOrigin } = tileMatrix;
+
+    const minTilePoint = new GeoPoint(this.min.lon, cornerOfOrigin === 'topLeft' ? this.max.lat : this.min.lat);
+    const maxTilePoint = new GeoPoint(this.max.lon, cornerOfOrigin === 'topLeft' ? this.min.lat : this.max.lat);
+
+    const { col: minTileCol, row: minTileRow } = geoCoordsToTile(minTilePoint, tileMatrix, false, metatile);
+    const { col: maxTileCol, row: maxTileRow } = geoCoordsToTile(maxTilePoint, tileMatrix, true, metatile);
+
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix.identifier.code, metatile);
   }
 }
 

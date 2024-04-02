@@ -55,7 +55,7 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
     identifier: { code: tileMatrixId },
   } = tileMatrix;
 
-  const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBoxToTileRange(boundingBox, tileMatrix, metatile);
+  const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
 
   const width = maxTileCol - minTileCol;
   const height = maxTileRow - minTileRow;
@@ -78,7 +78,7 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
     const intersectingPolygons = flatten(intersections);
     intersectingPolygons.features.map((polygon) => {
       const boundingBox = new BoundingBox(bbox(polygon.geometry));
-      const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBoxToTileRange(boundingBox, tileMatrix, metatile);
+      const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
       tileRanges.push(new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixId, metatile));
     });
   }
@@ -147,33 +147,6 @@ function snapMaxPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoP
   const height = tileEffectiveHeight(tileMatrix);
   const maxLat = Math.ceil(point.lat / height) * height;
   return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
-}
-
-/**
- * Calculates tile range that covers the bounding box
- * @param boundingBox bounding box
- * @param tileMatrix tile matrix
- * @param metatile size of a metatile
- * @returns tile range that covers the `boundingBox`
- */
-export function boundingBoxToTileRange<T extends TileMatrixSet>(
-  boundingBox: BoundingBox,
-  tileMatrix: ArrayElement<T['tileMatrices']>,
-  metatile = 1
-): TileRange<T> {
-  validateMetatile(metatile);
-  validateTileMatrix(tileMatrix);
-  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
-
-  const { cornerOfOrigin } = tileMatrix;
-
-  const minTilePoint = new GeoPoint(boundingBox.min.lon, cornerOfOrigin === 'topLeft' ? boundingBox.max.lat : boundingBox.min.lat);
-  const maxTilePoint = new GeoPoint(boundingBox.max.lon, cornerOfOrigin === 'topLeft' ? boundingBox.min.lat : boundingBox.max.lat);
-
-  const { col: minTileCol, row: minTileRow } = geoCoordsToTile(minTilePoint, tileMatrix, false, metatile);
-  const { col: maxTileCol, row: maxTileRow } = geoCoordsToTile(maxTilePoint, tileMatrix, true, metatile);
-
-  return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix.identifier.code, metatile);
 }
 
 /**
@@ -346,7 +319,7 @@ export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: Boundi
     if (!booleanContains(boundingBoxFeature, tileMatrixBoundingBoxFeature)) {
       return null;
     }
-    const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBoxToTileRange(boundingBox, tileMatrix, metatile);
+    const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
     const {
       identifier: { code: tileMatrixId },
       scaleDenominator,
@@ -391,7 +364,7 @@ export function geometryToTileRanges<G extends GeoJSONGeometry, T extends TileMa
 
   switch (true) {
     case geometry instanceof BoundingBox:
-      return [boundingBoxToTileRange(geometry, tileMatrix, metatile)];
+      return [geometry.toTileRange(tileMatrix, metatile)];
     case geometry instanceof Polygon:
       return polygonToTileRanges(geometry, tileMatrix, metatile);
     case geometry instanceof GeometryCollection: {
