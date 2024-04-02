@@ -198,8 +198,13 @@ function snapMaxPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoP
  * @param tileMatrixSet tile matrix set
  * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
  */
-export function getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): TileMatrix | undefined {
-  return tileMatrixSet.tileMatrices.find(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId);
+export function getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): ArrayElement<T['tileMatrices']> | undefined {
+  return tileMatrixSet.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
+    const {
+      identifier: { code: comparedTileMatrixId },
+    } = tileMatrix;
+    return comparedTileMatrixId === tileMatrixId;
+  });
 }
 
 /**
