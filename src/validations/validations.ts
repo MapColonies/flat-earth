@@ -178,7 +178,7 @@ export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<
  * @param tileMatrixSet the tile matrix set to validate the `tileMatrixId` against
  */
 export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): void {
-  if (tileMatrixSet.tileMatrices.findIndex(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId) > 0) {
+  if (tileMatrixSet.tileMatrices.findIndex(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId) < 0) {
     throw new Error('tile matrix id is not part of the given tile matrix set');
   }
 }
