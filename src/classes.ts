@@ -11,7 +11,7 @@ import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
 import { geoCoordsToTile } from './tiles/tiles';
 import type { ArrayElement, GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
-import { validateBoundingBoxByTileMatrix, validateGeoPointByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
+import { validateBoundingBox, validateBoundingBoxByTileMatrix, validateGeoPointByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
   protected constructor(public readonly type: G['type']) {}
@@ -73,9 +73,8 @@ export class BoundingBox extends Polygon {
   public readonly max: GeoPoint;
 
   public constructor([minX, minY, maxX, maxY]: BBox) {
-    if (maxY < minY) {
-      throw new Error("bounding box's minimum latitude must be equal or lower than the maximum latitude");
-    }
+    validateBoundingBox([minX, minY, maxX, maxY]);
+
     super([
       [
         [minX, minY],

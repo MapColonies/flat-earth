@@ -1,3 +1,4 @@
+import type { BBox } from 'geojson';
 import { BoundingBox, GeoPoint, type Geometry } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry';
 import { Tile } from '../tiles/tile';
@@ -11,9 +12,11 @@ import type { ArrayElement, GeoJSONGeometry, TileMatrixId } from '../types';
  * Validates that the input `boundingBox` is valid
  * @param boundingBox the bounding box to validate
  */
-export function validateBoundingBox(boundingBox: BoundingBox): void {
-  if (boundingBox.max.lat <= boundingBox.min.lat) {
-    throw new Error("bounding box's max.lat must be larger than min.lat");
+export function validateBoundingBox(boundingBox: BoundingBox | BBox): void {
+  const [minLat, maxLat] = boundingBox instanceof BoundingBox ? [boundingBox.min.lat, boundingBox.max.lat] : [boundingBox[1], boundingBox[2]];
+
+  if (maxLat < minLat) {
+    throw new Error("bounding box's minimum latitude must be equal or lower than the maximum latitude");
   }
 }
 
