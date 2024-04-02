@@ -1,6 +1,6 @@
 import { BoundingBox } from '../classes';
 import type { ArrayElement, TileMatrixId } from '../types';
-import { validateMetatile } from '../validations/validations';
+import { validateMetatile, validateTileRangeByTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { clampValues, tileMatrixToBoundingBox, tileToGeoCoords } from './tiles';
@@ -42,6 +42,8 @@ export class TileRange<T extends TileMatrixSet> {
    * @returns bounding box
    */
   public toBoundingBox<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
+    validateTileRangeByTileMatrix(this, tileMatrix);
+
     const { maxTileCol, maxTileRow, metatile, minTileCol, minTileRow, tileMatrixId } = this;
 
     if (tileMatrixId !== tileMatrix.identifier.code) {

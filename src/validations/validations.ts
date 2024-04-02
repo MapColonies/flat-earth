@@ -2,6 +2,7 @@ import { BoundingBox, GeoPoint, type Geometry } from '../classes';
 import { geometryToBoundingBox } from '../converters/geometry';
 import { Tile } from '../tiles/tile';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
+import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBoundingBox } from '../tiles/tiles';
 import type { TileMatrix } from '../tiles/types';
 import type { ArrayElement, GeoJSONGeometry, TileMatrixId } from '../types';
@@ -167,5 +168,34 @@ export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<
 export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): void {
   if (tileMatrixSet.tileMatrices.findIndex(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId) < 0) {
     throw new Error('tile matrix id is not part of the given tile matrix set');
+  }
+}
+
+/**
+ * Validates that the input `tileRange` is valid with respect to `tileMatrix`
+ * @param tileRange tile range to validate
+ * @param tileMatrix tile matrix to validate against
+ */
+export function validateTileRangeByTileMatrix<T extends TileMatrixSet>(tileRange: TileRange<T>, tileMatrix: ArrayElement<T['tileMatrices']>): void {
+  const { maxTileCol, maxTileRow, metatile, minTileCol, minTileRow } = tileRange;
+
+  if (tileRange.tileMatrixId !== tileMatrix.identifier.code) {
+    throw new Error('tile identifier is not equal to the tile matrix identifier');
+  }
+
+  if (maxTileCol < 0 || maxTileCol >= tileMatrix.matrixWidth / metatile) {
+    throw new RangeError("tile range's maximum col index is out of range of the tile matrix");
+  }
+
+  if (maxTileRow < 0 || maxTileRow >= tileMatrix.matrixHeight / metatile) {
+    throw new RangeError("tile range's maximum row index is out of range of the tile matrix");
+  }
+
+  if (minTileCol < 0 || minTileCol > maxTileCol) {
+    throw new RangeError("tile range's minimum col index is out of range of the tile matrix");
+  }
+
+  if (minTileRow < 0 || minTileRow > maxTileRow) {
+    throw new RangeError("tile range's minimum row index is out of range of the tile matrix");
   }
 }
