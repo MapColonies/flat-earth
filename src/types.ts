@@ -5,12 +5,12 @@ export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 export type Comparison = 'equal' | 'closest' | 'lower' | 'higher';
 
 /**
- * An ellipsoidal longitude
+ * Geodetic longitude
  */
 export type Longitude = number;
 
 /**
- * An ellipsoidal latitude
+ * Geodetic latitude
  */
 export type Latitude = number;
 
