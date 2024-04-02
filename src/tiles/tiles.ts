@@ -55,21 +55,18 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
     identifier: { code: tileMatrixId },
   } = tileMatrix;
 
-  const { min: minBoundingBoxTile, max: maxBoundingBoxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
+  const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBoxToTileRange(boundingBox, tileMatrix, metatile);
 
-  const width = maxBoundingBoxTile.col - minBoundingBoxTile.col;
-  const height = maxBoundingBoxTile.row - minBoundingBoxTile.row;
+  const width = maxTileCol - minTileCol;
+  const height = maxTileRow - minTileRow;
 
-  const [minTileIndex, maxTileIndex]: [number, number] =
-    width > height ? [minBoundingBoxTile.row, maxBoundingBoxTile.row] : [minBoundingBoxTile.col, maxBoundingBoxTile.col];
+  const [minTileIndex, maxTileIndex]: [number, number] = width > height ? [minTileRow, maxTileRow] : [minTileCol, maxTileCol];
 
   for (let tileIndex = minTileIndex; tileIndex <= maxTileIndex; tileIndex += 1) {
-    const [minTileCol, minTileRow, maxTileCol, maxTileRow] =
-      width > height
-        ? [minBoundingBoxTile.col, tileIndex, maxBoundingBoxTile.col, tileIndex]
-        : [tileIndex, minBoundingBoxTile.row, tileIndex, maxBoundingBoxTile.row];
+    const [minMovingTileCol, minMovingTileRow, maxMovingTileCol, maxMovingTileRow] =
+      width > height ? [minTileCol, tileIndex, maxTileCol, tileIndex] : [tileIndex, minTileRow, tileIndex, maxTileRow];
 
-    const movingTileRange = new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixId, metatile);
+    const movingTileRange = new TileRange(minMovingTileCol, minMovingTileRow, maxMovingTileCol, maxMovingTileRow, tileMatrixId, metatile);
 
     const movingTileRangeBoundingBox = geometryToFeature(tileRangeToBoundingBox(movingTileRange, tileMatrix, true));
     const intersections = intersect(featureCollection([geometryToFeature(polygon), movingTileRangeBoundingBox]));
@@ -81,8 +78,8 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
     const intersectingPolygons = flatten(intersections);
     intersectingPolygons.features.map((polygon) => {
       const boundingBox = new BoundingBox(bbox(polygon.geometry));
-      const { min: minTile, max: maxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
-      tileRanges.push(new TileRange(minTile.col, minTile.row, maxTile.col, maxTile.row, tileMatrixId, metatile));
+      const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBoxToTileRange(boundingBox, tileMatrix, metatile);
+      tileRanges.push(new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixId, metatile));
     });
   }
 
@@ -195,22 +192,6 @@ function snapMaxPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoP
   return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
 }
 
-function boundingBoxToTileBounds<T extends TileMatrixSet>(
-  boundingBox: BoundingBox,
-  tileMatrix: ArrayElement<T['tileMatrices']>,
-  metatile = 1
-): { min: Tile<T>; max: Tile<T> } {
-  const { cornerOfOrigin } = tileMatrix;
-
-  const minTilePoint = new GeoPoint(boundingBox.min.lon, cornerOfOrigin === 'topLeft' ? boundingBox.max.lat : boundingBox.min.lat);
-  const maxTilePoint = new GeoPoint(boundingBox.max.lon, cornerOfOrigin === 'topLeft' ? boundingBox.min.lat : boundingBox.max.lat);
-
-  return {
-    min: geoCoordsToTile(minTilePoint, tileMatrix, false, metatile),
-    max: geoCoordsToTile(maxTilePoint, tileMatrix, true, metatile),
-  };
-}
-
 /**
  * extracts a tile matrix from a tile matrix set
  * @param tileMatrixId identifier of a tile matrix inside `tileMatrixSet`
@@ -237,8 +218,15 @@ export function boundingBoxToTileRange<T extends TileMatrixSet>(
   validateTileMatrix(tileMatrix);
   validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
 
-  const { min: minTile, max: maxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
-  return new TileRange(minTile.col, minTile.row, maxTile.col, maxTile.row, tileMatrix.identifier.code, metatile);
+  const { cornerOfOrigin } = tileMatrix;
+
+  const minTilePoint = new GeoPoint(boundingBox.min.lon, cornerOfOrigin === 'topLeft' ? boundingBox.max.lat : boundingBox.min.lat);
+  const maxTilePoint = new GeoPoint(boundingBox.max.lon, cornerOfOrigin === 'topLeft' ? boundingBox.min.lat : boundingBox.max.lat);
+
+  const { col: minTileCol, row: minTileRow } = geoCoordsToTile(minTilePoint, tileMatrix, false, metatile);
+  const { col: maxTileCol, row: maxTileRow } = geoCoordsToTile(maxTilePoint, tileMatrix, true, metatile);
+
+  return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix.identifier.code, metatile);
 }
 
 /**
@@ -440,12 +428,14 @@ export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: Boundi
     if (!booleanContains(boundingBoxFeature, tileMatrixBoundingBoxFeature)) {
       return null;
     }
+    const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBoxToTileRange(boundingBox, tileMatrix, metatile);
+    const {
+      identifier: { code: tileMatrixId },
+      scaleDenominator,
+    } = tileMatrix;
 
-    const { min: minTile, max: maxTile } = boundingBoxToTileBounds(boundingBox, tileMatrix, metatile);
-    const { scaleDenominator } = tileMatrix;
-
-    if (minTile.col === maxTile.col && minTile.row === maxTile.row) {
-      return { tile: minTile, scaleDenominator };
+    if (minTileCol === maxTileCol && minTileRow === maxTileRow) {
+      return { tile: new Tile(minTileCol, minTileRow, tileMatrixId, metatile), scaleDenominator };
     }
 
     return null;
