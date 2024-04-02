@@ -98,7 +98,7 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
 }
 
 /**
- * Validates that the input `boundingBox` is a valid bounding box inside the tile matrix with respect to `tileMatrix`
+ * Validates that the input `boundingBox` is a valid bounding box with respect to `tileMatrix`
  * @param boundingBox bounding box
  * @param tileMatrix tile matrix to validate against
  */
