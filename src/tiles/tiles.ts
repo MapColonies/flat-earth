@@ -25,18 +25,6 @@ function avoidNegativeZero(value: number): number {
   return value;
 }
 
-function clampValues(value: number, minValue: number, maxValue: number): number {
-  if (value < minValue) {
-    return minValue;
-  }
-
-  if (value > maxValue) {
-    return maxValue;
-  }
-
-  return value;
-}
-
 function tileEffectiveHeight(tileMatrix: TileMatrix): number {
   const { cellSize, matrixHeight, tileHeight } = tileMatrix;
   return (cellSize * tileHeight) / matrixHeight;
@@ -67,7 +55,7 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
 
     const movingTileRange = new TileRange(minMovingTileCol, minMovingTileRow, maxMovingTileCol, maxMovingTileRow, tileMatrixId, metatile);
 
-    const movingTileRangeBoundingBox = geometryToFeature(tileRangeToBoundingBox(movingTileRange, tileMatrix, true));
+    const movingTileRangeBoundingBox = geometryToFeature(movingTileRange.toBoundingBox(tileMatrix, true));
     const intersections = intersect(featureCollection([geometryToFeature(polygon), movingTileRangeBoundingBox]));
 
     if (intersections === null) {
@@ -83,53 +71,6 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
   }
 
   return tileRanges;
-}
-
-function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
-  const { col, row, metatile = 1 } = tile;
-  const width = tileEffectiveWidth(tileMatrix) * metatile;
-  const height = tileEffectiveHeight(tileMatrix) * metatile;
-
-  const {
-    pointOfOrigin: [originX, originY],
-    cornerOfOrigin = 'topLeft',
-  } = tileMatrix;
-
-  const lon = originX + col * width;
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-  const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
-
-  return new GeoPoint(lon, lat);
-}
-
-function tileRangeToBoundingBox<T extends TileMatrixSet>(
-  tileRange: TileRange<T>,
-  tileMatrix: ArrayElement<T['tileMatrices']>,
-  clamp = false
-): BoundingBox {
-  const { maxTileCol, maxTileRow, metatile, minTileCol, minTileRow, tileMatrixId } = tileRange;
-
-  const { lon, lat } = tileToGeoCoords(new Tile(minTileCol, minTileRow, tileMatrixId), tileMatrix);
-
-  const boundingBox = tileMatrixToBoundingBox(
-    { ...tileMatrix, pointOfOrigin: [lon, lat] },
-    (maxTileRow - minTileRow) * metatile + 1,
-    (maxTileCol - minTileCol) * metatile + 1
-  );
-
-  if (clamp) {
-    // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
-    // of the tile matrix
-    const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
-    return new BoundingBox([
-      clampValues(boundingBox.min.lon, tileMatrixBoundingBoxMin.lon, tileMatrixBoundingBoxMax.lon),
-      clampValues(boundingBox.min.lat, tileMatrixBoundingBoxMin.lat, tileMatrixBoundingBoxMax.lat),
-      clampValues(boundingBox.max.lon, tileMatrixBoundingBoxMin.lon, tileMatrixBoundingBoxMax.lon),
-      clampValues(boundingBox.max.lat, tileMatrixBoundingBoxMin.lat, tileMatrixBoundingBoxMax.lat),
-    ]);
-  }
-
-  return boundingBox;
 }
 
 function snapMinPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoPoint {
@@ -263,7 +204,7 @@ export function tileToBoundingBox<T extends TileMatrixSet>(tile: Tile<T>, tileMa
 
   const { col, row, tileMatrixId, metatile = 1 } = tile;
   const tileRange = new TileRange(col, row, col, row, tileMatrixId, metatile);
-  const tileBoundingBox = tileRangeToBoundingBox(tileRange, tileMatrix, clamp);
+  const tileBoundingBox = tileRange.toBoundingBox(tileMatrix, clamp);
 
   return tileBoundingBox;
 }
@@ -366,6 +307,35 @@ export function geometryToTileRanges<G extends GeoJSONGeometry, T extends TileMa
     default:
       throw new Error(`unsupported geometry type: ${geometry.type}`);
   }
+}
+
+export function clampValues(value: number, minValue: number, maxValue: number): number {
+  if (value < minValue) {
+    return minValue;
+  }
+
+  if (value > maxValue) {
+    return maxValue;
+  }
+
+  return value;
+}
+
+export function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
+  const { col, row, metatile = 1 } = tile;
+  const width = tileEffectiveWidth(tileMatrix) * metatile;
+  const height = tileEffectiveHeight(tileMatrix) * metatile;
+
+  const {
+    pointOfOrigin: [originX, originY],
+    cornerOfOrigin = 'topLeft',
+  } = tileMatrix;
+
+  const lon = originX + col * width;
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+  const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
+
+  return new GeoPoint(lon, lat);
 }
 
 /**
