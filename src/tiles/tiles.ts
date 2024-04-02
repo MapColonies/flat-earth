@@ -5,34 +5,11 @@ import { geometryToBoundingBox } from '../converters/geometry';
 import { geometryToFeature } from '../converters/turf';
 import type { ArrayElement, Comparison, GeoJSONGeometry, TileMatrixId } from '../types';
 import { flatGeometryCollection } from '../utilities';
-import {
-  validateBoundingBox,
-  validateBoundingBoxByTileMatrix,
-  validateGeometryByTileMatrix,
-  validateMetatile,
-  validateTileMatrix,
-} from '../validations/validations';
+import { validateBoundingBox, validateGeometryByTileMatrix, validateMetatile, validateTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
 import type { TileMatrix } from './types';
-
-function avoidNegativeZero(value: number): number {
-  if (value === 0) {
-    return 0;
-  }
-  return value;
-}
-
-function tileEffectiveHeight(tileMatrix: TileMatrix): number {
-  const { cellSize, matrixHeight, tileHeight } = tileMatrix;
-  return (cellSize * tileHeight) / matrixHeight;
-}
-
-function tileEffectiveWidth(tileMatrix: TileMatrix): number {
-  const { cellSize, matrixWidth, tileWidth } = tileMatrix;
-  return (cellSize * tileWidth) / matrixWidth;
-}
 
 function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T>[] {
   const tileRanges: TileRange<T>[] = [];
@@ -70,22 +47,6 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
   }
 
   return tileRanges;
-}
-
-function snapMinPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoPoint {
-  const width = tileEffectiveWidth(tileMatrix);
-  const minLon = Math.floor(point.lon / width) * width;
-  const height = tileEffectiveHeight(tileMatrix);
-  const minLat = Math.floor(point.lat / height) * height;
-  return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
-}
-
-function snapMaxPointToTileMatrix(point: GeoPoint, tileMatrix: TileMatrix): GeoPoint {
-  const width = tileEffectiveWidth(tileMatrix);
-  const maxLon = Math.ceil(point.lon / width) * width;
-  const height = tileEffectiveHeight(tileMatrix);
-  const maxLat = Math.ceil(point.lat / height) * height;
-  return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
 }
 
 /**
@@ -177,23 +138,6 @@ export function tileMatrixToBoundingBox(
 }
 
 /**
- * Expands bounding box to the containing tile matrix
- * @param boundingBox bounding box to expand
- * @param tileMatrix tile matrix
- * @returns bounding box that contains the input `boundingBox` snapped to the tile matrix tiles
- */
-export function expandBoundingBoxToTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): BoundingBox {
-  validateBoundingBox(boundingBox);
-  validateTileMatrix(tileMatrix);
-  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
-
-  const minPoint = snapMinPointToTileMatrix(boundingBox.min, tileMatrix);
-  const maxPoint = snapMaxPointToTileMatrix(boundingBox.max, tileMatrix);
-
-  return new BoundingBox([minPoint.lon, minPoint.lat, maxPoint.lon, maxPoint.lat]);
-}
-
-/**
  * Find the minimal bounding tile containing the bounding box
  * @param boundingBox bounding box
  * @param tileMatrixSet tile matrix set for the containing tile lookup
@@ -276,6 +220,13 @@ export function geometryToTileRanges<G extends GeoJSONGeometry, T extends TileMa
   }
 }
 
+export function avoidNegativeZero(value: number): number {
+  if (value === 0) {
+    return 0;
+  }
+  return value;
+}
+
 export function clampValues(value: number, minValue: number, maxValue: number): number {
   if (value < minValue) {
     return minValue;
@@ -286,6 +237,16 @@ export function clampValues(value: number, minValue: number, maxValue: number): 
   }
 
   return value;
+}
+
+export function tileEffectiveHeight(tileMatrix: TileMatrix): number {
+  const { cellSize, matrixHeight, tileHeight } = tileMatrix;
+  return (cellSize * tileHeight) / matrixHeight;
+}
+
+export function tileEffectiveWidth(tileMatrix: TileMatrix): number {
+  const { cellSize, matrixWidth, tileWidth } = tileMatrix;
+  return (cellSize * tileWidth) / matrixWidth;
 }
 
 export function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {

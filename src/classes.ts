@@ -9,9 +9,16 @@ import type {
 import type { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
-import { geoCoordsToTile } from './tiles/tiles';
+import { avoidNegativeZero, geoCoordsToTile, tileEffectiveHeight, tileEffectiveWidth } from './tiles/tiles';
+import type { TileMatrix } from './tiles/types';
 import type { ArrayElement, GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
-import { validateBoundingBox, validateBoundingBoxByTileMatrix, validateGeoPointByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
+import {
+  validateBoundingBox,
+  validateBoundingBoxByTileMatrix,
+  validateGeoPointByTileMatrix,
+  validateMetatile,
+  validateTileMatrix,
+} from './validations/validations';
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
   protected constructor(public readonly type: G['type']) {}
@@ -90,6 +97,23 @@ export class BoundingBox extends Polygon {
   }
 
   /**
+   * Expands bounding box to the containing tile matrix
+   * @param boundingBox bounding box to expand
+   * @param tileMatrix tile matrix
+   * @returns bounding box that contains the input `boundingBox` snapped to the tile matrix tiles
+   */
+  public expandToTileMatrixCells(tileMatrix: TileMatrix): BoundingBox {
+    validateBoundingBox(this);
+    validateTileMatrix(tileMatrix);
+    validateBoundingBoxByTileMatrix(this, tileMatrix);
+
+    const minPoint = this.snapMinPointToTileMatrixCell(tileMatrix);
+    const maxPoint = this.snapMaxPointToTileMatrixCell(tileMatrix);
+
+    return new BoundingBox([minPoint.lon, minPoint.lat, maxPoint.lon, maxPoint.lat]);
+  }
+
+  /**
    * Calculates tile range that covers the bounding box
    * @param tileMatrix tile matrix
    * @param metatile size of a metatile
@@ -109,6 +133,22 @@ export class BoundingBox extends Polygon {
     const { col: maxTileCol, row: maxTileRow } = geoCoordsToTile(maxTilePoint, tileMatrix, true, metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix.identifier.code, metatile);
+  }
+
+  private snapMinPointToTileMatrixCell(tileMatrix: TileMatrix): GeoPoint {
+    const width = tileEffectiveWidth(tileMatrix);
+    const minLon = Math.floor(this.min.lon / width) * width;
+    const height = tileEffectiveHeight(tileMatrix);
+    const minLat = Math.floor(this.min.lat / height) * height;
+    return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
+  }
+
+  private snapMaxPointToTileMatrixCell(tileMatrix: TileMatrix): GeoPoint {
+    const width = tileEffectiveWidth(tileMatrix);
+    const maxLon = Math.ceil(this.max.lon / width) * width;
+    const height = tileEffectiveHeight(tileMatrix);
+    const maxLat = Math.ceil(this.max.lat / height) * height;
+    return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
   }
 }
 
