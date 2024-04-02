@@ -1,8 +1,9 @@
+import type { GeoPoint } from '../classes';
 import type { ArrayElement, TileMatrixId } from '../types';
-import { validateMetatile, validateTileMatrix } from '../validations/validations';
+import { validateMetatile, validateTileByTileMatrix, validateTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { geoCoordsToTile, tileToBoundingBox } from './tiles';
+import { geoCoordsToTile, tileToBoundingBox, tileToGeoCoords } from './tiles';
 
 /**
  * Tile class that supports a metatile definition
@@ -21,6 +22,19 @@ export class Tile<T extends TileMatrixSet> {
     if (metatile !== undefined) {
       validateMetatile(metatile);
     }
+  }
+
+  /**
+   * Calculates a point with longitude and latitude for a tile in a tile matrix
+   * @param tileMatrix tile matrix which the tile belongs to
+   * @returns point with longitude and latitude of the origin of the tile, determined by `cornerOfOrigin` property of the tile matrix
+   */
+  public toGeoPoint<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
+    validateTileMatrix(tileMatrix);
+    validateTileByTileMatrix(this, tileMatrix);
+
+    const geoPoint = tileToGeoCoords(this, tileMatrix);
+    return geoPoint;
   }
 
   /**

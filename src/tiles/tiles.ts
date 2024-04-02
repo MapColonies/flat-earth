@@ -178,20 +178,6 @@ export function tileMatrixToBoundingBox(
 }
 
 /**
- * Calculates a point with longitude and latitude for a tile in a tile matrix
- * @param tile tile within the tile matrix
- * @param tileMatrix tile matrix which the tile belongs to
- * @returns point with longitude and latitude of the origin of the tile, determined by `cornerOfOrigin` property of the tile matrix
- */
-export function tileToGeoPoint<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
-  validateTileMatrix(tileMatrix);
-  validateTileByTileMatrix(tile, tileMatrix);
-
-  const geoPoint = tileToGeoCoords(tile, tileMatrix);
-  return geoPoint;
-}
-
-/**
  * Calculates a bounding box of a tile
  * @param tile the input tile
  * @param tileMatrixSet a tile matrix containing the tile
