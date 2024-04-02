@@ -10,7 +10,6 @@ import {
   validateBoundingBoxByTileMatrix,
   validateGeometryByTileMatrix,
   validateMetatile,
-  validateTileByTileMatrix,
   validateTileMatrix,
 } from '../validations/validations';
 import { Tile } from './tile';
@@ -175,24 +174,6 @@ export function tileMatrixToBoundingBox(
   const [minY, maxY] = cornerOfOrigin === 'topLeft' ? [latOrigin - tileMatrixHeight, latOrigin] : [latOrigin, latOrigin + tileMatrixHeight];
   const [minX, maxX] = [lonOrigin, lonOrigin + tileMatrixWidth];
   return new BoundingBox([minX, minY, maxX, maxY]);
-}
-
-/**
- * Calculates a bounding box of a tile
- * @param tile the input tile
- * @param tileMatrixSet a tile matrix containing the tile
- * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
- * @returns bounding box of the input `tile`
- */
-export function tileToBoundingBox<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
-  validateTileMatrix(tileMatrix);
-  validateTileByTileMatrix(tile, tileMatrix);
-
-  const { col, row, tileMatrixId, metatile = 1 } = tile;
-  const tileRange = new TileRange(col, row, col, row, tileMatrixId, metatile);
-  const tileBoundingBox = tileRange.toBoundingBox(tileMatrix, clamp);
-
-  return tileBoundingBox;
 }
 
 /**
