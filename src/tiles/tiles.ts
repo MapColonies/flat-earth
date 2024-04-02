@@ -8,7 +8,6 @@ import { flatGeometryCollection } from '../utilities';
 import {
   validateBoundingBox,
   validateBoundingBoxByTileMatrix,
-  validateGeoPointByTileMatrix,
   validateGeometryByTileMatrix,
   validateMetatile,
   validateTileByTileMatrix,
@@ -207,21 +206,6 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
   }
 
   return tileMatrixId;
-}
-
-/**
- * Calculates a tile for longitude, latitude and tile matrix
- * @param geoPoint point with longitude and latitude
- * @param tileMatrix tile matrix which the calculated tile belongs to
- * @param metatile size of a metatile
- * @returns tile within the tile matrix
- */
-export function geoPointToTile<T extends TileMatrixSet>(geoPoint: GeoPoint, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): Tile<T> {
-  validateMetatile(metatile);
-  validateTileMatrix(tileMatrix);
-  validateGeoPointByTileMatrix(geoPoint, tileMatrix);
-
-  return geoCoordsToTile(geoPoint, tileMatrix, false, metatile);
 }
 
 /**

@@ -6,11 +6,12 @@ import type {
   Polygon as GeoJSONPolygon,
   Position,
 } from 'geojson';
+import type { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
 import { geoCoordsToTile } from './tiles/tiles';
 import type { ArrayElement, GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
-import { validateBoundingBoxByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
+import { validateBoundingBoxByTileMatrix, validateGeoPointByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
   protected constructor(public readonly type: G['type']) {}
@@ -117,4 +118,18 @@ export class GeoPoint {
     public readonly lon: Longitude,
     public readonly lat: Latitude
   ) {}
+
+  /**
+   * Calculates a tile for longitude, latitude and tile matrix
+   * @param tileMatrix tile matrix which the calculated tile belongs to
+   * @param metatile size of a metatile
+   * @returns tile within the tile matrix
+   */
+  public toTile<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): Tile<T> {
+    validateMetatile(metatile);
+    validateTileMatrix(tileMatrix);
+    validateGeoPointByTileMatrix(this, tileMatrix);
+
+    return geoCoordsToTile(this, tileMatrix, false, metatile);
+  }
 }
