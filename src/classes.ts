@@ -69,7 +69,7 @@ export class BoundingBox extends Polygon {
 
   public constructor([minX, minY, maxX, maxY]: BBox) {
     if (maxY < minY) {
-      throw new Error('invalid bounding box input: minimum latitude must be lower than the maximum latitude');
+      throw new Error("bounding box's minimum latitude must be equal or lower than the maximum latitude");
     }
     super([
       [
