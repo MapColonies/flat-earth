@@ -77,9 +77,6 @@ export function validateMetatile(metatile: number): void {
  * @param tileMatrix the tile matrix to validate
  */
 export function validateTileMatrix(tileMatrix: TileMatrix): void {
-  // validateBoundingBox(tileMatrix.boundingBox);
-  // validateScaleSet(tileMatrix.wellKnownScaleSet);
-
   if (tileMatrix.matrixWidth < 1) {
     throw new Error('width of tile matrix must be at least 1');
   }
