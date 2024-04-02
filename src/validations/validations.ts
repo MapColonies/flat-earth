@@ -153,23 +153,13 @@ export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>,
  * @param tileMatrixSet tile matrix set to validate the `tile` against
  */
 export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<T>, tileMatrixSet: T): void {
-  const { col, row, tileMatrixId, metatile } = tile;
-  if (metatile !== undefined) {
-    validateMetatile(metatile);
-  }
+  const tileMatrix = getTileMatrix(tile.tileMatrixId, tileMatrixSet);
 
-  const tileMatrix = getTileMatrix(tileMatrixId, tileMatrixSet);
   if (!tileMatrix) {
     throw new Error('tile could not be found inside tile matrix set');
   }
 
-  if (col < 0 || col >= tileMatrix.matrixWidth / (metatile ?? 1)) {
-    throw new RangeError('tile matrix col index out of range of the tile matrix set');
-  }
-
-  if (row < 0 || row >= tileMatrix.matrixHeight / (metatile ?? 1)) {
-    throw new RangeError('tile matrix row index out of range of the tile matrix set');
-  }
+  validateTileByTileMatrix(tile, tileMatrix);
 }
 
 /**
