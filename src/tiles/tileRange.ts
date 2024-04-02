@@ -1,9 +1,10 @@
 import { BoundingBox } from '../classes';
-import type { ArrayElement, TileMatrixId } from '../types';
+import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileRangeByTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { clampValues, tileMatrixToBoundingBox, tileToGeoCoords } from './tiles';
+import type { TileMatrixId } from './types';
 
 export class TileRange<T extends TileMatrixSet> {
   public constructor(

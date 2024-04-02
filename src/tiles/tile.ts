@@ -1,9 +1,10 @@
 import type { BoundingBox, GeoPoint } from '../classes';
-import type { ArrayElement, TileMatrixId } from '../types';
+import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileByTileMatrix, validateTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
 import { geoCoordsToTile, tileToGeoCoords } from './tiles';
+import type { TileMatrixId } from './types';
 
 /**
  * Tile class that supports a metatile definition

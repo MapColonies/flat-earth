@@ -1,4 +1,10 @@
+import { ArrayElement } from '../types';
 import type { cornerOfOriginCode } from './constants';
+
+/**
+ * Tile Matrix Id
+ */
+export type TileMatrixId<T extends TileMatrixSet> = ArrayElement<T['tileMatrices']>['identifier']['code'];
 
 export type URI = string;
 

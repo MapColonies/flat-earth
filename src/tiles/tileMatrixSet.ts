@@ -1,4 +1,4 @@
-import type { ArrayElement, TileMatrixId } from '../types';
+import type { ArrayElement } from '../types';
 import type {
   BoundingBox2D,
   CRS,
@@ -6,6 +6,7 @@ import type {
   Keyword,
   LanguageString,
   TileMatrix,
+  TileMatrixId,
   TileMatrixSetJSON,
   TileMatrixSet as TileMatrixSetType,
 } from './types';

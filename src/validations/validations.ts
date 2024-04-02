@@ -4,8 +4,8 @@ import { Tile } from '../tiles/tile';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBoundingBox } from '../tiles/tiles';
-import type { TileMatrix } from '../tiles/types';
-import type { ArrayElement, GeoJSONGeometry, TileMatrixId } from '../types';
+import type { TileMatrix, TileMatrixId } from '../tiles/types';
+import type { ArrayElement, GeoJSONGeometry } from '../types';
 
 /**
  * Validates that the input `boundingBox` is valid

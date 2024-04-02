@@ -2,13 +2,13 @@ import { bbox, booleanContains, dissolve, feature, featureCollection, flatten, i
 import type { Polygon as GeoJSONPolygon } from 'geojson';
 import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '../classes';
 import { geometryToFeature } from '../converters/turf';
-import type { ArrayElement, Comparison, GeoJSONGeometry, TileMatrixId } from '../types';
+import type { ArrayElement, Comparison, GeoJSONGeometry } from '../types';
 import { flatGeometryCollection } from '../utilities';
 import { validateBoundingBox, validateGeometryByTileMatrix, validateMetatile, validateTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import type { TileMatrix } from './types';
+import type { TileMatrix, TileMatrixId } from './types';
 
 function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T>[] {
   const tileRanges: TileRange<T>[] = [];
