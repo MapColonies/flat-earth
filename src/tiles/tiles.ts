@@ -111,14 +111,14 @@ function tileRangeToBoundingBox<T extends TileMatrixSet>(
   tileMatrix: ArrayElement<T['tileMatrices']>,
   clamp = false
 ): BoundingBox {
-  const { maxCol, maxRow, metatile, minCol, minRow, tileMatrixId } = tileRange;
+  const { maxTileCol, maxTileRow, metatile, minTileCol, minTileRow, tileMatrixId } = tileRange;
 
-  const { lon, lat } = tileToGeoCoords(new Tile(minCol, minRow, tileMatrixId), tileMatrix);
+  const { lon, lat } = tileToGeoCoords(new Tile(minTileCol, minTileRow, tileMatrixId), tileMatrix);
 
   const boundingBox = tileMatrixToBoundingBox(
     { ...tileMatrix, pointOfOrigin: [lon, lat] },
-    (maxRow - minRow) * metatile + 1,
-    (maxCol - minCol) * metatile + 1
+    (maxTileRow - minTileRow) * metatile + 1,
+    (maxTileCol - minTileCol) * metatile + 1
   );
 
   if (clamp) {
@@ -293,7 +293,7 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
       return prevValue;
     });
 
-    if ((comparison === 'equal' && diff !== 0) || (comparison === 'lower' && diff < 0) || (comparison === 'higher' && diff > 0)) {
+  if ((comparison === 'equal' && diff !== 0) || (comparison === 'lower' && diff < 0) || (comparison === 'higher' && diff > 0)) {
     // could not find a match
     return undefined;
   }
