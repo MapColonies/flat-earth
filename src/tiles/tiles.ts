@@ -338,9 +338,10 @@ export function tileMatrixToBoundingBox(
   const [lonOrigin, latOrigin] = pointOfOrigin; // TODO: currently the axis order is assumed and not calculated
   const tileMatrixHeight = cellSize * tileHeight * matrixHeight;
   const tileMatrixWidth = cellSize * tileWidth * matrixWidth;
-  return cornerOfOrigin === 'topLeft'
-    ? new BoundingBox([lonOrigin, latOrigin - tileMatrixHeight, lonOrigin + tileMatrixWidth, latOrigin])
-    : new BoundingBox([lonOrigin, latOrigin, lonOrigin + tileMatrixWidth, latOrigin + tileMatrixHeight]);
+
+  const [minY, maxY] = cornerOfOrigin === 'topLeft' ? [latOrigin - tileMatrixHeight, latOrigin] : [latOrigin, latOrigin + tileMatrixHeight];
+  const [minX, maxX] = [lonOrigin, lonOrigin + tileMatrixWidth];
+  return new BoundingBox([minX, minY, maxX, maxY]);
 }
 
 /**
