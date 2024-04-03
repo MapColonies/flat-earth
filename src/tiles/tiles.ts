@@ -25,10 +25,10 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
   const [minTileIndex, maxTileIndex]: [number, number] = width > height ? [minTileRow, maxTileRow] : [minTileCol, maxTileCol];
 
   for (let tileIndex = minTileIndex; tileIndex <= maxTileIndex; tileIndex += 1) {
-    const [minMovingTileCol, minMovingTileRow, maxMovingTileCol, maxMovingTileRow] =
-      width > height ? [minTileCol, tileIndex, maxTileCol, tileIndex] : [tileIndex, minTileRow, tileIndex, maxTileRow];
+    const tileRangeLimits =
+      width > height ? ([minTileCol, tileIndex, maxTileCol, tileIndex] as const) : ([tileIndex, minTileRow, tileIndex, maxTileRow] as const);
 
-    const movingTileRange = new TileRange(minMovingTileCol, minMovingTileRow, maxMovingTileCol, maxMovingTileRow, tileMatrixId, metatile);
+    const movingTileRange = new TileRange(...tileRangeLimits, tileMatrixId, metatile);
 
     const movingTileRangeBoundingBox = geometryToFeature(movingTileRange.toBoundingBox(tileMatrix, true));
     const intersections = intersect(featureCollection([geometryToFeature(polygon), movingTileRangeBoundingBox]));
@@ -38,11 +38,40 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
     }
 
     const intersectingPolygons = flatten(intersections);
-    intersectingPolygons.features.map((polygon) => {
-      const boundingBox = new BoundingBox(bbox(polygon.geometry));
-      const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
-      tileRanges.push(new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixId, metatile));
-    });
+    const movingTileRanges: TileRange<T>[] = [];
+    intersectingPolygons.features
+      .map((polygon) => {
+        const boundingBox = new BoundingBox(bbox(polygon.geometry));
+        const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
+        return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixId, metatile);
+      })
+      .sort((a, b) => (width > height ? a.minTileRow - b.minTileRow : a.minTileCol - b.minTileCol))
+      .forEach((tileRange) => {
+        const lastTileRange = movingTileRanges.at(-1);
+
+        if (!lastTileRange) {
+          movingTileRanges.push(tileRange);
+          return;
+        }
+
+        const [prevMin, prevMax, currMin, currMax] =
+          width > height
+            ? [lastTileRange.minTileCol, lastTileRange.maxTileCol, tileRange.minTileCol, tileRange.maxTileCol]
+            : [lastTileRange.minTileRow, lastTileRange.maxTileRow, tileRange.minTileRow, tileRange.maxTileRow];
+
+        if (currMin - 1 <= prevMax) {
+          // merge with last
+          const tileRangeLimits =
+            width > height ? ([prevMin, tileIndex, currMax, tileIndex] as const) : ([tileIndex, prevMin, tileIndex, currMax] as const);
+          const replacingTileRange = new TileRange(...tileRangeLimits, tileMatrixId, metatile);
+          movingTileRanges.splice(movingTileRanges.length - 1, 1, replacingTileRange);
+        } else {
+          // add
+          movingTileRanges.push(tileRange);
+        }
+      });
+
+    tileRanges.push(...movingTileRanges);
   }
 
   return tileRanges;
