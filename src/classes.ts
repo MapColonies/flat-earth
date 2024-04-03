@@ -135,7 +135,7 @@ export class BoundingBox extends Polygon {
     validateTileMatrix(tileMatrix);
     validateBoundingBoxByTileMatrix(this, tileMatrix);
 
-    const { cornerOfOrigin } = tileMatrix;
+    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
     const minTilePoint = new GeoPoint(this.min.lon, cornerOfOrigin === 'topLeft' ? this.max.lat : this.min.lat);
     const maxTilePoint = new GeoPoint(this.max.lon, cornerOfOrigin === 'topLeft' ? this.min.lat : this.max.lat);
