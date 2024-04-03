@@ -239,13 +239,13 @@ export function clampValues(value: number, minValue: number, maxValue: number): 
 }
 
 export function tileEffectiveHeight(tileMatrix: TileMatrix): number {
-  const { cellSize, matrixHeight, tileHeight } = tileMatrix;
-  return (cellSize * tileHeight) / matrixHeight;
+  const { cellSize, tileHeight } = tileMatrix;
+  return cellSize * tileHeight;
 }
 
 export function tileEffectiveWidth(tileMatrix: TileMatrix): number {
-  const { cellSize, matrixWidth, tileWidth } = tileMatrix;
-  return (cellSize * tileWidth) / matrixWidth;
+  const { cellSize, tileWidth } = tileMatrix;
+  return cellSize * tileWidth;
 }
 
 export function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
