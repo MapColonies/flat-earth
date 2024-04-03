@@ -154,7 +154,7 @@ export function validateGeoJsonSelfIntersect(geojson: string): ValidationResult 
 }
 
 /**
- * Validates that the input `geojson` is on of the `types`
+ * Validates that the input `geojson` is one of the `types`
  * @param geojson
  * @param types
  */
