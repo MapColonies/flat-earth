@@ -76,9 +76,9 @@ export class Tile<T extends TileMatrixSet> {
 
     const { min: minTilePoint, max: maxTilePoint } = this.toBoundingBox(tileMatrix);
 
-    const { col: minCol, row: minRow } = geoCoordsToTile(minTilePoint, targetTileMatrix, false, metatile);
-    const { col: maxCol, row: maxRow } = geoCoordsToTile(maxTilePoint, targetTileMatrix, true, metatile);
+    const { col: minTileCol, row: minTileRow } = geoCoordsToTile(minTilePoint, targetTileMatrix, false, metatile);
+    const { col: maxTileCol, row: maxTileRow } = geoCoordsToTile(maxTilePoint, targetTileMatrix, true, metatile);
 
-    return new TileRange(minCol, minRow, maxCol, maxRow, targetTileMatrixId, metatile);
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, targetTileMatrixId, metatile);
   }
 }
