@@ -259,7 +259,6 @@ export function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatr
   } = tileMatrix;
 
   const lon = originX + col * width;
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
   return new GeoPoint(lon, lat);
