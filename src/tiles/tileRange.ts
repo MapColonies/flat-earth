@@ -8,12 +8,12 @@ import type { TileMatrixId } from './types';
 
 export class TileRange<T extends TileMatrixSet> {
   public constructor(
-    public minTileCol: number,
-    public minTileRow: number,
-    public maxTileCol: number,
-    public maxTileRow: number,
-    public tileMatrixId: TileMatrixId<T>,
-    public metatile = 1
+    public readonly minTileCol: number,
+    public readonly minTileRow: number,
+    public readonly maxTileCol: number,
+    public readonly maxTileRow: number,
+    public readonly tileMatrixId: TileMatrixId<T>,
+    public readonly metatile = 1
   ) {
     {
       if (minTileCol < 0 || minTileRow < 0) {

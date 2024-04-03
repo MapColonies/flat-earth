@@ -11,10 +11,10 @@ import type { TileMatrixId } from './types';
  */
 export class Tile<T extends TileMatrixSet> {
   public constructor(
-    public col: number,
-    public row: number,
-    public tileMatrixId: TileMatrixId<T>,
-    public metatile?: number
+    public readonly col: number,
+    public readonly row: number,
+    public readonly tileMatrixId: TileMatrixId<T>,
+    public readonly metatile?: number
   ) {
     if (col < 0 || row < 0) {
       throw new Error('tile indices must be non-negative integers');
