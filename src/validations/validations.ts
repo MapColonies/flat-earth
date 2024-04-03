@@ -12,7 +12,7 @@ import type { ArrayElement, GeoJSONGeometry } from '../types';
  * @param boundingBox the bounding box to validate
  */
 export function validateBoundingBox(boundingBox: BoundingBox | BBox): void {
-  const [minLat, maxLat] = boundingBox instanceof BoundingBox ? [boundingBox.min.lat, boundingBox.max.lat] : [boundingBox[1], boundingBox[2]];
+  const [minLat, maxLat] = boundingBox instanceof BoundingBox ? [boundingBox.min.lat, boundingBox.max.lat] : [boundingBox[1], boundingBox[3]];
 
   if (maxLat < minLat) {
     throw new Error("bounding box's minimum latitude must be equal or lower than the maximum latitude");
