@@ -47,6 +47,7 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
       })
       .sort((a, b) => (width > height ? a.minTileRow - b.minTileRow : a.minTileCol - b.minTileCol))
       .forEach((tileRange) => {
+        // eslint-disable-next-line @typescript-eslint/no-magic-numbers
         const lastTileRange = movingTileRanges.at(-1);
 
         if (!lastTileRange) {
@@ -288,6 +289,7 @@ export function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatr
   } = tileMatrix;
 
   const lon = originX + col * width;
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
   const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
   return new GeoPoint(lon, lat);

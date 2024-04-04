@@ -3,20 +3,5 @@
   "extends": ["@map-colonies/eslint-config/jest", "@map-colonies/eslint-config/ts-base"],
   "parserOptions": {
     "project": "./tsconfig.lint.json"
-  },
-  "overrides": [
-    {
-      "files": ["**/*.ts"],
-      "rules": {
-        "@typescript-eslint/no-magic-numbers": [
-          "error",
-          {
-            "ignore": [1, 0, -1],
-            "ignoreArrayIndexes": true,
-            "ignoreNumericLiteralTypes": true
-          }
-        ]
-      }
-    }
-  ]
+  }
 }
