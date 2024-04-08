@@ -3,7 +3,7 @@ import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileRangeByTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
-import { clampValues, tileMatrixToBoundingBox, tileToGeoCoords } from './tiles';
+import { clampValues, tileMatrixToBoundingBox } from './tiles';
 import type { TileMatrixId } from './types';
 
 export class TileRange<T extends TileMatrixSet> {
@@ -51,7 +51,8 @@ export class TileRange<T extends TileMatrixSet> {
       throw new Error('tile matrix identifier does not match the identifier of the tile range');
     }
 
-    const { lon, lat } = tileToGeoCoords(new Tile(minTileCol, minTileRow, tileMatrixId), tileMatrix);
+    const tile = new Tile(minTileCol, minTileRow, tileMatrixId);
+    const { lon, lat } = tile.toGeoPoint(tileMatrix);
 
     const boundingBox = tileMatrixToBoundingBox(
       { ...tileMatrix, pointOfOrigin: [lon, lat] },

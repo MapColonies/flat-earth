@@ -277,23 +277,6 @@ export function tileEffectiveWidth(tileMatrix: TileMatrix): number {
   return cellSize * tileWidth;
 }
 
-export function tileToGeoCoords<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
-  const { col, row, metatile = 1 } = tile;
-  const width = tileEffectiveWidth(tileMatrix) * metatile;
-  const height = tileEffectiveHeight(tileMatrix) * metatile;
-
-  const {
-    pointOfOrigin: [originX, originY],
-    cornerOfOrigin = 'topLeft',
-  } = tileMatrix;
-
-  const lon = originX + col * width;
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-  const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
-
-  return new GeoPoint(lon, lat);
-}
-
 /**
  * Calculates a tile for a longitude, latitude and tile matrix
  * @param geoPoint point with longitude and latitude

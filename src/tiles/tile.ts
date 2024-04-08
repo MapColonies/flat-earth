@@ -1,9 +1,9 @@
-import type { BoundingBox, GeoPoint } from '../classes';
+import { GeoPoint, type BoundingBox } from '../classes';
 import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileByTileMatrix, validateTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { geoCoordsToTile, tileToGeoCoords } from './tiles';
+import { geoCoordsToTile, tileEffectiveHeight, tileEffectiveWidth } from './tiles';
 import type { TileMatrixId } from './types';
 
 /**
@@ -51,8 +51,20 @@ export class Tile<T extends TileMatrixSet> {
     validateTileMatrix(tileMatrix);
     validateTileByTileMatrix(this, tileMatrix);
 
-    const geoPoint = tileToGeoCoords(this, tileMatrix);
-    return geoPoint;
+    const { col, row, metatile = 1 } = this;
+    const width = tileEffectiveWidth(tileMatrix) * metatile;
+    const height = tileEffectiveHeight(tileMatrix) * metatile;
+
+    const {
+      pointOfOrigin: [originX, originY],
+      cornerOfOrigin = 'topLeft',
+    } = tileMatrix;
+
+    const lon = originX + col * width;
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
+
+    return new GeoPoint(lon, lat);
   }
 
   /**
