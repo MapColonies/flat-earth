@@ -1,4 +1,3 @@
-import type { BBox } from 'geojson';
 import { BoundingBox, GeoPoint, type Geometry } from '../classes';
 import { Tile } from '../tiles/tile';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
@@ -6,38 +5,6 @@ import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBoundingBox } from '../tiles/tiles';
 import type { TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, GeoJSONGeometry } from '../types';
-
-/**
- * Validates that the input `boundingBox` is valid
- * @param boundingBox the bounding box to validate
- */
-export function validateBoundingBox(boundingBox: BoundingBox | BBox): void {
-  const [minLon, minLat, maxLon, maxLat] =
-    boundingBox instanceof BoundingBox ? [boundingBox.min.lon, boundingBox.min.lat, boundingBox.max.lon, boundingBox.max.lat] : boundingBox;
-
-  [minLon, maxLon].forEach((lon) => {
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    if (lon < -180 || lon > 180) {
-      throw new RangeError('longitude must be between -180 and 180');
-    }
-  });
-
-  [minLat, maxLat].forEach((lat) => {
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    if (lat < -90 || lat > 90) {
-      throw new RangeError('latitude must be between -90 and 90');
-    }
-  });
-
-  if (maxLat < minLat) {
-    throw new Error("bounding box's minimum latitude must be equal or lower than the maximum latitude");
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-  if (maxLon - minLon > 360) {
-    throw new Error("bounding box's longitude bounds size must be less than 360");
-  }
-}
 
 /**
  * Validates that the input `geoPoint` is valid with respect to `tileMatrixSet`
@@ -119,8 +86,6 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
  * @param tileMatrix tile matrix to validate against
  */
 export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
-  validateBoundingBox(boundingBox);
-
   try {
     validateGeoPointByTileMatrix(boundingBox.min, tileMatrix);
     validateGeoPointByTileMatrix(boundingBox.max, tileMatrix);

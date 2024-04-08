@@ -4,7 +4,7 @@ import { BoundingBox, GeoPoint, Geometry, GeometryCollection, Polygon } from '..
 import { geometryToFeature } from '../converters/turf';
 import type { ArrayElement, Comparison, GeoJSONGeometry } from '../types';
 import { flatGeometryCollection } from '../utilities';
-import { validateBoundingBox, validateGeometryByTileMatrix, validateMetatile, validateTileMatrix } from '../validations/validations';
+import { validateGeometryByTileMatrix, validateMetatile, validateTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
@@ -174,7 +174,6 @@ export function tileMatrixToBoundingBox(
  * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
  */
 export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: BoundingBox, tileMatrixSet: TileMatrixSet, metatile = 1): Tile<T> | null {
-  validateBoundingBox(boundingBox);
   validateMetatile(metatile);
 
   const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {

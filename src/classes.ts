@@ -13,16 +13,12 @@ import { TileRange } from './tiles/tileRange';
 import { avoidNegativeZero, geoCoordsToTile, tileEffectiveHeight, tileEffectiveWidth } from './tiles/tiles';
 import type { TileMatrix } from './tiles/types';
 import type { ArrayElement, GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
-import {
-  validateBoundingBox,
-  validateBoundingBoxByTileMatrix,
-  validateGeoPointByTileMatrix,
-  validateMetatile,
-  validateTileMatrix,
-} from './validations/validations';
+import { validateBoundingBoxByTileMatrix, validateGeoPointByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
 
 export abstract class Geometry<G extends GeoJSONGeometry> {
-  protected constructor(public readonly type: G['type']) {}
+  protected constructor(public readonly type: G['type']) {
+    this.validateBoundingBox();
+  }
 
   /**
    * Calculates the bounding box of a geometry
@@ -31,6 +27,33 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   public toBoundingBox(): BoundingBox {
     const bbox = geometryToTurfBbox(this);
     return new BoundingBox(bbox);
+  }
+
+  private validateBoundingBox(): void {
+    const [minLon, minLat, maxLon, maxLat] = geometryToTurfBbox(this);
+
+    [minLon, maxLon].forEach((lon) => {
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+      if (lon < -180 || lon > 180) {
+        throw new RangeError('geometry longitude must be between -180 and 180');
+      }
+    });
+
+    [minLat, maxLat].forEach((lat) => {
+      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+      if (lat < -90 || lat > 90) {
+        throw new RangeError('geometry latitude must be between -90 and 90');
+      }
+    });
+
+    if (maxLat < minLat) {
+      throw new Error("geometry bounding box's minimum latitude must be equal or lower than the maximum latitude");
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    if (maxLon - minLon > 360) {
+      throw new Error("geometry bounding box's longitude bounds size must be less than 360");
+    }
   }
 
   public abstract getGeoJSON(): G;
@@ -91,8 +114,6 @@ export class BoundingBox extends Polygon {
   public readonly max: GeoPoint;
 
   public constructor([minX, minY, maxX, maxY]: BBox) {
-    validateBoundingBox([minX, minY, maxX, maxY]);
-
     super([
       [
         [minX, minY],
