@@ -114,7 +114,6 @@ export class BoundingBox extends Polygon {
    * @returns bounding box that contains the input `boundingBox` snapped to the tile matrix tiles
    */
   public expandToTileMatrixCells(tileMatrix: TileMatrix): BoundingBox {
-    validateBoundingBox(this);
     validateTileMatrix(tileMatrix);
     validateBoundingBoxByTileMatrix(this, tileMatrix);
 
