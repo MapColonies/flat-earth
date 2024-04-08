@@ -3,7 +3,7 @@ import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileByTileMatrix, validateTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { geoCoordsToTile, tileEffectiveHeight, tileEffectiveWidth } from './tiles';
+import { tileEffectiveHeight, tileEffectiveWidth } from './tiles';
 import type { TileMatrixId } from './types';
 
 /**
@@ -89,8 +89,8 @@ export class Tile<T extends TileMatrixSet> {
 
     const { min: minTilePoint, max: maxTilePoint } = this.toBoundingBox(tileMatrix);
 
-    const { col: minTileCol, row: minTileRow } = geoCoordsToTile(minTilePoint, targetTileMatrix, false, metatile);
-    const { col: maxTileCol, row: maxTileRow } = geoCoordsToTile(maxTilePoint, targetTileMatrix, true, metatile);
+    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(targetTileMatrix, false, metatile);
+    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(targetTileMatrix, true, metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, targetTileMatrixId, metatile);
   }

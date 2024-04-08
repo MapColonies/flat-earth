@@ -7,10 +7,10 @@ import type {
   Position,
 } from 'geojson';
 import { geometryToTurfBbox } from './converters/turf';
-import type { Tile } from './tiles/tile';
+import { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
-import { avoidNegativeZero, geoCoordsToTile, tileEffectiveHeight, tileEffectiveWidth } from './tiles/tiles';
+import { avoidNegativeZero, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles/tiles';
 import type { TileMatrix } from './tiles/types';
 import type { ArrayElement, GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
 import { validateBoundingBoxByTileMatrix, validateGeoPointByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
@@ -160,8 +160,8 @@ export class BoundingBox extends Polygon {
     const minTilePoint = new GeoPoint(this.min.lon, cornerOfOrigin === 'topLeft' ? this.max.lat : this.min.lat);
     const maxTilePoint = new GeoPoint(this.max.lon, cornerOfOrigin === 'topLeft' ? this.min.lat : this.max.lat);
 
-    const { col: minTileCol, row: minTileRow } = geoCoordsToTile(minTilePoint, tileMatrix, false, metatile);
-    const { col: maxTileCol, row: maxTileRow } = geoCoordsToTile(maxTilePoint, tileMatrix, true, metatile);
+    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrix, false, metatile);
+    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(tileMatrix, true, metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix.identifier.code, metatile);
   }
@@ -192,14 +192,42 @@ export class GeoPoint {
   /**
    * Calculates a tile for longitude, latitude and tile matrix
    * @param tileMatrix tile matrix which the calculated tile belongs to
+   * @param reverseIntersectionPolicy boolean value whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
    * @param metatile size of a metatile
    * @returns tile within the tile matrix
    */
-  public toTile<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): Tile<T> {
+  public toTile<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, reverseIntersectionPolicy: boolean, metatile = 1): Tile<T> {
     validateMetatile(metatile);
     validateTileMatrix(tileMatrix);
     validateGeoPointByTileMatrix(this, tileMatrix);
 
-    return geoCoordsToTile(this, tileMatrix, false, metatile);
+    const width = tileEffectiveWidth(tileMatrix) * metatile;
+    const height = tileEffectiveHeight(tileMatrix) * metatile;
+
+    const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
+
+    const {
+      identifier: { code: tileMatrixId },
+      cornerOfOrigin = 'topLeft',
+    } = tileMatrix;
+
+    const x = (this.lon - tileMatrixBoundingBoxMin.lon) / width;
+    const y = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMax.lat - this.lat : this.lat - tileMatrixBoundingBoxMin.lat) / height;
+
+    // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
+    if (reverseIntersectionPolicy) {
+      const tileCol = Math.ceil(x) - 1;
+      const tileRow = Math.ceil(y) - 1;
+      return new Tile(tileCol, tileRow, tileMatrixId, metatile);
+    }
+
+    // When longitude/latitude is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90)
+    const onEdgeXTranslation = this.lon === tileMatrixBoundingBoxMax.lon ? 1 : 0;
+    const onEdgeYTranslation = this.lat === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMin.lat : tileMatrixBoundingBoxMax.lat) ? 1 : 0;
+
+    const tileCol = Math.floor(x) - onEdgeXTranslation;
+    const tileRow = Math.floor(y) - onEdgeYTranslation;
+
+    return new Tile(tileCol, tileRow, tileMatrixId, metatile);
   }
 }
