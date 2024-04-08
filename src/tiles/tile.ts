@@ -68,6 +68,7 @@ export class Tile<T extends TileMatrixSet> {
   ): TileRange<T> {
     validateTileMatrix(tileMatrix);
     validateTileMatrix(targetTileMatrix);
+    validateTileByTileMatrix(this, tileMatrix);
 
     const { metatile = 1 } = this;
     const {
