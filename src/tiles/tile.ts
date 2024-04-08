@@ -31,7 +31,7 @@ export class Tile<T extends TileMatrixSet> {
    * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
    * @returns bounding box of the tile
    */
-  public toBoundingBox<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
+  public toBoundingBox(tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
     validateTileMatrix(tileMatrix);
     validateTileByTileMatrix(this, tileMatrix);
 
@@ -47,7 +47,7 @@ export class Tile<T extends TileMatrixSet> {
    * @param tileMatrix tile matrix which the tile belongs to
    * @returns point with longitude and latitude of the origin of the tile, determined by `cornerOfOrigin` property of the tile matrix
    */
-  public toGeoPoint<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
+  public toGeoPoint(tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
     validateTileMatrix(tileMatrix);
     validateTileByTileMatrix(this, tileMatrix);
 
@@ -74,10 +74,7 @@ export class Tile<T extends TileMatrixSet> {
    * @param targetTileMatrix target tile matrix
    * @returns tile range at the given tile matrix
    */
-  public toTileRange<T extends TileMatrixSet>(
-    tileMatrix: ArrayElement<T['tileMatrices']>,
-    targetTileMatrix: ArrayElement<T['tileMatrices']>
-  ): TileRange<T> {
+  public toTileRange(tileMatrix: ArrayElement<T['tileMatrices']>, targetTileMatrix: ArrayElement<T['tileMatrices']>): TileRange<T> {
     validateTileMatrix(tileMatrix);
     validateTileMatrix(targetTileMatrix);
     validateTileByTileMatrix(this, tileMatrix);
