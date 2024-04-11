@@ -111,19 +111,17 @@ export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry
  */
 export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): void {
   const { col, row, tileMatrixId, metatile } = tile;
-  if (metatile !== undefined) {
-    validateMetatile(metatile);
-  }
+  validateMetatile(metatile);
 
   if (tileMatrixId !== tileMatrix.identifier.code) {
     throw new Error('tile identifier is not equal to the tile matrix identifier');
   }
 
-  if (col < 0 || col >= tileMatrix.matrixWidth / (metatile ?? 1)) {
+  if (col < 0 || col >= tileMatrix.matrixWidth / metatile) {
     throw new RangeError('tile matrix col index out of range of the tile matrix');
   }
 
-  if (row < 0 || row >= tileMatrix.matrixHeight / (metatile ?? 1)) {
+  if (row < 0 || row >= tileMatrix.matrixHeight / metatile) {
     throw new RangeError('tile matrix row index out of range of the tile matrix');
   }
 }
