@@ -21,7 +21,7 @@ export class Tile<T extends TileMatrixSet> {
     validateTileMatrix(tileMatrix);
 
     if (col < 0 || row < 0 || col > tileMatrix.matrixWidth - 1 || row > tileMatrix.matrixHeight - 1) {
-      throw new RangeError('tile indices must be non-negative integers between 0 and tile matrix size');
+      throw new RangeError('tile indices must be non-negative integers larger than 0 and less than tile matrix size');
     }
 
     this.tileMatrixId = tileMatrix.identifier.code;
