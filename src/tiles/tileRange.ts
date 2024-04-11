@@ -74,13 +74,4 @@ export class TileRange<T extends TileMatrixSet> {
 
     return boundingBox;
   }
-
-  public tiles(): Tile<T>[] {
-    const tilesGenerator = this.tileGenerator();
-    const tiles = [];
-    for (const tile of tilesGenerator) {
-      tiles.push(tile);
-    }
-    return tiles;
-  }
 }
