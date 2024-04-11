@@ -45,7 +45,7 @@ export class Tile<T extends TileMatrixSet> {
   }
 
   /**
-   * Calculates a point with longitude and latitude for a tile in a tile matrix
+   * Calculates a point with longitude and latitude for a tile origin in a tile matrix
    * @param tileMatrix tile matrix which the tile belongs to
    * @returns point with longitude and latitude of the origin of the tile, determined by `cornerOfOrigin` property of the tile matrix
    */
