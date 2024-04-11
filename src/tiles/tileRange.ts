@@ -50,7 +50,7 @@ export class TileRange<T extends TileMatrixSet> {
    * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
    * @returns bounding box
    */
-  public toBoundingBox<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
+  public toBoundingBox(tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
     validateTileMatrix(tileMatrix);
     validateTileRangeByTileMatrix(this, tileMatrix);
 
