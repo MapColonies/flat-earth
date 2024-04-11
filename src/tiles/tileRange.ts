@@ -16,24 +16,22 @@ export class TileRange<T extends TileMatrixSet> {
     public readonly tileMatrix: TileMatrix,
     public readonly metatile = 1
   ) {
-    {
-      validateMetatile(metatile);
-      validateTileMatrix(tileMatrix);
+    validateMetatile(metatile);
+    validateTileMatrix(tileMatrix);
 
-      if (minTileCol < 0 || minTileRow < 0) {
-        throw new Error('tile indices must be non-negative integers');
-      }
-
-      if (minTileCol > maxTileCol || minTileRow > maxTileRow) {
-        throw new Error('max tile indices must be equal or larger than min tile indices');
-      }
-
-      if (maxTileCol >= Math.ceil(tileMatrix.matrixWidth / metatile) || maxTileRow >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
-        throw new Error('max tile indices must be less than tile matrix size');
-      }
-
-      this.tileMatrixId = tileMatrix.identifier.code;
+    if (minTileCol < 0 || minTileRow < 0) {
+      throw new Error('tile indices must be non-negative integers');
     }
+
+    if (minTileCol > maxTileCol || minTileRow > maxTileRow) {
+      throw new Error('max tile indices must be equal or larger than min tile indices');
+    }
+
+    if (maxTileCol >= Math.ceil(tileMatrix.matrixWidth / metatile) || maxTileRow >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
+      throw new Error('max tile indices must be less than tile matrix size');
+    }
+
+    this.tileMatrixId = tileMatrix.identifier.code;
   }
 
   public *tileGenerator(tileMatrix: ArrayElement<T['tileMatrices']>): Generator<Tile<T>, void, void> {
