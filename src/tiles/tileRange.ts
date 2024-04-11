@@ -28,7 +28,7 @@ export class TileRange<T extends TileMatrixSet> {
     }
 
     if (maxTileCol >= Math.ceil(tileMatrix.matrixWidth / metatile) || maxTileRow >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
-      throw new Error('max tile indices must be less than tile matrix size');
+      throw new Error('max tile indices must be less than tile matrix size (considering metatile size)');
     }
 
     this.tileMatrixId = tileMatrix.identifier.code;

@@ -20,8 +20,8 @@ export class Tile<T extends TileMatrixSet> {
     validateMetatile(metatile);
     validateTileMatrix(tileMatrix);
 
-    if (col < 0 || row < 0 || col > tileMatrix.matrixWidth - 1 || row > tileMatrix.matrixHeight - 1) {
-      throw new RangeError('tile indices must be non-negative integers larger than 0 and less than tile matrix size');
+    if (col < 0 || row < 0 || col >= Math.ceil(tileMatrix.matrixWidth / metatile) || row >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
+      throw new RangeError('tile indices must be non-negative integers larger than 0 and less than tile matrix size (considering metatile size)');
     }
 
     this.tileMatrixId = tileMatrix.identifier.code;

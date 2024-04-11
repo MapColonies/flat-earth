@@ -117,12 +117,12 @@ export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>,
     throw new Error('tile identifier is not equal to the tile matrix identifier');
   }
 
-  if (col < 0 || col >= tileMatrix.matrixWidth / metatile) {
-    throw new RangeError('tile matrix col index out of range of the tile matrix');
+  if (col < 0 || col >= Math.ceil(tileMatrix.matrixWidth / metatile)) {
+    throw new RangeError('tile matrix col index out of range of the tile matrix (considering metatile size)');
   }
 
-  if (row < 0 || row >= tileMatrix.matrixHeight / metatile) {
-    throw new RangeError('tile matrix row index out of range of the tile matrix');
+  if (row < 0 || row >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
+    throw new RangeError('tile matrix row index out of range of the tile matrix (considering metatile size)');
   }
 }
 
