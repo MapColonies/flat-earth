@@ -206,10 +206,7 @@ export class GeoPoint {
 
     const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
 
-    const {
-      identifier: { code: tileMatrixId },
-      cornerOfOrigin = 'topLeft',
-    } = tileMatrix;
+    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
     const x = (this.lon - tileMatrixBoundingBoxMin.lon) / width;
     const y = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMax.lat - this.lat : this.lat - tileMatrixBoundingBoxMin.lat) / height;
@@ -218,7 +215,7 @@ export class GeoPoint {
     if (reverseIntersectionPolicy) {
       const tileCol = Math.ceil(x) - 1;
       const tileRow = Math.ceil(y) - 1;
-      return new Tile(tileCol, tileRow, tileMatrixId, metatile);
+      return new Tile(tileCol, tileRow, tileMatrix, metatile);
     }
 
     // When longitude/latitude is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90)
@@ -228,6 +225,6 @@ export class GeoPoint {
     const tileCol = Math.floor(x) - onEdgeXTranslation;
     const tileRow = Math.floor(y) - onEdgeYTranslation;
 
-    return new Tile(tileCol, tileRow, tileMatrixId, metatile);
+    return new Tile(tileCol, tileRow, tileMatrix, metatile);
   }
 }

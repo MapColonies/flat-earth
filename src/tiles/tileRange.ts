@@ -1,6 +1,6 @@
 import { BoundingBox } from '../classes';
 import type { ArrayElement } from '../types';
-import { validateMetatile, validateTileRangeByTileMatrix } from '../validations/validations';
+import { validateMetatile, validateTileMatrix, validateTileRangeByTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { clampValues, tileMatrixToBoundingBox } from './tiles';
@@ -28,10 +28,12 @@ export class TileRange<T extends TileMatrixSet> {
     }
   }
 
-  public *tileGenerator(): Generator<Tile<T>, void, void> {
+  public *tileGenerator(tileMatrix: ArrayElement<T['tileMatrices']>): Generator<Tile<T>, void, void> {
+    validateTileMatrix(tileMatrix);
+    validateTileRangeByTileMatrix(this, tileMatrix);
     for (let row = this.minTileRow; row <= this.maxTileRow; row++) {
       for (let col = this.minTileCol; col <= this.maxTileCol; col++) {
-        yield new Tile(col, row, this.tileMatrixId, this.metatile);
+        yield new Tile(col, row, tileMatrix, this.metatile);
       }
     }
   }
@@ -43,21 +45,20 @@ export class TileRange<T extends TileMatrixSet> {
    * @returns bounding box
    */
   public toBoundingBox<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
+    validateTileMatrix(tileMatrix);
     validateTileRangeByTileMatrix(this, tileMatrix);
 
-    const { maxTileCol, maxTileRow, metatile, minTileCol, minTileRow, tileMatrixId } = this;
-
-    if (tileMatrixId !== tileMatrix.identifier.code) {
+    if (this.tileMatrixId !== tileMatrix.identifier.code) {
       throw new Error('tile matrix identifier does not match the identifier of the tile range');
     }
 
-    const tile = new Tile(minTileCol, minTileRow, tileMatrixId);
+    const tile = new Tile(this.minTileCol, this.minTileRow, tileMatrix);
     const { lon, lat } = tile.toGeoPoint(tileMatrix);
 
     const boundingBox = tileMatrixToBoundingBox(
       { ...tileMatrix, pointOfOrigin: [lon, lat] },
-      (maxTileRow - minTileRow) * metatile + 1,
-      (maxTileCol - minTileCol) * metatile + 1
+      (this.maxTileRow - this.minTileRow) * this.metatile + 1,
+      (this.maxTileCol - this.minTileCol) * this.metatile + 1
     );
 
     if (clamp) {

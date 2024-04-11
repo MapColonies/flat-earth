@@ -184,13 +184,10 @@ export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: Boundi
       return null;
     }
     const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
-    const {
-      identifier: { code: tileMatrixId },
-      scaleDenominator,
-    } = tileMatrix;
+    const { scaleDenominator } = tileMatrix;
 
     if (minTileCol === maxTileCol && minTileRow === maxTileRow) {
-      return { tile: new Tile(minTileCol, minTileRow, tileMatrixId, metatile), scaleDenominator };
+      return { tile: new Tile(minTileCol, minTileRow, tileMatrix, metatile), scaleDenominator };
     }
 
     return null;

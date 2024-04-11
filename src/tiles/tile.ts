@@ -4,25 +4,27 @@ import { validateMetatile, validateTileByTileMatrix, validateTileMatrix } from '
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
 import { tileEffectiveHeight, tileEffectiveWidth } from './tiles';
-import type { TileMatrixId } from './types';
+import type { TileMatrix, TileMatrixId } from './types';
 
 /**
  * Tile class that supports a metatile definition
  */
 export class Tile<T extends TileMatrixSet> {
+  public readonly tileMatrixId: TileMatrixId<T>;
   public constructor(
     public readonly col: number,
     public readonly row: number,
-    public readonly tileMatrixId: TileMatrixId<T>,
-    public readonly metatile?: number
+    tileMatrix: TileMatrix,
+    public readonly metatile = 1
   ) {
-    if (col < 0 || row < 0) {
-      throw new Error('tile indices must be non-negative integers');
+    validateMetatile(metatile);
+    validateTileMatrix(tileMatrix);
+
+    if (col < 0 || row < 0 || col > tileMatrix.matrixWidth - 1 || row > tileMatrix.matrixHeight - 1) {
+      throw new RangeError('tile indices must be non-negative integers between 0 and tile matrix size');
     }
 
-    if (metatile !== undefined) {
-      validateMetatile(metatile);
-    }
+    this.tileMatrixId = tileMatrix.identifier.code;
   }
 
   /**
