@@ -13,9 +13,6 @@ import type { TileMatrix, TileMatrixId } from './types';
 function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T>[] {
   const tileRanges: TileRange<T>[] = [];
   const boundingBox = polygon.toBoundingBox();
-  const {
-    identifier: { code: tileMatrixId },
-  } = tileMatrix;
 
   const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
 
@@ -28,7 +25,7 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
     const tileRangeLimits =
       width > height ? ([minTileCol, tileIndex, maxTileCol, tileIndex] as const) : ([tileIndex, minTileRow, tileIndex, maxTileRow] as const);
 
-    const movingTileRange = new TileRange(...tileRangeLimits, tileMatrixId, metatile);
+    const movingTileRange = new TileRange(...tileRangeLimits, tileMatrix, metatile);
 
     const movingTileRangeBoundingBox = geometryToFeature(movingTileRange.toBoundingBox(tileMatrix, true));
     const intersections = intersect(featureCollection([geometryToFeature(polygon), movingTileRangeBoundingBox]));
@@ -43,7 +40,7 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
       .map((polygon) => {
         const boundingBox = new BoundingBox(bbox(polygon.geometry));
         const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
-        return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixId, metatile);
+        return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix, metatile);
       })
       .sort((a, b) => (width > height ? a.minTileRow - b.minTileRow : a.minTileCol - b.minTileCol))
       .forEach((tileRange) => {
@@ -64,7 +61,7 @@ function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatr
           // merge with last
           const tileRangeLimits =
             width > height ? ([prevMin, tileIndex, currMax, tileIndex] as const) : ([tileIndex, prevMin, tileIndex, currMax] as const);
-          const replacingTileRange = new TileRange(...tileRangeLimits, tileMatrixId, metatile);
+          const replacingTileRange = new TileRange(...tileRangeLimits, tileMatrix, metatile);
           movingTileRanges.splice(movingTileRanges.length - 1, 1, replacingTileRange);
         } else {
           // add

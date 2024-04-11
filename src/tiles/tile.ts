@@ -37,8 +37,8 @@ export class Tile<T extends TileMatrixSet> {
     validateTileMatrix(tileMatrix);
     validateTileByTileMatrix(this, tileMatrix);
 
-    const { col, row, tileMatrixId, metatile } = this;
-    const tileRange = new TileRange(col, row, col, row, tileMatrixId, metatile);
+    const { col, row, metatile } = this;
+    const tileRange = new TileRange(col, row, col, row, tileMatrix, metatile);
     const tileBoundingBox = tileRange.toBoundingBox(tileMatrix, clamp);
 
     return tileBoundingBox;
@@ -82,15 +82,11 @@ export class Tile<T extends TileMatrixSet> {
     validateTileByTileMatrix(this, tileMatrix);
 
     const { metatile } = this;
-    const {
-      identifier: { code: targetTileMatrixId },
-    } = targetTileMatrix;
-
     const { min: minTilePoint, max: maxTilePoint } = this.toBoundingBox(tileMatrix);
 
     const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(targetTileMatrix, false, metatile);
     const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(targetTileMatrix, true, metatile);
 
-    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, targetTileMatrixId, metatile);
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, targetTileMatrix, metatile);
   }
 }

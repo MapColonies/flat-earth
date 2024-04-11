@@ -4,18 +4,22 @@ import { validateMetatile, validateTileMatrix, validateTileRangeByTileMatrix } f
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { clampValues, tileMatrixToBoundingBox } from './tiles';
-import type { TileMatrixId } from './types';
+import type { TileMatrix, TileMatrixId } from './types';
 
 export class TileRange<T extends TileMatrixSet> {
+  public readonly tileMatrixId: TileMatrixId<T>;
   public constructor(
     public readonly minTileCol: number,
     public readonly minTileRow: number,
     public readonly maxTileCol: number,
     public readonly maxTileRow: number,
-    public readonly tileMatrixId: TileMatrixId<T>,
+    public readonly tileMatrix: TileMatrix,
     public readonly metatile = 1
   ) {
     {
+      validateMetatile(metatile);
+      validateTileMatrix(tileMatrix);
+
       if (minTileCol < 0 || minTileRow < 0) {
         throw new Error('tile indices must be non-negative integers');
       }
@@ -24,7 +28,11 @@ export class TileRange<T extends TileMatrixSet> {
         throw new Error('max tile indices must be equal or larger than min tile indices');
       }
 
-      validateMetatile(metatile);
+      if (maxTileCol >= Math.ceil(tileMatrix.matrixWidth / metatile) || maxTileRow >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
+        throw new Error('max tile indices must be less than tile matrix size');
+      }
+
+      this.tileMatrixId = tileMatrix.identifier.code;
     }
   }
 

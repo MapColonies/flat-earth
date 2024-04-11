@@ -161,7 +161,7 @@ export class BoundingBox extends Polygon {
     const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrix, false, metatile);
     const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(tileMatrix, true, metatile);
 
-    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix.identifier.code, metatile);
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix, metatile);
   }
 
   private snapMinPointToTileMatrixCell(tileMatrix: TileMatrix): GeoPoint {
