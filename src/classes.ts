@@ -22,7 +22,6 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
 
   /**
    * Calculates the bounding box of a geometry
-   * @param geometry
    */
   public toBoundingBox(): BoundingBox {
     const bbox = geometryToTurfBbox(this);
@@ -130,7 +129,6 @@ export class BoundingBox extends Polygon {
 
   /**
    * Expands bounding box to the containing tile matrix
-   * @param boundingBox bounding box to expand
    * @param tileMatrix tile matrix
    * @returns bounding box that contains the input `boundingBox` snapped to the tile matrix tiles
    */
