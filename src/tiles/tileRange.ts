@@ -41,11 +41,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
   public *tileGenerator(): Generator<TileIndex<T>, void, void> {
     for (let row = this.minTileRow; row <= this.maxTileRow; row++) {
       for (let col = this.minTileCol; col <= this.maxTileCol; col++) {
-        yield {
-          col,
-          row,
-          tileMatrixId: this.tileMatrixId
-        };
+        yield { col, row, tileMatrixId: this.tileMatrixId };
       }
     }
   }
@@ -57,7 +53,9 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
    */
   public toBoundingBox(clamp = true): BoundingBox {
     const tile = new Tile(this.minTileCol, this.minTileRow, this.tileMatrixSet, this.tileMatrixId, this.metatile);
-    const { coordinates: [east, north] } = tile.toPoint();
+    const {
+      coordinates: [east, north],
+    } = tile.toPoint();
 
     const tileRangeBoundingBox = tileMatrixToBoundingBox(
       { ...this.tileMatrix, pointOfOrigin: [east, north] },

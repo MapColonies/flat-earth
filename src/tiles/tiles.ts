@@ -145,7 +145,7 @@ export function tileMatrixToBoundingBox<T extends TileMatrixSet>(
   tileMatrix: ArrayElement<T['tileMatrices']>,
   coordRefSys: T['crs'],
   matrixHeight: number = tileMatrix.matrixHeight,
-  matrixWidth: number = tileMatrix.matrixWidth,
+  matrixWidth: number = tileMatrix.matrixWidth
 ): BoundingBox {
   validateTileMatrix(tileMatrix);
 
@@ -163,7 +163,7 @@ export function tileMatrixToBoundingBox<T extends TileMatrixSet>(
 
   return new BoundingBox({
     bbox: [minX, minY, maxX, maxY],
-    coordRefSys
+    coordRefSys,
   });
 }
 
@@ -175,21 +175,36 @@ export function tileMatrixToBoundingBox<T extends TileMatrixSet>(
  * @param metatile size of a metatile
  * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
  */
-export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: BoundingBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): Tile<T> | null | undefined {
+export function minimalBoundingTile<T extends TileMatrixSet>(
+  boundingBox: BoundingBox,
+  tileMatrixSet: T,
+  tileMatrixId: TileMatrixId<T>,
+  metatile = 1
+): Tile<T> | null | undefined {
   validateMetatile(metatile);
 
   const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
     const tileMatrixBoundingBox = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
 
-    const { coordinates: [boundingBoxMinEast, boundingBoxMinNorth] } = boundingBox.min;
-    const { coordinates: [boundingBoxMaxEast, boundingBoxMaxNorth] } = boundingBox.max;
-    const { coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth] } = tileMatrixBoundingBox.min
-    const { coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] } = tileMatrixBoundingBox.max
+    const {
+      coordinates: [boundingBoxMinEast, boundingBoxMinNorth],
+    } = boundingBox.min;
+    const {
+      coordinates: [boundingBoxMaxEast, boundingBoxMaxNorth],
+    } = boundingBox.max;
+    const {
+      coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth],
+    } = tileMatrixBoundingBox.min;
+    const {
+      coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth],
+    } = tileMatrixBoundingBox.max;
 
-    if (boundingBoxMinEast < tileMatrixBoundingBoxMinEast ||
+    if (
+      boundingBoxMinEast < tileMatrixBoundingBoxMinEast ||
       boundingBoxMinNorth < tileMatrixBoundingBoxMinNorth ||
       boundingBoxMaxEast > tileMatrixBoundingBoxMaxEast ||
-      boundingBoxMaxNorth > tileMatrixBoundingBoxMaxNorth) {
+      boundingBoxMaxNorth > tileMatrixBoundingBoxMaxNorth
+    ) {
       return null;
     }
     const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrixSet, tileMatrixId, metatile);

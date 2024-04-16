@@ -42,7 +42,9 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
    * @returns bounding box of the tile
    */
   public toBoundingBox(clamp = true): BoundingBox {
-    const { coordinates: [east, north] } = this.toPoint();
+    const {
+      coordinates: [east, north],
+    } = this.toPoint();
     const tileBoundingBox = tileMatrixToBoundingBox(
       { ...this.tileMatrix, pointOfOrigin: [east, north] },
       this.tileMatrixSet.crs,

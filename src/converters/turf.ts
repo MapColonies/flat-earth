@@ -5,7 +5,7 @@ import type { GeoJSONGeometry } from '../types';
 
 export function geometryToTurfBbox<G extends GeoJSONGeometry>(geometry: Geometry<G>): BBox | undefined {
   const feature = geometryToFeature(geometry);
-  return feature ? bbox(feature): feature;
+  return feature ? bbox(feature) : feature;
 }
 
 /**

@@ -4,9 +4,26 @@ import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles/tiles';
 import type { TileMatrix, TileMatrixId } from './tiles/types';
-import type { BoundingBoxInput, GeoJSONBaseGeometry, GeoJSONGeometry, GeoJSONGeometryCollection, GeoJSONLineString, GeoJSONPoint, GeoJSONPolygon, JSONFG, LineStringInput, PointInput, PolygonInput } from './types';
+import type {
+  BoundingBoxInput,
+  GeoJSONBaseGeometry,
+  GeoJSONGeometry,
+  GeoJSONGeometryCollection,
+  GeoJSONLineString,
+  GeoJSONPoint,
+  GeoJSONPolygon,
+  JSONFG,
+  LineStringInput,
+  PointInput,
+  PolygonInput,
+} from './types';
 import { flatGeometryCollection, flattenGeometryPositions } from './utilities';
-import { validateBoundingBoxByTileMatrix, validateMetatile, validatePointByTileMatrix, validateTileMatrixIdByTileMatrixSet } from './validations/validations';
+import {
+  validateBoundingBoxByTileMatrix,
+  validateMetatile,
+  validatePointByTileMatrix,
+  validateTileMatrixIdByTileMatrixSet,
+} from './validations/validations';
 
 export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JSONFG> {
   public readonly coordRefSys: FG['coordRefSys'];
@@ -29,7 +46,7 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
   public toBoundingBox(): BoundingBox {
     return new BoundingBox({
       bbox: this.bbox,
-      coordRefSys: this.coordRefSys
+      coordRefSys: this.coordRefSys,
     });
   }
 
@@ -75,7 +92,10 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JS
   }
 }
 
-export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGeometryCollection, FG extends JSONFG = JSONFG> extends Geometry<GC, FG> {
+export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGeometryCollection, FG extends JSONFG = JSONFG> extends Geometry<
+  GC,
+  FG
+> {
   public constructor(geometryCollection: GC & FG) {
     super(geometryCollection);
   }
@@ -89,13 +109,10 @@ export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGe
       // we follow the same convention as turfjs & OpenLayers to return infinity bounds for empty geometry collection
       return [
         [Infinity, Infinity],
-        [-Infinity, -Infinity]
+        [-Infinity, -Infinity],
       ];
     }
-
-    return this.geoJSONGeometry.geometries
-      .flatMap(flatGeometryCollection)
-      .flatMap(flattenGeometryPositions);
+    return this.geoJSONGeometry.geometries.flatMap(flatGeometryCollection).flatMap(flattenGeometryPositions);
   }
 }
 
@@ -147,8 +164,12 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
     const height = tileEffectiveHeight(tileMatrix) * metatile;
 
     const {
-      min: { coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth] },
-      max: { coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] }
+      min: {
+        coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth],
+      },
+      max: {
+        coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth],
+      },
     } = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
@@ -178,7 +199,10 @@ export class BoundingBox extends Polygon {
   public readonly max: Point;
 
   public constructor(boundingBox: BoundingBoxInput) {
-    const { bbox: [minX, minY, maxX, maxY], coordRefSys } = boundingBox;
+    const {
+      bbox: [minX, minY, maxX, maxY],
+      coordRefSys,
+    } = boundingBox;
     super({
       coordRefSys,
       coordinates: [
@@ -189,7 +213,7 @@ export class BoundingBox extends Polygon {
           [minX, maxY],
           [minX, minY],
         ],
-      ]
+      ],
     });
 
     this.min = new Point({ coordinates: [minX, minY], coordRefSys });
@@ -198,12 +222,20 @@ export class BoundingBox extends Polygon {
 
   public clampToBoundingBox(clampingBoundingBox: BoundingBox): BoundingBox {
     const {
-      min: { coordinates: [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth] },
-      max: { coordinates: [clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] }
+      min: {
+        coordinates: [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth],
+      },
+      max: {
+        coordinates: [clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth],
+      },
     } = clampingBoundingBox;
 
-    const { coordinates: [minEast, minNorth] } = this.min;
-    const { coordinates: [maxEast, maxNorth] } = this.max;
+    const {
+      coordinates: [minEast, minNorth],
+    } = this.min;
+    const {
+      coordinates: [maxEast, maxNorth],
+    } = this.max;
 
     return new BoundingBox({
       bbox: [
@@ -212,7 +244,7 @@ export class BoundingBox extends Polygon {
         clampValues(maxEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
         clampValues(maxNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
       ],
-      coordRefSys: this.coordRefSys
+      coordRefSys: this.coordRefSys,
     });
   }
 
@@ -233,8 +265,12 @@ export class BoundingBox extends Polygon {
 
     validateBoundingBoxByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
 
-    const { coordinates: [minPointEast, minPointNorth] } = this.snapMinPointToTileMatrixCell(tileMatrix);
-    const { coordinates: [maxPointEast, maxPointNorth] } = this.snapMaxPointToTileMatrixCell(tileMatrix);
+    const {
+      coordinates: [minPointEast, minPointNorth],
+    } = this.snapMinPointToTileMatrixCell(tileMatrix);
+    const {
+      coordinates: [maxPointEast, maxPointNorth],
+    } = this.snapMaxPointToTileMatrixCell(tileMatrix);
 
     return new BoundingBox({ bbox: [minPointEast, minPointNorth, maxPointEast, maxPointNorth], coordRefSys: this.coordRefSys });
   }
@@ -258,16 +294,20 @@ export class BoundingBox extends Polygon {
     validateBoundingBoxByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
 
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
-    const { coordinates: [minEast, minNorth] } = this.min;
-    const { coordinates: [maxEast, maxNorth] } = this.max;
+    const {
+      coordinates: [minEast, minNorth],
+    } = this.min;
+    const {
+      coordinates: [maxEast, maxNorth],
+    } = this.max;
 
     const minTilePoint = new Point({
       coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
-      coordRefSys: this.coordRefSys
+      coordRefSys: this.coordRefSys,
     });
     const maxTilePoint = new Point({
       coordinates: [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
-      coordRefSys: this.coordRefSys
+      coordRefSys: this.coordRefSys,
     });
 
     const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false, metatile);
@@ -277,26 +317,30 @@ export class BoundingBox extends Polygon {
   }
 
   private snapMinPointToTileMatrixCell(tileMatrix: TileMatrix): Point {
-    const { coordinates: [minEast, minNorth] } = this.min;
+    const {
+      coordinates: [minEast, minNorth],
+    } = this.min;
     const width = tileEffectiveWidth(tileMatrix);
     const snappedMinEast = Math.floor(minEast / width) * width;
     const height = tileEffectiveHeight(tileMatrix);
     const snappedMinNorth = Math.floor(minNorth / height) * height;
     return new Point({
       coordinates: [avoidNegativeZero(snappedMinEast), avoidNegativeZero(snappedMinNorth)],
-      coordRefSys: this.coordRefSys
+      coordRefSys: this.coordRefSys,
     });
   }
 
   private snapMaxPointToTileMatrixCell(tileMatrix: TileMatrix): Point {
-    const { coordinates: [maxEast, maxNorth] } = this.max;
+    const {
+      coordinates: [maxEast, maxNorth],
+    } = this.max;
     const width = tileEffectiveWidth(tileMatrix);
     const snappedMaxEast = Math.ceil(maxEast / width) * width;
     const height = tileEffectiveHeight(tileMatrix);
     const snappedMaxNorth = Math.ceil(maxNorth / height) * height;
     return new Point({
       coordinates: [avoidNegativeZero(snappedMaxEast), avoidNegativeZero(snappedMaxNorth)],
-      coordRefSys: this.coordRefSys
+      coordRefSys: this.coordRefSys,
     });
   }
 }
