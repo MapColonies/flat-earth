@@ -5,6 +5,7 @@ import { TileRange } from './tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles/tiles';
 import type { TileMatrix, TileMatrixId } from './tiles/types';
 import type {
+  ArrayElement,
   BoundingBoxInput,
   GeoJSONBaseGeometry,
   GeoJSONGeometry,
