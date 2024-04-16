@@ -29,6 +29,7 @@
     "@commitlint/config-conventional": "^18.6.0",
     "@map-colonies/eslint-config": "^4.0.0",
     "@map-colonies/prettier-config": "0.0.1",
+    "@types/geojson": "7946.0.14",
     "@types/jest": "^29.5.11",
     "@types/node": "20.8.2",
     "eslint": "8.57.0",
