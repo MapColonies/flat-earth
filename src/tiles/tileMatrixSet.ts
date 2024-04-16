@@ -11,7 +11,7 @@ import type {
   TileMatrixSet as TileMatrixSetType,
 } from './types';
 
-export class TileMatrixSet {
+export class TileMatrixSet implements TileMatrixSetType {
   private readonly options: TileMatrixSetType;
   // TODO: add validations for TileMatrixSetJSON with json-schema-to-zod?! missing validations on TileMatrixSet / TileMatrix - use ZOD/AJV?
   public constructor(private readonly tileMatrixSetJSON: TileMatrixSetJSON) {
