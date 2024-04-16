@@ -39,6 +39,10 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
     return this.geoJSONGeometry.type;
   }
 
+  public getJSONFG(): G & FG {
+    return this.geoJSONGeometry;
+  }
+
   /**
    * Bounding box of a geometry
    * @returns bounding box of a geometry
@@ -50,8 +54,70 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
     });
   }
 
-  public getJSONFG(): G & FG {
-    return this.geoJSONGeometry;
+  /**
+   * Find the minimal bounding tile containing the bounding box
+   * @param tileMatrixSet tile matrix set for the containing tile lookup
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param metatile size of a metatile
+   * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
+   */
+  public minimalBoundingTile<T extends TileMatrixSet>(
+    // boundingBox: BoundingBox,
+    tileMatrixSet: T,
+    tileMatrixId: TileMatrixId<T>,
+    metatile = 1
+  ): Tile<T> | null | undefined {
+    validateMetatile(metatile);
+
+    const boundingBox = this.toBoundingBox();
+
+    const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
+      const tileMatrixBoundingBox = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
+
+      const {
+        coordinates: [boundingBoxMinEast, boundingBoxMinNorth],
+      } = boundingBox.min;
+      const {
+        coordinates: [boundingBoxMaxEast, boundingBoxMaxNorth],
+      } = boundingBox.max;
+      const {
+        coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth],
+      } = tileMatrixBoundingBox.min;
+      const {
+        coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth],
+      } = tileMatrixBoundingBox.max;
+
+      if (
+        boundingBoxMinEast < tileMatrixBoundingBoxMinEast ||
+        boundingBoxMinNorth < tileMatrixBoundingBoxMinNorth ||
+        boundingBoxMaxEast > tileMatrixBoundingBoxMaxEast ||
+        boundingBoxMaxNorth > tileMatrixBoundingBoxMaxNorth
+      ) {
+        return null;
+      }
+      const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrixSet, tileMatrixId, metatile);
+      const { scaleDenominator } = tileMatrix;
+
+      if (minTileCol === maxTileCol && minTileRow === maxTileRow) {
+        return { tile: new Tile(minTileCol, minTileRow, tileMatrixSet, tileMatrixId, metatile), scaleDenominator };
+      }
+
+      return null;
+    });
+
+    const boundingTiles = possibleBoundingTiles.filter(
+      <T extends ArrayElement<typeof possibleBoundingTiles>>(value: T): value is NonNullable<T> => value !== null
+    );
+
+    if (boundingTiles.length === 0) {
+      return null;
+    }
+
+    const { tile } = boundingTiles.reduce((prevPossibleBoundingTile, possibleBoundingTile) => {
+      return possibleBoundingTile.scaleDenominator < prevPossibleBoundingTile.scaleDenominator ? possibleBoundingTile : prevPossibleBoundingTile;
+    });
+
+    return tile;
   }
 
   // TODO: complete
