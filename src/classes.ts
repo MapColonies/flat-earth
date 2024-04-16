@@ -1,87 +1,101 @@
-import type {
-  BBox,
-  GeometryCollection as GeoJSONGeometryCollection,
-  LineString as GeoJSONLineString,
-  Point as GeoJSONPoint,
-  Polygon as GeoJSONPolygon,
-  Position,
-} from 'geojson';
-import { geometryToTurfBbox } from './converters/turf';
+import type { BBox, Position } from 'geojson';
 import { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
-import { avoidNegativeZero, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles/tiles';
-import type { TileMatrix } from './tiles/types';
-import type { ArrayElement, GeoJSONBaseGeometry, GeoJSONGeometry, Latitude, Longitude } from './types';
-import { validateBoundingBoxByTileMatrix, validateGeoPointByTileMatrix, validateMetatile, validateTileMatrix } from './validations/validations';
+import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles/tiles';
+import type { TileMatrix, TileMatrixId } from './tiles/types';
+import type { BoundingBoxInput, GeoJSONBaseGeometry, GeoJSONGeometry, GeoJSONGeometryCollection, GeoJSONLineString, GeoJSONPoint, GeoJSONPolygon, JSONFG, LineStringInput, PointInput, PolygonInput } from './types';
+import { flatGeometryCollection, flattenGeometryPositions } from './utilities';
+import { validateBoundingBoxByTileMatrix, validateMetatile, validatePointByTileMatrix, validateTileMatrixIdByTileMatrixSet } from './validations/validations';
 
-export abstract class Geometry<G extends GeoJSONGeometry> {
-  protected constructor(public readonly type: G['type']) {
-    this.validateBoundingBox();
+export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JSONFG> {
+  public readonly coordRefSys: FG['coordRefSys'];
+  private readonly bbox: BBox;
+
+  protected constructor(protected readonly geoJSONGeometry: G & FG) {
+    this.bbox = this.calculateBBox();
+    this.validateBBox();
+    this.coordRefSys = geoJSONGeometry.coordRefSys;
+  }
+
+  public get type(): G['type'] {
+    return this.geoJSONGeometry.type;
   }
 
   /**
-   * Calculates the bounding box of a geometry
+   * Bounding box of a geometry
+   * @returns bounding box of a geometry
    */
   public toBoundingBox(): BoundingBox {
-    const bbox = geometryToTurfBbox(this);
-    return new BoundingBox(bbox);
+    return new BoundingBox({
+      bbox: this.bbox,
+      coordRefSys: this.coordRefSys
+    });
   }
 
-  private validateBoundingBox(): void {
-    const [minLon, minLat, maxLon, maxLat] = geometryToTurfBbox(this);
+  public getJSONFG(): G & FG {
+    return this.geoJSONGeometry;
+  }
 
-    [minLon, maxLon].forEach((lon) => {
-      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-      if (lon < -180 || lon > 180) {
-        throw new RangeError('geometry longitude must be between -180 and 180');
-      }
-    });
+  // TODO: complete
+  private validateBBox(): void {
+    return;
+  }
 
-    [minLat, maxLat].forEach((lat) => {
-      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-      if (lat < -90 || lat > 90) {
-        throw new RangeError('geometry latitude must be between -90 and 90');
-      }
-    });
+  private calculateBBox(): BBox {
+    const positions = this.getPositions();
 
-    if (maxLat < minLat) {
-      throw new Error("geometry bounding box's minimum latitude must be equal or lower than the maximum latitude");
+    let [minX, minY] = positions[0];
+    let [maxX, maxY] = positions[0];
+
+    for (const [x, y] of positions) {
+      minX = x < minX ? x : minX;
+      minY = y < minY ? y : minY;
+      maxX = x > maxX ? x : maxX;
+      maxY = y > maxY ? y : maxY;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    if (maxLon - minLon > 360) {
-      throw new Error("geometry bounding box's longitude bounds size must be less than 360");
+    return [minX, minY, maxX, maxY];
+  }
+
+  protected abstract getPositions(): Position[];
+}
+
+export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JSONFG = JSONFG> extends Geometry<BG, FG> {
+  public constructor(geometry: BG & FG) {
+    super(geometry);
+  }
+
+  public get coordinates(): BG['coordinates'] {
+    return this.geoJSONGeometry.coordinates;
+  }
+
+  protected getPositions(): Position[] {
+    return flattenGeometryPositions(this.geoJSONGeometry);
+  }
+}
+
+export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGeometryCollection, FG extends JSONFG = JSONFG> extends Geometry<GC, FG> {
+  public constructor(geometryCollection: GC & FG) {
+    super(geometryCollection);
+  }
+
+  public get geometries(): GeoJSONGeometryCollection['geometries'] {
+    return this.geoJSONGeometry.geometries;
+  }
+
+  protected getPositions(): Position[] {
+    if (this.geoJSONGeometry.geometries.length === 0) {
+      // we follow the same convention as turfjs & OpenLayers to return infinity bounds for empty geometry collection
+      return [
+        [Infinity, Infinity],
+        [-Infinity, -Infinity]
+      ];
     }
-  }
 
-  public abstract getGeoJSON(): G;
-}
-
-export abstract class BaseGeometry<G extends GeoJSONBaseGeometry> extends Geometry<G> {
-  public constructor(private readonly geometry: G) {
-    super(geometry.type);
-  }
-
-  public get coordinates(): G['coordinates'] {
-    return this.geometry.coordinates;
-  }
-
-  public getGeoJSON(): G {
-    return this.geometry;
-  }
-}
-
-export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
-  public constructor(public readonly geometries: GeoJSONGeometry[]) {
-    super('GeometryCollection');
-  }
-
-  public getGeoJSON(): GeoJSONGeometryCollection {
-    return {
-      type: this.type,
-      geometries: this.geometries,
-    };
+    return this.geoJSONGeometry.geometries
+      .flatMap(flatGeometryCollection)
+      .flatMap(flattenGeometryPositions);
   }
 }
 
@@ -91,138 +105,198 @@ export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
  * Points must be ordered counterclockwise.
  */
 export class Polygon extends BaseGeometry<GeoJSONPolygon> {
-  public constructor(coordinates: Position[][] = []) {
-    super({ type: 'Polygon', coordinates });
+  public constructor(polygon: PolygonInput) {
+    super({ ...polygon, type: 'Polygon' });
   }
 }
 
 export class Line extends BaseGeometry<GeoJSONLineString> {
-  public constructor(coordinates: Position[] = []) {
-    super({ type: 'LineString', coordinates });
+  public constructor(lineString: LineStringInput) {
+    super({ ...lineString, type: 'LineString' });
   }
 }
 
 export class Point extends BaseGeometry<GeoJSONPoint> {
-  public constructor(coordinates: Position) {
-    super({ type: 'Point', coordinates });
-  }
-}
-
-export class BoundingBox extends Polygon {
-  public readonly min: GeoPoint;
-  public readonly max: GeoPoint;
-
-  public constructor([minX, minY, maxX, maxY]: BBox) {
-    super([
-      [
-        [minX, minY],
-        [maxX, minY],
-        [maxX, maxY],
-        [minX, maxY],
-        [minX, minY],
-      ],
-    ]);
-
-    this.min = new GeoPoint(minX, minY);
-    this.max = new GeoPoint(maxX, maxY);
+  public constructor(point: PointInput) {
+    super({ ...point, type: 'Point' });
   }
 
   /**
-   * Expands bounding box to the containing tile matrix
-   * @param tileMatrix tile matrix
-   * @returns bounding box that contains the input `boundingBox` snapped to the tile matrix tiles
-   */
-  public expandToTileMatrixCells(tileMatrix: TileMatrix): BoundingBox {
-    validateTileMatrix(tileMatrix);
-    validateBoundingBoxByTileMatrix(this, tileMatrix);
-
-    const minPoint = this.snapMinPointToTileMatrixCell(tileMatrix);
-    const maxPoint = this.snapMaxPointToTileMatrixCell(tileMatrix);
-
-    return new BoundingBox([minPoint.lon, minPoint.lat, maxPoint.lon, maxPoint.lat]);
-  }
-
-  /**
-   * Calculates tile range that covers the bounding box
-   * @param tileMatrix tile matrix
-   * @param metatile size of a metatile
-   * @returns tile range that covers the `boundingBox`
-   */
-  public toTileRange<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T> {
-    validateMetatile(metatile);
-    validateTileMatrix(tileMatrix);
-    validateBoundingBoxByTileMatrix(this, tileMatrix);
-
-    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
-
-    const minTilePoint = new GeoPoint(this.min.lon, cornerOfOrigin === 'topLeft' ? this.max.lat : this.min.lat);
-    const maxTilePoint = new GeoPoint(this.max.lon, cornerOfOrigin === 'topLeft' ? this.min.lat : this.max.lat);
-
-    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrix, false, metatile);
-    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(tileMatrix, true, metatile);
-
-    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix, metatile);
-  }
-
-  private snapMinPointToTileMatrixCell(tileMatrix: TileMatrix): GeoPoint {
-    const width = tileEffectiveWidth(tileMatrix);
-    const minLon = Math.floor(this.min.lon / width) * width;
-    const height = tileEffectiveHeight(tileMatrix);
-    const minLat = Math.floor(this.min.lat / height) * height;
-    return new GeoPoint(avoidNegativeZero(minLon), avoidNegativeZero(minLat));
-  }
-
-  private snapMaxPointToTileMatrixCell(tileMatrix: TileMatrix): GeoPoint {
-    const width = tileEffectiveWidth(tileMatrix);
-    const maxLon = Math.ceil(this.max.lon / width) * width;
-    const height = tileEffectiveHeight(tileMatrix);
-    const maxLat = Math.ceil(this.max.lat / height) * height;
-    return new GeoPoint(avoidNegativeZero(maxLon), avoidNegativeZero(maxLat));
-  }
-}
-
-export class GeoPoint {
-  public constructor(
-    public readonly lon: Longitude,
-    public readonly lat: Latitude
-  ) {}
-
-  /**
-   * Calculates a tile for longitude, latitude and tile matrix
-   * @param tileMatrix tile matrix which the calculated tile belongs to
+   * Calculates a tile for east, north and tile matrix
+   * @param tileMatrixSet tile matrix set which the calculated tile belongs to
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
    * @param reverseIntersectionPolicy boolean value whether to reverse the intersection policy (in cases that the location is on the edge of the tile)
    * @param metatile size of a metatile
    * @returns tile within the tile matrix
    */
-  public toTile<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>, reverseIntersectionPolicy: boolean, metatile = 1): Tile<T> {
+  public toTile<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, reverseIntersectionPolicy: boolean, metatile = 1): Tile<T> {
     validateMetatile(metatile);
-    validateTileMatrix(tileMatrix);
-    validateGeoPointByTileMatrix(this, tileMatrix);
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
+
+    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+    if (!tileMatrix) {
+      throw new Error('tile matrix id is not part of the given tile matrix set');
+    }
+
+    validatePointByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
+
+    const [east, north] = this.coordinates;
 
     const width = tileEffectiveWidth(tileMatrix) * metatile;
     const height = tileEffectiveHeight(tileMatrix) * metatile;
 
-    const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
-
+    const {
+      min: { coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth] },
+      max: { coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] }
+    } = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
-    const x = (this.lon - tileMatrixBoundingBoxMin.lon) / width;
-    const y = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMax.lat - this.lat : this.lat - tileMatrixBoundingBoxMin.lat) / height;
+    const x = (east - tileMatrixBoundingBoxMinEast) / width;
+    const y = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth - north : north - tileMatrixBoundingBoxMinNorth) / height;
 
-    // When explicitly asked to reverse the intersection policy (location on the edge of the tile)
+    // when explicitly asked to reverse the intersection policy (location on the edge of the tile)
     if (reverseIntersectionPolicy) {
       const tileCol = Math.ceil(x) - 1;
       const tileRow = Math.ceil(y) - 1;
-      return new Tile(tileCol, tileRow, tileMatrix, metatile);
+      return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
     }
 
-    // When longitude/latitude is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90)
-    const onEdgeXTranslation = this.lon === tileMatrixBoundingBoxMax.lon ? 1 : 0;
-    const onEdgeYTranslation = this.lat === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMin.lat : tileMatrixBoundingBoxMax.lat) ? 1 : 0;
+    // when east/north is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90 in wgs84)
+    const onEdgeXTranslation = east === tileMatrixBoundingBoxMaxEast ? 1 : 0;
+    const onEdgeYTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) ? 1 : 0;
 
     const tileCol = Math.floor(x) - onEdgeXTranslation;
     const tileRow = Math.floor(y) - onEdgeYTranslation;
 
-    return new Tile(tileCol, tileRow, tileMatrix, metatile);
+    return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
+  }
+}
+
+export class BoundingBox extends Polygon {
+  public readonly min: Point;
+  public readonly max: Point;
+
+  public constructor(boundingBox: BoundingBoxInput) {
+    const { bbox: [minX, minY, maxX, maxY], coordRefSys } = boundingBox;
+    super({
+      coordRefSys,
+      coordinates: [
+        [
+          [minX, minY],
+          [maxX, minY],
+          [maxX, maxY],
+          [minX, maxY],
+          [minX, minY],
+        ],
+      ]
+    });
+
+    this.min = new Point({ coordinates: [minX, minY], coordRefSys });
+    this.max = new Point({ coordinates: [maxX, maxY], coordRefSys });
+  }
+
+  public clampToBoundingBox(clampingBoundingBox: BoundingBox): BoundingBox {
+    const {
+      min: { coordinates: [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth] },
+      max: { coordinates: [clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] }
+    } = clampingBoundingBox;
+
+    const { coordinates: [minEast, minNorth] } = this.min;
+    const { coordinates: [maxEast, maxNorth] } = this.max;
+
+    return new BoundingBox({
+      bbox: [
+        clampValues(minEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
+        clampValues(minNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
+        clampValues(maxEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
+        clampValues(maxNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
+      ],
+      coordRefSys: this.coordRefSys
+    });
+  }
+
+  /**
+   * Expands bounding box to the containing tile matrix
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @returns bounding box that contains the bunding box instance snapped to the tile matrix tiles
+   */
+  public expandToTileMatrixCells<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>): BoundingBox {
+    // TODO: consider metatile
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+
+    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+    if (!tileMatrix) {
+      throw new Error('tile matrix id is not part of the given tile matrix set');
+    }
+
+    validateBoundingBoxByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
+
+    const { coordinates: [minPointEast, minPointNorth] } = this.snapMinPointToTileMatrixCell(tileMatrix);
+    const { coordinates: [maxPointEast, maxPointNorth] } = this.snapMaxPointToTileMatrixCell(tileMatrix);
+
+    return new BoundingBox({ bbox: [minPointEast, minPointNorth, maxPointEast, maxPointNorth], coordRefSys: this.coordRefSys });
+  }
+
+  /**
+   * Calculates tile range that covers the bounding box
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param metatile size of a metatile
+   * @returns tile range that covers the bounding box instance
+   */
+  public toTileRange<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): TileRange<T> {
+    validateMetatile(metatile);
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+
+    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+    if (!tileMatrix) {
+      throw new Error('tile matrix id is not part of the given tile matrix set');
+    }
+
+    validateBoundingBoxByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
+
+    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
+    const { coordinates: [minEast, minNorth] } = this.min;
+    const { coordinates: [maxEast, maxNorth] } = this.max;
+
+    const minTilePoint = new Point({
+      coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
+      coordRefSys: this.coordRefSys
+    });
+    const maxTilePoint = new Point({
+      coordinates: [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
+      coordRefSys: this.coordRefSys
+    });
+
+    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false, metatile);
+    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true, metatile);
+
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixSet, tileMatrixId, metatile);
+  }
+
+  private snapMinPointToTileMatrixCell(tileMatrix: TileMatrix): Point {
+    const { coordinates: [minEast, minNorth] } = this.min;
+    const width = tileEffectiveWidth(tileMatrix);
+    const snappedMinEast = Math.floor(minEast / width) * width;
+    const height = tileEffectiveHeight(tileMatrix);
+    const snappedMinNorth = Math.floor(minNorth / height) * height;
+    return new Point({
+      coordinates: [avoidNegativeZero(snappedMinEast), avoidNegativeZero(snappedMinNorth)],
+      coordRefSys: this.coordRefSys
+    });
+  }
+
+  private snapMaxPointToTileMatrixCell(tileMatrix: TileMatrix): Point {
+    const { coordinates: [maxEast, maxNorth] } = this.max;
+    const width = tileEffectiveWidth(tileMatrix);
+    const snappedMaxEast = Math.ceil(maxEast / width) * width;
+    const height = tileEffectiveHeight(tileMatrix);
+    const snappedMaxNorth = Math.ceil(maxNorth / height) * height;
+    return new Point({
+      coordinates: [avoidNegativeZero(snappedMaxEast), avoidNegativeZero(snappedMaxNorth)],
+      coordRefSys: this.coordRefSys
+    });
   }
 }

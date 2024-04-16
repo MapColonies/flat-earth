@@ -11,9 +11,9 @@ const geod = Geodesic.WGS84;
  * @param polygon a polygon
  * @returns polygon's area in square meters
  */
-export function area(polygon: Polygon): number {
+export function area(polygon: Polygon): number | undefined {
   const feature = geometryToFeature(polygon);
-  return turfArea(feature);
+  return feature ? turfArea(feature) : feature;
 }
 
 /**
@@ -25,9 +25,11 @@ export function area(polygon: Polygon): number {
  * @param options object specifying units for distance output
  * @returns distance in meters
  */
-export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number {
+export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number | undefined {
   // TODO: only a single distance function should exist for distance calculated on the surface of an ellipsoid
-  return turfDistance(from, to, options);
+  const fromPoint = geometryToFeature(from);
+  const toPoint = geometryToFeature(to);
+  return fromPoint && toPoint ? turfDistance(fromPoint, toPoint, options) : undefined;
 }
 
 /**
@@ -51,8 +53,8 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * @param geometry2
  * @returns true/false if two geometries are equal
  */
-export function geometriesEqual<G extends GeoJSONGeometry>(geometry1: Geometry<G>, geometry2: Geometry<G>): boolean {
+export function geometriesEqual<G extends GeoJSONGeometry>(geometry1: Geometry<G>, geometry2: Geometry<G>): boolean | undefined {
   const feature1 = geometryToFeature(geometry1);
   const feature2 = geometryToFeature(geometry2);
-  return booleanEqual(feature1, feature2);
+  return feature1 && feature2 ? booleanEqual(feature1, feature2) : undefined;
 }

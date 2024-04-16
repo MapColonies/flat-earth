@@ -1,12 +1,12 @@
 import { check, HintError, HintIssue } from '@placemarkio/check-geojson';
 import { kinks } from '@turf/turf';
 import type { Feature, FeatureCollection, Geometry, LineString, MultiLineString, MultiPolygon, Polygon } from 'geojson';
-import { GeoPoint } from '../classes';
+import { Point } from '../classes';
 import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { Latitude, Longitude } from '../types';
 import { ValidationIssue, ValidationIssueType, ValidationResult } from './classes';
-import { validateGeoPointByTileMatrixSet } from './validations';
+import { validatePointByTileMatrixSet } from './validations';
 
 const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'GeometryCollection'];
 
@@ -47,7 +47,7 @@ function innerValidateGeoJsonInTileMatrixSet(geoJsonObject: Geometry, tileMatrix
 
 function isPointInTileMatrixSet(lon: Longitude, lat: Latitude, tileMatrixSet: TileMatrixSet): ValidationResult {
   try {
-    validateGeoPointByTileMatrixSet(new GeoPoint(lon, lat), tileMatrixSet);
+    validatePointByTileMatrixSet(new Point({ coordinates: [lon, lat], coordRefSys: tileMatrixSet.crs }), tileMatrixSet);
   } catch (error) {
     return new ValidationResult(false, [
       new ValidationIssue(`Point lon: ${lon} lat: ${lat} is not inside the tile matrix set`, ValidationIssueType.GEOJSON_NOT_IN_TILEMATRIXSET),

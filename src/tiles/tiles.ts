@@ -1,79 +1,77 @@
-import { bbox, booleanContains, dissolve, feature, featureCollection, flatten, intersect } from '@turf/turf';
-import type { Polygon as GeoJSONPolygon } from 'geojson';
-import { BoundingBox, Geometry, GeometryCollection, Polygon } from '../classes';
-import { geometryToFeature } from '../converters/turf';
-import type { ArrayElement, Comparison, GeoJSONGeometry } from '../types';
-import { flatGeometryCollection } from '../utilities';
-import { validateGeometryByTileMatrix, validateMetatile, validateTileMatrix } from '../validations/validations';
+import { BoundingBox } from '../classes';
+import type { ArrayElement, Comparison } from '../types';
+import { validateMetatile, validateTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
-import { TileRange } from './tileRange';
 import type { TileMatrix, TileMatrixId } from './types';
 
-function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T>[] {
-  const tileRanges: TileRange<T>[] = [];
-  const boundingBox = polygon.toBoundingBox();
+// function polygonToTileRanges<T extends TileMatrixSet>(polygon: Polygon, tileMatrix: ArrayElement<T['tileMatrices']>, metatile = 1): TileRange<T>[] {
+//   const tileRanges: TileRange<T>[] = [];
+//   const boundingBox = polygon.toBoundingBox();
 
-  const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
+//   const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
 
-  const width = maxTileCol - minTileCol;
-  const height = maxTileRow - minTileRow;
+//   const width = maxTileCol - minTileCol;
+//   const height = maxTileRow - minTileRow;
 
-  const [minTileIndex, maxTileIndex]: [number, number] = width > height ? [minTileRow, maxTileRow] : [minTileCol, maxTileCol];
+//   const [minTileIndex, maxTileIndex]: [number, number] = width > height ? [minTileRow, maxTileRow] : [minTileCol, maxTileCol];
 
-  for (let tileIndex = minTileIndex; tileIndex <= maxTileIndex; tileIndex += 1) {
-    const tileRangeLimits =
-      width > height ? ([minTileCol, tileIndex, maxTileCol, tileIndex] as const) : ([tileIndex, minTileRow, tileIndex, maxTileRow] as const);
+//   for (let tileIndex = minTileIndex; tileIndex <= maxTileIndex; tileIndex += 1) {
+//     const tileRangeLimits =
+//       width > height ? ([minTileCol, tileIndex, maxTileCol, tileIndex] as const) : ([tileIndex, minTileRow, tileIndex, maxTileRow] as const);
 
-    const movingTileRange = new TileRange(...tileRangeLimits, tileMatrix, metatile);
+//     const movingTileRange = new TileRange(...tileRangeLimits, tileMatrix, metatile);
 
-    const movingTileRangeBoundingBox = geometryToFeature(movingTileRange.toBoundingBox(tileMatrix, true));
-    const intersections = intersect(featureCollection([geometryToFeature(polygon), movingTileRangeBoundingBox]));
+//     const movingTileRangeBoundingBox = geometryToFeature(movingTileRange.toBoundingBox(tileMatrix, true));
+//     const intersections = intersect(featureCollection([geometryToFeature(polygon), movingTileRangeBoundingBox]));
 
-    if (intersections === null) {
-      return [];
-    }
+//     if (intersections === null) {
+//       return [];
+//     }
 
-    const intersectingPolygons = flatten(intersections);
-    const movingTileRanges: TileRange<T>[] = [];
-    intersectingPolygons.features
-      .map((polygon) => {
-        const boundingBox = new BoundingBox(bbox(polygon.geometry));
-        const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
-        return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix, metatile);
-      })
-      .sort((a, b) => (width > height ? a.minTileRow - b.minTileRow : a.minTileCol - b.minTileCol))
-      .forEach((tileRange) => {
-        // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-        const lastTileRange = movingTileRanges.at(-1);
+//     const intersectingPolygons = flatten(intersections);
+//     const movingTileRanges: TileRange<T>[] = [];
+//     intersectingPolygons.features
+//       .map((polygon) => {
+//         const boundingBox = new BoundingBox({
+//           bbox: bbox(polygon.geometry),
+//           coordRefSys: '' // TODO: complete
+//         });
+//         const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
+//         return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrix, metatile);
+//       })
+//       .sort((a, b) => (width > height ? a.minTileRow - b.minTileRow : a.minTileCol - b.minTileCol))
+//       .forEach((tileRange) => {
+//         // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+//         const lastTileRange = movingTileRanges.at(-1);
 
-        if (!lastTileRange) {
-          movingTileRanges.push(tileRange);
-          return;
-        }
+//         if (!lastTileRange) {
+//           movingTileRanges.push(tileRange);
+//           return;
+//         }
 
-        const [prevMin, prevMax, currMin, currMax] =
-          width > height
-            ? [lastTileRange.minTileCol, lastTileRange.maxTileCol, tileRange.minTileCol, tileRange.maxTileCol]
-            : [lastTileRange.minTileRow, lastTileRange.maxTileRow, tileRange.minTileRow, tileRange.maxTileRow];
+//         const [prevMin, prevMax, currMin, currMax] =
+//           width > height
+//             ? [lastTileRange.minTileCol, lastTileRange.maxTileCol, tileRange.minTileCol, tileRange.maxTileCol]
+//             : [lastTileRange.minTileRow, lastTileRange.maxTileRow, tileRange.minTileRow, tileRange.maxTileRow];
 
-        if (currMin - 1 <= prevMax) {
-          // merge with last
-          const tileRangeLimits =
-            width > height ? ([prevMin, tileIndex, currMax, tileIndex] as const) : ([tileIndex, prevMin, tileIndex, currMax] as const);
-          const replacingTileRange = new TileRange(...tileRangeLimits, tileMatrix, metatile);
-          movingTileRanges.splice(movingTileRanges.length - 1, 1, replacingTileRange);
-        } else {
-          // add
-          movingTileRanges.push(tileRange);
-        }
-      });
+//         if (currMin - 1 <= prevMax) {
+//           // merge with last
+//           const tileRangeLimits =
+//             width > height ? ([prevMin, tileIndex, currMax, tileIndex] as const) : ([tileIndex, prevMin, tileIndex, currMax] as const);
+//           const replacingTileRange = new TileRange(...tileRangeLimits, tileMatrix, metatile);
+//           movingTileRanges.splice(movingTileRanges.length - 1, 1, replacingTileRange);
+//         } else {
+//           // add
+//           movingTileRanges.push(tileRange);
+//         }
+//       });
 
-    tileRanges.push(...movingTileRanges);
-  }
+//     tileRanges.push(...movingTileRanges);
+//   }
 
-  return tileRanges;
-}
+//   return tileRanges;
+// }
 
 /**
  * Finds the matching tile matrix in target tile matrix set based on the selected comparison method
@@ -138,14 +136,16 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
 /**
  * Calculates bounding box for a tile matrix and input height and width
  * @param tileMatrix tile matrix
+ * @param coordRefSys CRS of `tileMatrix`
  * @param matrixHeight tile matrix height
  * @param matrixWidth tile matrix width
  * @returns bounding box
  */
-export function tileMatrixToBoundingBox(
-  tileMatrix: TileMatrix,
+export function tileMatrixToBoundingBox<T extends TileMatrixSet>(
+  tileMatrix: ArrayElement<T['tileMatrices']>,
+  coordRefSys: T['crs'],
   matrixHeight: number = tileMatrix.matrixHeight,
-  matrixWidth: number = tileMatrix.matrixWidth
+  matrixWidth: number = tileMatrix.matrixWidth,
 ): BoundingBox {
   validateTileMatrix(tileMatrix);
 
@@ -160,31 +160,43 @@ export function tileMatrixToBoundingBox(
 
   const [minY, maxY] = cornerOfOrigin === 'topLeft' ? [latOrigin - tileMatrixHeight, latOrigin] : [latOrigin, latOrigin + tileMatrixHeight];
   const [minX, maxX] = [lonOrigin, lonOrigin + tileMatrixWidth];
-  return new BoundingBox([minX, minY, maxX, maxY]);
+
+  return new BoundingBox({
+    bbox: [minX, minY, maxX, maxY],
+    coordRefSys
+  });
 }
 
 /**
  * Find the minimal bounding tile containing the bounding box
  * @param boundingBox bounding box
  * @param tileMatrixSet tile matrix set for the containing tile lookup
+ * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
  * @param metatile size of a metatile
  * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
  */
-export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: BoundingBox, tileMatrixSet: TileMatrixSet, metatile = 1): Tile<T> | null {
+export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: BoundingBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): Tile<T> | null | undefined {
   validateMetatile(metatile);
 
   const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
-    const boundingBoxFeature = geometryToFeature(boundingBox);
-    const tileMatrixBoundingBoxFeature = geometryToFeature(tileMatrixToBoundingBox(tileMatrix));
+    const tileMatrixBoundingBox = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
 
-    if (!booleanContains(boundingBoxFeature, tileMatrixBoundingBoxFeature)) {
+    const { coordinates: [boundingBoxMinEast, boundingBoxMinNorth] } = boundingBox.min;
+    const { coordinates: [boundingBoxMaxEast, boundingBoxMaxNorth] } = boundingBox.max;
+    const { coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth] } = tileMatrixBoundingBox.min
+    const { coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] } = tileMatrixBoundingBox.max
+
+    if (boundingBoxMinEast < tileMatrixBoundingBoxMinEast ||
+      boundingBoxMinNorth < tileMatrixBoundingBoxMinNorth ||
+      boundingBoxMaxEast > tileMatrixBoundingBoxMaxEast ||
+      boundingBoxMaxNorth > tileMatrixBoundingBoxMaxNorth) {
       return null;
     }
-    const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrix, metatile);
+    const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrixSet, tileMatrixId, metatile);
     const { scaleDenominator } = tileMatrix;
 
     if (minTileCol === maxTileCol && minTileRow === maxTileRow) {
-      return { tile: new Tile(minTileCol, minTileRow, tileMatrix, metatile), scaleDenominator };
+      return { tile: new Tile(minTileCol, minTileRow, tileMatrixSet, tileMatrixId, metatile), scaleDenominator };
     }
 
     return null;
@@ -201,46 +213,52 @@ export function minimalBoundingTile<T extends TileMatrixSet>(boundingBox: Boundi
   const { tile } = boundingTiles.reduce((prevPossibleBoundingTile, possibleBoundingTile) => {
     return possibleBoundingTile.scaleDenominator < prevPossibleBoundingTile.scaleDenominator ? possibleBoundingTile : prevPossibleBoundingTile;
   });
+
   return tile;
 }
 
-/**
- * Convert geometry to a set of tile ranges in the given tile matrix
- * @param geometry geometry to compute tile ranges for
- * @param tileMatrix tile matrix
- * @param metatile size of a metatile
- * @returns tile range in `tileMatrix`
- */
-export function geometryToTileRanges<G extends GeoJSONGeometry, T extends TileMatrixSet>(
-  geometry: Geometry<G>,
-  tileMatrix: ArrayElement<T['tileMatrices']>,
-  metatile = 1
-): TileRange<T>[] {
-  validateTileMatrix(tileMatrix);
-  validateMetatile(metatile);
-  validateGeometryByTileMatrix(geometry, tileMatrix);
+// TODO: add implementation - GENERATOR OF "Thin" Tile data structure, MOVE IT TO GEOMETRY CLASS
+// TODO: change implementation - MAKE IT GENERATOR OF TileMatrixLimit data structure, MOVE IT TO GEOMETRY CLASS
+// /**
+//  * Convert geometry to a set of tile ranges in the given tile matrix
+//  * @param geometry geometry to compute tile ranges for
+//  * @param tileMatrix tile matrix
+//  * @param metatile size of a metatile
+//  * @returns tile range in `tileMatrix`
+//  */
+// export function geometryToTileRanges<G extends JSONFGGeometry, T extends TileMatrixSet>(
+//   geometry: Geometry<G>,
+//   tileMatrix: ArrayElement<T['tileMatrices']>,
+//   metatile = 1
+// ): TileRange<T>[] {
+//   validateTileMatrix(tileMatrix);
+//   validateMetatile(metatile);
+//   validateGeometryByTileMatrix(geometry, tileMatrix);
 
-  switch (true) {
-    case geometry instanceof BoundingBox:
-      return [geometry.toTileRange(tileMatrix, metatile)];
-    case geometry instanceof Polygon:
-      return polygonToTileRanges(geometry, tileMatrix, metatile);
-    case geometry instanceof GeometryCollection: {
-      const featurePolygons = geometry.geometries
-        .flatMap(flatGeometryCollection)
-        .filter((geometry): geometry is GeoJSONPolygon => geometry.type === 'Polygon' && Array.isArray(geometry.coordinates))
-        .map((polygon) => feature(polygon));
-      const dissolvedPolygons = dissolve(featureCollection(featurePolygons));
-      const tileRanges = dissolvedPolygons.features.flatMap((geoJSONPolygonFeature) => {
-        const polygon = new Polygon(geoJSONPolygonFeature.geometry.coordinates);
-        return polygonToTileRanges(polygon, tileMatrix, metatile);
-      });
-      return tileRanges;
-    }
-    default:
-      throw new Error(`unsupported geometry type: ${geometry.type}`);
-  }
-}
+//   switch (true) {
+//     case geometry instanceof BoundingBox:
+//       return [geometry.toTileRange(tileMatrix, metatile)];
+//     case geometry instanceof Polygon:
+//       return polygonToTileRanges(geometry, tileMatrix, metatile);
+//     case geometry instanceof GeometryCollection: {
+//       const featurePolygons = geometry.geometries
+//         .flatMap(flatGeometryCollection)
+//         .filter((geometry): geometry is GeoJSONPolygon => geometry.type === 'Polygon' && Array.isArray(geometry.coordinates))
+//         .map((polygon) => feature(polygon));
+//       const dissolvedPolygons = dissolve(featureCollection(featurePolygons));
+//       const tileRanges = dissolvedPolygons.features.flatMap((geoJSONPolygonFeature) => {
+//         const polygon = new Polygon({
+//           coordinates: geoJSONPolygonFeature.geometry.coordinates,
+//           coordRefSys: '' // TODO: complete
+//         });
+//         return polygonToTileRanges(polygon, tileMatrix, metatile);
+//       });
+//       return tileRanges;
+//     }
+//     default:
+//       throw new Error(`unsupported geometry type: ${geometry.type}`);
+//   }
+// }
 
 export function avoidNegativeZero(value: number): number {
   if (value === 0) {

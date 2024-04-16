@@ -1,92 +1,101 @@
-import { GeoPoint, type BoundingBox } from '../classes';
+import { Point, type BoundingBox } from '../classes';
 import type { ArrayElement } from '../types';
-import { validateMetatile, validateTileByTileMatrix, validateTileMatrix } from '../validations/validations';
+import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { tileEffectiveHeight, tileEffectiveWidth } from './tiles';
-import type { TileMatrix, TileMatrixId } from './types';
+import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles';
+import type { TileIndex, TileMatrixId } from './types';
 
 /**
  * Tile class that supports a metatile definition
  */
-export class Tile<T extends TileMatrixSet> {
-  public readonly tileMatrixId: TileMatrixId<T>;
+export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
+  private readonly tileMatrix: ArrayElement<T['tileMatrices']>;
+
   public constructor(
     public readonly col: number,
     public readonly row: number,
-    tileMatrix: TileMatrix,
+    private readonly tileMatrixSet: T,
+    public readonly tileMatrixId: TileMatrixId<T>,
     public readonly metatile = 1
   ) {
     validateMetatile(metatile);
-    validateTileMatrix(tileMatrix);
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
+
+    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+    if (!tileMatrix) {
+      throw new Error('tile matrix id is not part of the given tile matrix set');
+    }
 
     if (col < 0 || row < 0 || col >= Math.ceil(tileMatrix.matrixWidth / metatile) || row >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
       throw new RangeError('tile indices must be non-negative integers larger than 0 and less than tile matrix size (considering metatile size)');
     }
 
+    this.tileMatrix = tileMatrix;
     this.tileMatrixId = tileMatrix.identifier.code;
   }
 
   /**
    * Calculates a bounding box of a tile
-   * @param tileMatrix a tile matrix containing the tile
    * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
    * @returns bounding box of the tile
    */
-  public toBoundingBox(tileMatrix: ArrayElement<T['tileMatrices']>, clamp = false): BoundingBox {
-    validateTileMatrix(tileMatrix);
-    validateTileByTileMatrix(this, tileMatrix);
+  public toBoundingBox(clamp = true): BoundingBox {
+    const { coordinates: [east, north] } = this.toPoint();
+    const tileBoundingBox = tileMatrixToBoundingBox(
+      { ...this.tileMatrix, pointOfOrigin: [east, north] },
+      this.tileMatrixSet.crs,
+      this.metatile,
+      this.metatile
+    );
 
-    const { col, row, metatile } = this;
-    const tileRange = new TileRange(col, row, col, row, tileMatrix, metatile);
-    const tileBoundingBox = tileRange.toBoundingBox(tileMatrix, clamp);
+    if (clamp) {
+      // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
+      // of the tile matrix
+      return tileBoundingBox.clampToBoundingBox(tileMatrixToBoundingBox(this.tileMatrix, this.tileMatrixSet.crs));
+    }
 
     return tileBoundingBox;
   }
 
   /**
-   * Calculates a point with longitude and latitude for a tile origin in a tile matrix
-   * @param tileMatrix tile matrix which the tile belongs to
-   * @returns point with longitude and latitude of the origin of the tile, determined by `cornerOfOrigin` property of the tile matrix
+   * Calculates a point at tile origin
+   * @returns point of the tile origin, determined by `cornerOfOrigin` property of the tile matrix
    */
-  public toGeoPoint(tileMatrix: ArrayElement<T['tileMatrices']>): GeoPoint {
-    validateTileMatrix(tileMatrix);
-    validateTileByTileMatrix(this, tileMatrix);
-
+  public toPoint(): Point {
     const { col, row, metatile } = this;
-    const width = tileEffectiveWidth(tileMatrix) * metatile;
-    const height = tileEffectiveHeight(tileMatrix) * metatile;
+    const width = tileEffectiveWidth(this.tileMatrix) * metatile;
+    const height = tileEffectiveHeight(this.tileMatrix) * metatile;
 
     const {
       pointOfOrigin: [originX, originY],
       cornerOfOrigin = 'topLeft',
-    } = tileMatrix;
+    } = this.tileMatrix;
 
-    const lon = originX + col * width;
+    const east = originX + col * width;
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    const lat = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
+    const north = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
-    return new GeoPoint(lon, lat);
+    return new Point({ coordinates: [east, north], coordRefSys: this.tileMatrixSet.crs });
   }
 
   /**
-   * Converts tile to tile range in any tile matrix
+   * Converts tile to a tile range in any tile matrix
    * This method will help find what tiles are needed to cover a given tile at a different tile matrix
-   * @param tileMatrix tile matrix
    * @param targetTileMatrix target tile matrix
    * @returns tile range at the given tile matrix
    */
-  public toTileRange(tileMatrix: ArrayElement<T['tileMatrices']>, targetTileMatrix: ArrayElement<T['tileMatrices']>): TileRange<T> {
-    validateTileMatrix(tileMatrix);
+  public toTileRange(targetTileMatrix: ArrayElement<T['tileMatrices']>): TileRange<T> {
     validateTileMatrix(targetTileMatrix);
-    validateTileByTileMatrix(this, tileMatrix);
+    validateTileMatrixIdByTileMatrixSet(targetTileMatrix.identifier.code, this.tileMatrixSet);
 
     const { metatile } = this;
-    const { min: minTilePoint, max: maxTilePoint } = this.toBoundingBox(tileMatrix);
+    const { min: minTilePoint, max: maxTilePoint } = this.toBoundingBox(true);
 
-    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(targetTileMatrix, false, metatile);
-    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(targetTileMatrix, true, metatile);
+    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, false, metatile);
+    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, true, metatile);
 
-    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, targetTileMatrix, metatile);
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, this.tileMatrixSet, targetTileMatrix.identifier.code, metatile);
   }
 }

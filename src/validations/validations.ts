@@ -1,5 +1,4 @@
-import { BoundingBox, GeoPoint, type Geometry } from '../classes';
-import { Tile } from '../tiles/tile';
+import { BoundingBox, Point, type Geometry } from '../classes';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBoundingBox } from '../tiles/tiles';
@@ -7,44 +6,65 @@ import type { TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, GeoJSONGeometry } from '../types';
 
 /**
- * Validates that the input `geoPoint` is valid with respect to `tileMatrixSet`
- * @param geoPoint point with longitude and latitude to validate
- * @param tileMatrixSet tile matrix set to validate the `geoPoint` against
+ * Validates that the input `point` is valid with respect to `tileMatrixSet`
+ * @param point point to validate
+ * @param tileMatrixSet tile matrix set to validate `point` against
  */
-export function validateGeoPointByTileMatrixSet(geoPoint: GeoPoint, tileMatrixSet: TileMatrixSet): void {
+export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMatrixSet): void {
+  const {
+    coordinates: [east, north],
+  } = point;
   const { tileMatrices } = tileMatrixSet;
 
   for (const tileMatrix of tileMatrices) {
-    const { min: tileMatrixSetBoundingBoxMin, max: tileMatrixSetBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
+    const {
+      min: {
+        coordinates: [tileMatrixSetBoundingBoxMinEast, tileMatrixSetBoundingBoxMinNorth],
+      },
+      max: {
+        coordinates: [tileMatrixSetBoundingBoxMaxEast, tileMatrixSetBoundingBoxMaxNorth],
+      },
+    } = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
 
-    if (geoPoint.lon < tileMatrixSetBoundingBoxMin.lon || geoPoint.lon > tileMatrixSetBoundingBoxMax.lon) {
+    if (east < tileMatrixSetBoundingBoxMinEast || east > tileMatrixSetBoundingBoxMaxEast) {
       throw new RangeError(
-        `longitude ${geoPoint.lon} is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
+        `point's easting, ${east}, is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
       );
     }
 
-    if (geoPoint.lat < tileMatrixSetBoundingBoxMin.lat || geoPoint.lat > tileMatrixSetBoundingBoxMax.lat) {
+    if (north < tileMatrixSetBoundingBoxMinNorth || north > tileMatrixSetBoundingBoxMaxNorth) {
       throw new RangeError(
-        `latitude ${geoPoint.lat} is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
+        `point's northing, ${north}, is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
       );
     }
   }
 }
 
 /**
- * Validates that the input `geoPoint` is valid with respect to `tileMatrix`
- * @param geoPoint a point with longitude and latitude to validate
- * @param tileMatrix the tile matrix to validate the `geoPoint` against
+ * Validates that the input `point` is valid with respect to `tileMatrix`
+ * @param point point to validate
+ * @param tileMatrix tile matrix to validate `point` against
+ * @param coordRefSys CRS of `tileMatrix`
  */
-export function validateGeoPointByTileMatrix(geoPoint: GeoPoint, tileMatrix: TileMatrix): void {
-  const { min: tileMatrixBoundingBoxMin, max: tileMatrixBoundingBoxMax } = tileMatrixToBoundingBox(tileMatrix);
+export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix, coordRefSys: TileMatrixSet['crs']): void {
+  const {
+    coordinates: [east, north],
+  } = point;
+  const {
+    min: {
+      coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth],
+    },
+    max: {
+      coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth],
+    },
+  } = tileMatrixToBoundingBox(tileMatrix, coordRefSys);
 
-  if (geoPoint.lon < tileMatrixBoundingBoxMin.lon || geoPoint.lon > tileMatrixBoundingBoxMax.lon) {
-    throw new RangeError(`longitude ${geoPoint.lon} is out of range of tile matrix bounding box`);
+  if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
+    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box`);
   }
 
-  if (geoPoint.lat < tileMatrixBoundingBoxMin.lat || geoPoint.lat > tileMatrixBoundingBoxMax.lat) {
-    throw new RangeError(`latitude ${geoPoint.lat} is out of range of tile matrix bounding box`);
+  if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
+    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box`);
   }
 }
 
@@ -84,11 +104,12 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
  * Validates that the input `boundingBox` is a valid bounding box with respect to `tileMatrix`
  * @param boundingBox bounding box
  * @param tileMatrix tile matrix to validate against
+ * @param coordRefSys CRS of `tileMatrix`
  */
-export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
+export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix, coordRefSys: TileMatrixSet['crs']): void {
   try {
-    validateGeoPointByTileMatrix(boundingBox.min, tileMatrix);
-    validateGeoPointByTileMatrix(boundingBox.max, tileMatrix);
+    validatePointByTileMatrix(boundingBox.min, tileMatrix, coordRefSys);
+    validatePointByTileMatrix(boundingBox.max, tileMatrix, coordRefSys);
   } catch (err) {
     throw new RangeError(`bounding box is not within the tile matrix`);
   }
@@ -98,53 +119,21 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
  * Validates that the input `geometry` is a valid with respect to `tileMatrixSet`
  * @param geometry geometry
  * @param tileMatrix tile matrix
+ * @param coordRefSys CRS of `tileMatrix`
  */
-export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry: Geometry<G>, tileMatrix: TileMatrix): void {
+export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(
+  geometry: Geometry<G>,
+  tileMatrix: TileMatrix,
+  coordRefSys: TileMatrixSet['crs']
+): void {
   const boundingBox = geometry.toBoundingBox();
-  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
-}
-
-/**
- * Validates that the input `tile` is valid with respect to `tileMatrixSet`
- * @param tile tile to validate
- * @param tileMatrixSet tile matrix set to validate the `tile` against
- */
-export function validateTileByTileMatrix<T extends TileMatrixSet>(tile: Tile<T>, tileMatrix: ArrayElement<T['tileMatrices']>): void {
-  const { col, row, tileMatrixId, metatile } = tile;
-  validateMetatile(metatile);
-
-  if (tileMatrixId !== tileMatrix.identifier.code) {
-    throw new Error('tile identifier is not equal to the tile matrix identifier');
-  }
-
-  if (col < 0 || col >= Math.ceil(tileMatrix.matrixWidth / metatile)) {
-    throw new RangeError('tile matrix col index out of range of the tile matrix (considering metatile size)');
-  }
-
-  if (row < 0 || row >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
-    throw new RangeError('tile matrix row index out of range of the tile matrix (considering metatile size)');
-  }
-}
-
-/**
- * Validates that the input `tile` is valid with respect to `tileMatrixSet`
- * @param tile tile to validate
- * @param tileMatrixSet tile matrix set to validate the `tile` against
- */
-export function validateTileByTileMatrixSet<T extends TileMatrixSet>(tile: Tile<T>, tileMatrixSet: T): void {
-  const tileMatrix = tileMatrixSet.getTileMatrix(tile.tileMatrixId);
-
-  if (!tileMatrix) {
-    throw new Error('tile could not be found inside tile matrix set');
-  }
-
-  validateTileByTileMatrix(tile, tileMatrix);
+  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix, coordRefSys);
 }
 
 /**
  * Validates that the input `tileMatrixId` is valid with respect to `tileMatrixSet`
- * @param tileMatrixId tile matrix id to validate
- * @param tileMatrixSet the tile matrix set to validate the `tileMatrixId` against
+ * @param tileMatrixId tile matrix identifier to validate
+ * @param tileMatrixSet the tile matrix set to validate `tileMatrixId` against
  */
 export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): void {
   if (tileMatrixSet.tileMatrices.findIndex(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId) < 0) {

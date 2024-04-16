@@ -63,8 +63,8 @@ export class TileMatrixSet {
   }
 
   /**
-   * extracts a tile matrix from a tile matrix set
-   * @param tileMatrixId identifier of a tile matrix inside `tileMatrixSet`
+   * Extracts a tile matrix from a tile matrix set
+   * @param tileMatrixId tile matrix identifier
    * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
    */
   public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> | undefined {
