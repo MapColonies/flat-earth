@@ -64,12 +64,6 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
       (this.maxTileCol - this.minTileCol) * this.metatile + 1
     );
 
-    if (clamp) {
-      // clamp the values in cases where a metatile may extend tile range bounding box beyond the bounding box
-      // of the tile matrix
-      return tileRangeBoundingBox.clampToBoundingBox(tileMatrixToBoundingBox(this.tileMatrix, this.tileMatrixSet.crs));
-    }
-
-    return tileRangeBoundingBox;
+    return clamp ? tileRangeBoundingBox.clampToBoundingBox(tileMatrixToBoundingBox(this.tileMatrix, this.tileMatrixSet.crs)) : tileRangeBoundingBox;
   }
 }

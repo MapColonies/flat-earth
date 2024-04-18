@@ -52,13 +52,7 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
       this.metatile
     );
 
-    if (clamp) {
-      // clamp the values in cases where a metatile may extend tile bounding box beyond the bounding box
-      // of the tile matrix
-      return tileBoundingBox.clampToBoundingBox(tileMatrixToBoundingBox(this.tileMatrix, this.tileMatrixSet.crs));
-    }
-
-    return tileBoundingBox;
+    return clamp ? tileBoundingBox.clampToBoundingBox(tileMatrixToBoundingBox(this.tileMatrix, this.tileMatrixSet.crs)) : tileBoundingBox;
   }
 
   /**
