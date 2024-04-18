@@ -383,7 +383,7 @@ export class BoundingBox extends Polygon {
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixSet, tileMatrixId, metatile);
   }
 
-  private snapMinPointToTileMatrixCell(tileMatrix: TileMatrix): Point {
+  private snapMinPointToTileMatrixCell<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): Point {
     const {
       coordinates: [minEast, minNorth],
     } = this.min;
@@ -397,7 +397,7 @@ export class BoundingBox extends Polygon {
     });
   }
 
-  private snapMaxPointToTileMatrixCell(tileMatrix: TileMatrix): Point {
+  private snapMaxPointToTileMatrixCell<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): Point {
     const {
       coordinates: [maxEast, maxNorth],
     } = this.max;
