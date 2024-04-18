@@ -154,15 +154,16 @@ export function tileMatrixToBoundingBox<T extends TileMatrixSet>(
   }
 
   const { cellSize, pointOfOrigin, tileHeight, tileWidth, cornerOfOrigin = 'topLeft' } = tileMatrix;
-  const [lonOrigin, latOrigin] = pointOfOrigin; // TODO: currently the axis order is assumed and not calculated
+  const [eastOrigin, northOrigin] = pointOfOrigin; // TODO: currently the axis order is assumed and not calculated
   const tileMatrixHeight = cellSize * tileHeight * matrixHeight;
   const tileMatrixWidth = cellSize * tileWidth * matrixWidth;
 
-  const [minY, maxY] = cornerOfOrigin === 'topLeft' ? [latOrigin - tileMatrixHeight, latOrigin] : [latOrigin, latOrigin + tileMatrixHeight];
-  const [minX, maxX] = [lonOrigin, lonOrigin + tileMatrixWidth];
+  const [minNorth, maxNorth] =
+    cornerOfOrigin === 'topLeft' ? [northOrigin - tileMatrixHeight, northOrigin] : [northOrigin, northOrigin + tileMatrixHeight];
+  const [minEast, maxEast] = [eastOrigin, eastOrigin + tileMatrixWidth];
 
   return new BoundingBox({
-    bbox: [minX, minY, maxX, maxY],
+    bbox: [minEast, minNorth, maxEast, maxNorth],
     coordRefSys,
   });
 }

@@ -129,17 +129,17 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
   private calculateBBox(): BBox {
     const positions = this.getPositions();
 
-    let [minX, minY] = positions[0];
-    let [maxX, maxY] = positions[0];
+    let [minEast, minNorth] = positions[0];
+    let [maxEast, maxNorth] = positions[0];
 
-    for (const [x, y] of positions) {
-      minX = x < minX ? x : minX;
-      minY = y < minY ? y : minY;
-      maxX = x > maxX ? x : maxX;
-      maxY = y > maxY ? y : maxY;
+    for (const [east, north] of positions) {
+      minEast = east < minEast ? east : minEast;
+      minNorth = north < minNorth ? north : minNorth;
+      maxEast = east > maxEast ? east : maxEast;
+      maxNorth = north > maxNorth ? north : maxNorth;
     }
 
-    return [minX, minY, maxX, maxY];
+    return [minEast, minNorth, maxEast, maxNorth];
   }
 
   protected abstract getPositions(): Position[];
@@ -240,13 +240,13 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
     } = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
-    const x = (east - tileMatrixBoundingBoxMinEast) / width;
-    const y = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth - north : north - tileMatrixBoundingBoxMinNorth) / height;
+    const tempTileCol = (east - tileMatrixBoundingBoxMinEast) / width;
+    const tempTileRow = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth - north : north - tileMatrixBoundingBoxMinNorth) / height;
 
     // when explicitly asked to reverse the intersection policy (location on the edge of the tile)
     if (reverseIntersectionPolicy) {
-      const tileCol = Math.ceil(x) - 1;
-      const tileRow = Math.ceil(y) - 1;
+      const tileCol = Math.ceil(tempTileCol) - 1;
+      const tileRow = Math.ceil(tempTileRow) - 1;
       return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
     }
 
@@ -254,8 +254,8 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
     const onEdgeXTranslation = east === tileMatrixBoundingBoxMaxEast ? 1 : 0;
     const onEdgeYTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) ? 1 : 0;
 
-    const tileCol = Math.floor(x) - onEdgeXTranslation;
-    const tileRow = Math.floor(y) - onEdgeYTranslation;
+    const tileCol = Math.floor(tempTileCol) - onEdgeXTranslation;
+    const tileRow = Math.floor(tempTileRow) - onEdgeYTranslation;
 
     return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
   }
@@ -267,24 +267,24 @@ export class BoundingBox extends Polygon {
 
   public constructor(boundingBox: BoundingBoxInput) {
     const {
-      bbox: [minX, minY, maxX, maxY],
+      bbox: [minEast, minNorth, maxEast, maxNorth],
       coordRefSys,
     } = boundingBox;
     super({
       coordRefSys,
       coordinates: [
         [
-          [minX, minY],
-          [maxX, minY],
-          [maxX, maxY],
-          [minX, maxY],
-          [minX, minY],
+          [minEast, minNorth],
+          [maxEast, minNorth],
+          [maxEast, maxNorth],
+          [minEast, maxNorth],
+          [minEast, minNorth],
         ],
       ],
     });
 
-    this.min = new Point({ coordinates: [minX, minY], coordRefSys });
-    this.max = new Point({ coordinates: [maxX, maxY], coordRefSys });
+    this.min = new Point({ coordinates: [minEast, minNorth], coordRefSys });
+    this.max = new Point({ coordinates: [maxEast, maxNorth], coordRefSys });
   }
 
   public clampToBoundingBox(clampingBoundingBox: BoundingBox): BoundingBox {
