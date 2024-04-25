@@ -120,7 +120,7 @@ export class TileMatrixSet implements TileMatrixSetType {
 
     const crsJSON = typeof crs === 'object' && 'wkt' in crs ? { wkt: JSON.parse(crs.wkt) as object } : crs;
     const tileMatricesJSON = tileMatrices.map((tileMaxtrixJSON) => {
-      const { identifier, cornerOfOrigin, ...otherProps } = tileMaxtrixJSON;
+      const { identifier, ...otherProps } = tileMaxtrixJSON;
       return {
         id: identifier.code,
         ...otherProps,
