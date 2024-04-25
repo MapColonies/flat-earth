@@ -1,9 +1,18 @@
+import { deepStrictEqual } from 'node:assert/strict';
 import { BoundingBox, Point, type Geometry } from '../classes';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBoundingBox } from '../tiles/tiles';
-import type { TileMatrix, TileMatrixId } from '../tiles/types';
+import type { CRS, TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, GeoJSONGeometry } from '../types';
+
+export function validateCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
+  try {
+    deepStrictEqual(geometryCRS, tileMatrixSetCRS);
+  } catch (err) {
+    throw new Error("geometry's and tile matrix set's CRS do not match");
+  }
+}
 
 /**
  * Validates that the input `point` is valid with respect to `tileMatrixSet`

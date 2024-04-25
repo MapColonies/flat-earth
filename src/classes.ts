@@ -21,6 +21,7 @@ import type {
 import { flatGeometryCollection, flattenGeometryPositions } from './utilities';
 import {
   validateBoundingBoxByTileMatrix,
+  validateCRS,
   validateMetatile,
   validatePointByTileMatrix,
   validateTileMatrixIdByTileMatrixSet,
@@ -69,6 +70,7 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
     metatile = 1
   ): Tile<T> | null | undefined {
     validateMetatile(metatile);
+    validateCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const boundingBox = this.toBoundingBox();
 
@@ -216,6 +218,7 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
   public toTile<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, reverseIntersectionPolicy: boolean, metatile = 1): Tile<T> {
     validateMetatile(metatile);
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateCRS(this.coordRefSys, tileMatrixSet.crs);
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
     const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
@@ -324,6 +327,7 @@ export class BoundingBox extends Polygon {
   public expandToTileMatrixCells<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>): BoundingBox {
     // TODO: consider metatile
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
     if (!tileMatrix) {
@@ -352,6 +356,7 @@ export class BoundingBox extends Polygon {
   public toTileRange<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): TileRange<T> {
     validateMetatile(metatile);
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
     if (!tileMatrix) {
