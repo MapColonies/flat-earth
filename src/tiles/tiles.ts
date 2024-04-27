@@ -9,8 +9,7 @@ import type { TileMatrix, TileMatrixId } from './types';
  * @param tileMatrix source tile matrix
  * @param targetTileMatrixSet target tile matrix set
  * @param comparison comparison method
- * @throws error when matching scale could not be found
- * @returns matching tile matrix
+ * @returns matching tile matrix or undefined when matching scale could not be found
  */
 export function findMatchingTileMatrix<T extends TileMatrixSet>(
   tileMatrix: TileMatrix,
