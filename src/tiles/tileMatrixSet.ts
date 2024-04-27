@@ -12,54 +12,54 @@ import type {
 } from './types';
 
 export class TileMatrixSet implements TileMatrixSetType {
-  private readonly options: TileMatrixSetType;
+  private readonly tileMatrixSet: TileMatrixSetType;
   // TODO: add validations for TileMatrixSetJSON with json-schema-to-zod?! missing validations on TileMatrixSet / TileMatrix - use ZOD/AJV?
-  public constructor(private readonly tileMatrixSetJSON: TileMatrixSetJSON) {
-    this.options = this.decodeFromJSON(tileMatrixSetJSON);
+  public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
+    this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
   }
 
   public get title(): LanguageString | undefined {
-    return this.options.title;
+    return this.tileMatrixSet.title;
   }
 
   public get description(): LanguageString | undefined {
-    return this.options.description;
+    return this.tileMatrixSet.description;
   }
 
   public get keywords(): Keyword[] | undefined {
-    return this.options.keywords;
+    return this.tileMatrixSet.keywords;
   }
 
   public get identifier(): CodeType | undefined {
-    return this.options.identifier;
+    return this.tileMatrixSet.identifier;
   }
 
   public get uri(): string | undefined {
-    return this.options.uri;
+    return this.tileMatrixSet.uri;
   }
 
   public get orderedAxes(): [string, string] | undefined {
-    return this.options.orderedAxes;
+    return this.tileMatrixSet.orderedAxes;
   }
 
   public get crs(): CRS {
-    return this.options.crs;
+    return this.tileMatrixSet.crs;
   }
 
   public get wellKnownScaleSet(): string | undefined {
-    return this.options.wellKnownScaleSet;
+    return this.tileMatrixSet.wellKnownScaleSet;
   }
 
   public get boundingBox(): BoundingBox2D | undefined {
-    return this.options.boundingBox;
+    return this.tileMatrixSet.boundingBox;
   }
 
   public get tileMatrices(): TileMatrix[] {
-    return this.options.tileMatrices;
+    return this.tileMatrixSet.tileMatrices;
   }
 
   public toJSON(): TileMatrixSetJSON {
-    return this.tileMatrixSetJSON;
+    return this.encodeToJSON();
   }
 
   /**
@@ -115,8 +115,8 @@ export class TileMatrixSet implements TileMatrixSetType {
     };
   }
 
-  private encodeToJSON(tileMatrixSet: TileMatrixSetType): TileMatrixSetJSON {
-    const { crs, tileMatrices, boundingBox, description, identifier, keywords, title, ...otherProps } = tileMatrixSet;
+  private encodeToJSON(): TileMatrixSetJSON {
+    const { crs, tileMatrices, boundingBox, description, identifier, keywords, title, ...otherProps } = this;
 
     const crsJSON = typeof crs === 'object' && 'wkt' in crs ? { wkt: JSON.parse(crs.wkt) as object } : crs;
     const tileMatricesJSON = tileMatrices.map((tileMaxtrixJSON) => {
