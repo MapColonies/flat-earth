@@ -33,7 +33,6 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
     }
 
     this.tileMatrix = tileMatrix;
-    this.tileMatrixId = tileMatrix.identifier.code;
   }
 
   /**
