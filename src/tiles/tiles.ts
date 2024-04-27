@@ -64,11 +64,11 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
 }
 
 /**
- * Calculates bbox for a tile matrix and input height and width
+ * Calculates GeoJSON bbox for a tile matrix and input height and width
  * @param tileMatrix tile matrix
  * @param matrixHeight tile matrix height
  * @param matrixWidth tile matrix width
- * @returns bbox
+ * @returns GeoJSON bbox
  */
 export function tileMatrixToBBox<T extends TileMatrixSet>(
   tileMatrix: ArrayElement<T['tileMatrices']>,
