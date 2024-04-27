@@ -182,9 +182,8 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JS
     }
 
     const lineSegments = this.geometryToLineSegments();
-    const boundingBox = this.toBoundingBox();
 
-    const [minBoundinBoxEast, minBoundinBoxNorth, maxBoundinBoxEast, maxBoundinBoxNorth] = boundingBox
+    const [minBoundinBoxEast, minBoundinBoxNorth, maxBoundinBoxEast, maxBoundinBoxNorth] = this.toBoundingBox()
       .toTileRange(tileMatrixSet, tileMatrixId, metatile)
       .toBoundingBox().bBox;
 
