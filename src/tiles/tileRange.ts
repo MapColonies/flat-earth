@@ -3,7 +3,7 @@ import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
-import { tileMatrixToBoundingBox } from './tiles';
+import { tileMatrixToBBox } from './tiles';
 import type { TileIndex, TileMatrixId, TileMatrixLimits } from './types';
 
 export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
@@ -57,13 +57,15 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
       coordinates: [east, north],
     } = tile.toPoint();
 
-    const tileRangeBoundingBox = tileMatrixToBoundingBox(
+    const tileRangeBBox = tileMatrixToBBox(
       { ...this.tileMatrix, pointOfOrigin: [east, north] },
-      this.tileMatrixSet.crs,
       (this.maxTileRow - this.minTileRow) * this.metatile + 1,
       (this.maxTileCol - this.minTileCol) * this.metatile + 1
     );
+    const tileRangeBoundingBox = new BoundingBox({ bbox: tileRangeBBox, coordRefSys: this.tileMatrixSet.crs });
 
-    return clamp ? tileRangeBoundingBox.clampToBoundingBox(tileMatrixToBoundingBox(this.tileMatrix, this.tileMatrixSet.crs)) : tileRangeBoundingBox;
+    return clamp
+      ? tileRangeBoundingBox.clampToBoundingBox(new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: this.tileMatrixSet.crs }))
+      : tileRangeBoundingBox;
   }
 }

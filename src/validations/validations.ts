@@ -2,7 +2,7 @@ import { deepStrictEqual } from 'node:assert/strict';
 import { BoundingBox, Point, type Geometry } from '../classes';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
-import { tileMatrixToBoundingBox } from '../tiles/tiles';
+import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS, TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, GeoJSONGeometry } from '../types';
 
@@ -26,14 +26,8 @@ export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMa
   const { tileMatrices } = tileMatrixSet;
 
   for (const tileMatrix of tileMatrices) {
-    const {
-      min: {
-        coordinates: [tileMatrixSetBoundingBoxMinEast, tileMatrixSetBoundingBoxMinNorth],
-      },
-      max: {
-        coordinates: [tileMatrixSetBoundingBoxMaxEast, tileMatrixSetBoundingBoxMaxNorth],
-      },
-    } = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
+    const [tileMatrixSetBoundingBoxMinEast, tileMatrixSetBoundingBoxMinNorth, tileMatrixSetBoundingBoxMaxEast, tileMatrixSetBoundingBoxMaxNorth] =
+      tileMatrixToBBox(tileMatrix);
 
     if (east < tileMatrixSetBoundingBoxMinEast || east > tileMatrixSetBoundingBoxMaxEast) {
       throw new RangeError(
@@ -53,20 +47,13 @@ export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMa
  * Validates that the input `point` is valid with respect to `tileMatrix`
  * @param point point to validate
  * @param tileMatrix tile matrix to validate `point` against
- * @param coordRefSys CRS of `tileMatrix`
  */
-export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix, coordRefSys: TileMatrixSet['crs']): void {
+export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix): void {
   const {
     coordinates: [east, north],
   } = point;
-  const {
-    min: {
-      coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth],
-    },
-    max: {
-      coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth],
-    },
-  } = tileMatrixToBoundingBox(tileMatrix, coordRefSys);
+  const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
+    tileMatrixToBBox(tileMatrix);
 
   if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
     throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box`);
@@ -113,12 +100,15 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
  * Validates that the input `boundingBox` is a valid bounding box with respect to `tileMatrix`
  * @param boundingBox bounding box
  * @param tileMatrix tile matrix to validate against
- * @param coordRefSys CRS of `tileMatrix`
  */
-export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix, coordRefSys: TileMatrixSet['crs']): void {
+export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
+  const [minEast, minNorth, maxEast, maxNorth] = boundingBox.bBox;
+  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: boundingBox.coordRefSys });
+  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: boundingBox.coordRefSys });
+
   try {
-    validatePointByTileMatrix(boundingBox.min, tileMatrix, coordRefSys);
-    validatePointByTileMatrix(boundingBox.max, tileMatrix, coordRefSys);
+    validatePointByTileMatrix(minPoint, tileMatrix);
+    validatePointByTileMatrix(maxPoint, tileMatrix);
   } catch (err) {
     throw new RangeError(`bounding box is not within the tile matrix`);
   }
@@ -128,15 +118,10 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
  * Validates that the input `geometry` is a valid with respect to `tileMatrixSet`
  * @param geometry geometry
  * @param tileMatrix tile matrix
- * @param coordRefSys CRS of `tileMatrix`
  */
-export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(
-  geometry: Geometry<G>,
-  tileMatrix: TileMatrix,
-  coordRefSys: TileMatrixSet['crs']
-): void {
+export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry: Geometry<G>, tileMatrix: TileMatrix): void {
   const boundingBox = geometry.toBoundingBox();
-  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix, coordRefSys);
+  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
 }
 
 /**

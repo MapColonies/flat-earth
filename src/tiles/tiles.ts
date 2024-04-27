@@ -1,4 +1,4 @@
-import { BoundingBox } from '../classes';
+import type { BBox } from 'geojson';
 import type { ArrayElement, Comparison } from '../types';
 import { validateMetatile, validateTileMatrix } from '../validations/validations';
 import { Tile } from './tile';
@@ -134,19 +134,17 @@ export function findMatchingTileMatrix<T extends TileMatrixSet>(
 }
 
 /**
- * Calculates bounding box for a tile matrix and input height and width
+ * Calculates bbox for a tile matrix and input height and width
  * @param tileMatrix tile matrix
- * @param coordRefSys CRS of `tileMatrix`
  * @param matrixHeight tile matrix height
  * @param matrixWidth tile matrix width
- * @returns bounding box
+ * @returns bbox
  */
-export function tileMatrixToBoundingBox<T extends TileMatrixSet>(
+export function tileMatrixToBBox<T extends TileMatrixSet>(
   tileMatrix: ArrayElement<T['tileMatrices']>,
-  coordRefSys: T['crs'],
   matrixHeight: number = tileMatrix.matrixHeight,
   matrixWidth: number = tileMatrix.matrixWidth
-): BoundingBox {
+): BBox {
   validateTileMatrix(tileMatrix);
 
   if (matrixHeight < 0 || matrixWidth < 0) {
@@ -162,10 +160,7 @@ export function tileMatrixToBoundingBox<T extends TileMatrixSet>(
     cornerOfOrigin === 'topLeft' ? [northOrigin - tileMatrixHeight, northOrigin] : [northOrigin, northOrigin + tileMatrixHeight];
   const [minEast, maxEast] = [eastOrigin, eastOrigin + tileMatrixWidth];
 
-  return new BoundingBox({
-    bbox: [minEast, minNorth, maxEast, maxNorth],
-    coordRefSys,
-  });
+  return [minEast, minNorth, maxEast, maxNorth];
 }
 
 // TODO: add implementation - GENERATOR OF "Thin" Tile data structure, MOVE IT TO GEOMETRY CLASS

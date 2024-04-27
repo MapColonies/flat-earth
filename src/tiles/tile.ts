@@ -3,7 +3,7 @@ import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles';
+import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles';
 import type { TileIndex, TileMatrixId } from './types';
 
 /**
@@ -45,14 +45,11 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
     const {
       coordinates: [east, north],
     } = this.toPoint();
-    const tileBoundingBox = tileMatrixToBoundingBox(
-      { ...this.tileMatrix, pointOfOrigin: [east, north] },
-      this.tileMatrixSet.crs,
-      this.metatile,
-      this.metatile
-    );
-
-    return clamp ? tileBoundingBox.clampToBoundingBox(tileMatrixToBoundingBox(this.tileMatrix, this.tileMatrixSet.crs)) : tileBoundingBox;
+    const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
+    const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: this.tileMatrixSet.crs });
+    return clamp
+      ? tileBoundingBox.clampToBoundingBox(new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: this.tileMatrixSet.crs }))
+      : tileBoundingBox;
   }
 
   /**
@@ -87,8 +84,9 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
     validateTileMatrixIdByTileMatrixSet(targetTileMatrix.identifier.code, this.tileMatrixSet);
 
     const { metatile } = this;
-    const { min: minTilePoint, max: maxTilePoint } = this.toBoundingBox(true);
-
+    const [minEast, minNorth, maxEast, maxNorth] = this.toBoundingBox(true).bBox;
+    const minTilePoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: this.tileMatrixSet.crs });
+    const maxTilePoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: this.tileMatrixSet.crs });
     const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, false, metatile);
     const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, true, metatile);
 

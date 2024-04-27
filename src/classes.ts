@@ -2,7 +2,7 @@ import type { BBox, Position } from 'geojson';
 import { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
-import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBoundingBox } from './tiles/tiles';
+import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles/tiles';
 import type { TileMatrix, TileMatrixId } from './tiles/types';
 import type {
   ArrayElement,
@@ -75,20 +75,11 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
     const boundingBox = this.toBoundingBox();
 
     const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
-      const tileMatrixBoundingBox = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
+      const tileMatrixBoundingBox = tileMatrixToBBox(tileMatrix);
 
-      const {
-        coordinates: [boundingBoxMinEast, boundingBoxMinNorth],
-      } = boundingBox.min;
-      const {
-        coordinates: [boundingBoxMaxEast, boundingBoxMaxNorth],
-      } = boundingBox.max;
-      const {
-        coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth],
-      } = tileMatrixBoundingBox.min;
-      const {
-        coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth],
-      } = tileMatrixBoundingBox.max;
+      const [boundingBoxMinEast, boundingBoxMinNorth, boundingBoxMaxEast, boundingBoxMaxNorth] = boundingBox.bbox;
+      const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
+        tileMatrixBoundingBox;
 
       if (
         boundingBoxMinEast < tileMatrixBoundingBoxMinEast ||
@@ -226,21 +217,15 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
       throw new Error('tile matrix id is not part of the given tile matrix set');
     }
 
-    validatePointByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
+    validatePointByTileMatrix(this, tileMatrix);
 
     const [east, north] = this.coordinates;
 
     const width = tileEffectiveWidth(tileMatrix) * metatile;
     const height = tileEffectiveHeight(tileMatrix) * metatile;
 
-    const {
-      min: {
-        coordinates: [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth],
-      },
-      max: {
-        coordinates: [tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth],
-      },
-    } = tileMatrixToBoundingBox(tileMatrix, tileMatrixSet.crs);
+    const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
+      tileMatrixToBBox(tileMatrix);
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
     const tempTileCol = (east - tileMatrixBoundingBoxMinEast) / width;
@@ -265,8 +250,7 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
 }
 
 export class BoundingBox extends Polygon {
-  public readonly min: Point;
-  public readonly max: Point;
+  public readonly bBox: BBox;
 
   public constructor(boundingBox: BoundingBoxInput) {
     const {
@@ -286,26 +270,14 @@ export class BoundingBox extends Polygon {
       ],
     });
 
-    this.min = new Point({ coordinates: [minEast, minNorth], coordRefSys });
-    this.max = new Point({ coordinates: [maxEast, maxNorth], coordRefSys });
+    this.bBox = [minEast, minNorth, maxEast, maxNorth];
   }
 
   public clampToBoundingBox(clampingBoundingBox: BoundingBox): BoundingBox {
-    const {
-      min: {
-        coordinates: [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth],
-      },
-      max: {
-        coordinates: [clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth],
-      },
-    } = clampingBoundingBox;
+    const [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] =
+      clampingBoundingBox.bBox;
 
-    const {
-      coordinates: [minEast, minNorth],
-    } = this.min;
-    const {
-      coordinates: [maxEast, maxNorth],
-    } = this.max;
+    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
 
     return new BoundingBox({
       bbox: [
@@ -334,7 +306,7 @@ export class BoundingBox extends Polygon {
       throw new Error('tile matrix id is not part of the given tile matrix set');
     }
 
-    validateBoundingBoxByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
+    validateBoundingBoxByTileMatrix(this, tileMatrix);
 
     const {
       coordinates: [minPointEast, minPointNorth],
@@ -363,15 +335,10 @@ export class BoundingBox extends Polygon {
       throw new Error('tile matrix id is not part of the given tile matrix set');
     }
 
-    validateBoundingBoxByTileMatrix(this, tileMatrix, tileMatrixSet.crs);
+    validateBoundingBoxByTileMatrix(this, tileMatrix);
 
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
-    const {
-      coordinates: [minEast, minNorth],
-    } = this.min;
-    const {
-      coordinates: [maxEast, maxNorth],
-    } = this.max;
+    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
 
     const minTilePoint = new Point({
       coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
@@ -389,9 +356,7 @@ export class BoundingBox extends Polygon {
   }
 
   private snapMinPointToTileMatrixCell<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): Point {
-    const {
-      coordinates: [minEast, minNorth],
-    } = this.min;
+    const [minEast, minNorth] = this.bBox;
     const width = tileEffectiveWidth(tileMatrix);
     const snappedMinEast = Math.floor(minEast / width) * width;
     const height = tileEffectiveHeight(tileMatrix);
@@ -403,9 +368,7 @@ export class BoundingBox extends Polygon {
   }
 
   private snapMaxPointToTileMatrixCell<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): Point {
-    const {
-      coordinates: [maxEast, maxNorth],
-    } = this.max;
+    const [, , maxEast, maxNorth] = this.bBox;
     const width = tileEffectiveWidth(tileMatrix);
     const snappedMaxEast = Math.ceil(maxEast / width) * width;
     const height = tileEffectiveHeight(tileMatrix);
