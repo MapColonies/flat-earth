@@ -239,11 +239,11 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
     }
 
     // when east/north is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90 in wgs84)
-    const onEdgeXTranslation = east === tileMatrixBoundingBoxMaxEast ? 1 : 0;
-    const onEdgeYTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) ? 1 : 0;
+    const onEdgeEastTranslation = east === tileMatrixBoundingBoxMaxEast ? 1 : 0;
+    const onEdgeNorthTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) ? 1 : 0;
 
-    const tileCol = Math.floor(tempTileCol) - onEdgeXTranslation;
-    const tileRow = Math.floor(tempTileRow) - onEdgeYTranslation;
+    const tileCol = Math.floor(tempTileCol) - onEdgeEastTranslation;
+    const tileRow = Math.floor(tempTileRow) - onEdgeNorthTranslation;
 
     return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
   }
