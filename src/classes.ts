@@ -39,13 +39,15 @@ interface LineSegment extends SimpleLineSegment {
 type RangeSpatialRelation = 'smaller' | 'in-range' | 'larger';
 
 export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JSONFG> {
-  public readonly coordRefSys: FG['coordRefSys'];
   protected readonly bbox: BBox;
 
   protected constructor(protected readonly geoJSONGeometry: G & FG) {
     this.bbox = this.calculateBBox();
     this.validateBBox();
-    this.coordRefSys = geoJSONGeometry.coordRefSys;
+  }
+
+  public get coordRefSys(): FG['coordRefSys'] {
+    return this.geoJSONGeometry.coordRefSys;
   }
 
   public get type(): G['type'] {
