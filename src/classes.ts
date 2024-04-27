@@ -120,9 +120,14 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
     return tile;
   }
 
-  // TODO: complete
   private validateBBox(): void {
-    return;
+    const [minEast, minNorth, maxEast, maxNorth] = this.bbox;
+
+    if (maxNorth < minNorth) {
+      throw new Error('bounding box north bound must be equal or larger than south bound');
+    }
+
+    // TODO: complete assertions against CRS
   }
 
   private calculateBBox(): BBox {
@@ -495,10 +500,6 @@ export class BoundingBox extends Polygon {
       bbox: [minEast, minNorth, maxEast, maxNorth],
       coordRefSys,
     } = boundingBox;
-
-    if (maxNorth < minNorth) {
-      throw new Error('bounding box north bound must be equal or larger than south bound');
-    }
 
     super({
       coordRefSys,
