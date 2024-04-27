@@ -3,7 +3,7 @@ import { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles/tiles';
-import type { TileMatrix, TileMatrixId } from './tiles/types';
+import type { TileMatrixId, TileMatrixLimits } from './tiles/types';
 import type {
   ArrayElement,
   BoundingBoxInput,
@@ -26,6 +26,17 @@ import {
   validatePointByTileMatrix,
   validateTileMatrixIdByTileMatrixSet,
 } from './validations/validations';
+
+interface SimpleLineSegment {
+  start: { position: Position };
+  end: { position: Position };
+}
+
+interface LineSegment extends SimpleLineSegment {
+  start: { position: Position; rangeSpatialRelation: RangeSpatialRelation };
+  end: { position: Position; rangeSpatialRelation: RangeSpatialRelation };
+}
+type RangeSpatialRelation = 'smaller' | 'in-range' | 'larger';
 
 export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JSONFG> {
   public readonly coordRefSys: FG['coordRefSys'];
@@ -147,8 +158,239 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JS
     return this.geoJSONGeometry.coordinates;
   }
 
+  /**
+   * Convert geometry to an iterator of tile matrix limits
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param metatile size of a metatile
+   * @returns generator function of tile matrix limits containing the geometry
+   */
+  public *toTileMatrixLimits<T extends TileMatrixSet>(
+    tileMatrixSet: T,
+    tileMatrixId: TileMatrixId<T>,
+    metatile = 1
+  ): Generator<TileMatrixLimits<T>[]> {
+    validateMetatile(metatile);
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateCRS(this.coordRefSys, tileMatrixSet.crs);
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
+
+    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+    if (!tileMatrix) {
+      throw new Error('tile matrix id is not part of the given tile matrix set');
+    }
+
+    if (this instanceof Point) {
+      const { col, row } = this.toTile(tileMatrixSet, tileMatrixId, false);
+      yield [{ tileMatrixId, minTileRow: row, maxTileRow: row, minTileCol: col, maxTileCol: col }];
+      return;
+    }
+
+    const lineSegments = this.geometryToLineSegments();
+    const boundingBox = this.toBoundingBox();
+
+    const [minBoundinBoxEast, minBoundinBoxNorth, maxBoundinBoxEast, maxBoundinBoxNorth] = boundingBox
+      .toTileRange(tileMatrixSet, tileMatrixId, metatile)
+      .toBoundingBox().bBox;
+
+    const width = maxBoundinBoxEast - minBoundinBoxEast;
+    const height = maxBoundinBoxNorth - minBoundinBoxNorth;
+
+    const isWide = width > height;
+    // axis1 follows the movement of the moving range, axis2 is the perpendicular axis to axis1. they are used to access the relevant axis of geometric position
+    const [axis1Index, axis2Index] = isWide ? [1, 0] : [0, 1];
+    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
+
+    const [startAxis, endAxis, axisStep]: [number, number, number] = isWide
+      ? cornerOfOrigin === 'topLeft'
+        ? [maxBoundinBoxNorth, minBoundinBoxNorth, -tileEffectiveHeight(tileMatrix) * metatile]
+        : [minBoundinBoxNorth, maxBoundinBoxNorth, tileEffectiveHeight(tileMatrix) * metatile]
+      : [minBoundinBoxEast, maxBoundinBoxEast, tileEffectiveWidth(tileMatrix) * metatile];
+
+    const stopLoopCondition = (axis: number): boolean => (isWide ? (cornerOfOrigin === 'topLeft' ? axis > endAxis : axis < endAxis) : axis < endAxis);
+    for (let axis = startAxis; stopLoopCondition(axis); axis += axisStep) {
+      // TODO: extract this map to a func
+      const segmentsInRange: LineSegment[] = lineSegments.map((lineSegment) => {
+        const { start, end } = lineSegment;
+        return {
+          start: {
+            position: start.position,
+            rangeSpatialRelation: this.rangeSpatialRelation(start.position[axis1Index], [axis, axis + axisStep]),
+          },
+          end: {
+            position: end.position,
+            rangeSpatialRelation: this.rangeSpatialRelation(end.position[axis1Index], [axis, axis + axisStep]),
+          },
+        };
+      });
+
+      const segmentsWithin = segmentsInRange
+        .filter(
+          ({ start: { rangeSpatialRelation: startRangeSpatialRelation }, end: { rangeSpatialRelation: endRangeSpatialRelation } }) =>
+            startRangeSpatialRelation === 'in-range' && endRangeSpatialRelation === 'in-range'
+        )
+        .map<SimpleLineSegment>((lineSegment) => {
+          return {
+            start: { position: lineSegment.start.position },
+            end: { position: lineSegment.end.position },
+          };
+        });
+      const segmentsOverlapping = segmentsInRange
+        .filter(
+          ({ start: { rangeSpatialRelation: startRangeSpatialRelation }, end: { rangeSpatialRelation: endRangeSpatialRelation } }) =>
+            (startRangeSpatialRelation === 'smaller' && endRangeSpatialRelation === 'larger') ||
+            (startRangeSpatialRelation === 'larger' && endRangeSpatialRelation === 'smaller') ||
+            (startRangeSpatialRelation === 'in-range' && endRangeSpatialRelation !== 'in-range') ||
+            (startRangeSpatialRelation !== 'in-range' && endRangeSpatialRelation === 'in-range')
+        )
+        .map((lineSegment) => this.trimLineSegment(lineSegment, [axis1Index, axis2Index], [axis, axis + axisStep]));
+
+      const mergedSegments = this.mergeSegments(axis2Index, ...segmentsWithin, ...segmentsOverlapping);
+
+      const tileMatrixLimits = mergedSegments.map<TileMatrixLimits<T>>(({ start, end }) => {
+        const [minEast, minNorth, maxEast, maxNorth]: BBox = isWide
+          ? [start.position[axis2Index], Math.min(axis, axis + axisStep), end.position[axis2Index], Math.max(axis, axis + axisStep)]
+          : [axis, start.position[axis2Index], axis + axisStep, end.position[axis2Index]];
+
+        const minTilePoint = new Point({
+          coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
+          coordRefSys: this.coordRefSys,
+        });
+        const maxTilePoint = new Point({
+          coordinates: [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
+          coordRefSys: this.coordRefSys,
+        });
+        const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false);
+        const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true);
+
+        return { minTileCol, maxTileCol, minTileRow, maxTileRow, tileMatrixId };
+      });
+
+      yield this.mergeTileMatrixLimits(tileMatrixLimits, isWide);
+    }
+
+    return;
+  }
+
   protected getPositions(): Position[] {
     return flattenGeometryPositions(this.geoJSONGeometry);
+  }
+
+  private geometryToLineSegments(): SimpleLineSegment[] {
+    const lineSegments: SimpleLineSegment[] = [];
+    const positions = this.getPositions();
+
+    positions.forEach((position, index) => {
+      if (index < positions.length - 1) {
+        lineSegments.push({
+          start: { position },
+          end: { position: positions[index + 1] },
+        });
+      }
+    });
+
+    return lineSegments;
+  }
+
+  private interpolateLinearLine(
+    [axis1RangeStart, axis1RangeEnd]: [number, number],
+    [axis2RangeStart, axis2RangeEnd]: [number, number],
+    axisRangeValue: number
+  ): number {
+    return ((axisRangeValue - axis1RangeStart) / (axis1RangeEnd - axis1RangeStart)) * (axis2RangeEnd - axis2RangeStart) + axis2RangeStart;
+  }
+
+  private mergeSegments(axis2Index: number, ...lineSegments: SimpleLineSegment[]): SimpleLineSegment[] {
+    const mergedSegments: SimpleLineSegment[] = [];
+
+    structuredClone(lineSegments)
+      .map((lineSegment) => {
+        if (lineSegment.start.position[axis2Index] > lineSegment.end.position[axis2Index]) {
+          [lineSegment.start, lineSegment.end] = [lineSegment.end, lineSegment.start];
+        }
+        return lineSegment;
+      })
+      .sort((a, b) => a.start.position[axis2Index] - b.start.position[axis2Index])
+      .forEach((lineSegment) => {
+        if (mergedSegments.length === 0) {
+          mergedSegments.push(lineSegment);
+        } else {
+          const { start, end } = lineSegment;
+          const { end: prevEnd } = mergedSegments[mergedSegments.length - 1];
+
+          if (start.position[axis2Index] <= prevEnd.position[axis2Index]) {
+            mergedSegments[mergedSegments.length - 1].end.position[axis2Index] =
+              end.position[axis2Index] > prevEnd.position[axis2Index] ? end.position[axis2Index] : prevEnd.position[axis2Index];
+          } else {
+            mergedSegments.push(lineSegment);
+          }
+        }
+      });
+
+    return mergedSegments;
+  }
+
+  private mergeTileMatrixLimits<T extends TileMatrixSet>(tileMatrixLimitsArr: TileMatrixLimits<T>[], isWide: boolean): TileMatrixLimits<T>[] {
+    const mergedTileMatrixLimits: TileMatrixLimits<T>[] = [];
+
+    structuredClone(tileMatrixLimitsArr)
+      .sort((a, b) => (isWide ? a.minTileCol - b.minTileCol : a.minTileRow - b.minTileRow))
+      .forEach((tileMatrixLimits) => {
+        if (mergedTileMatrixLimits.length === 0) {
+          mergedTileMatrixLimits.push(tileMatrixLimits);
+        } else {
+          const { minTileRow, maxTileRow, minTileCol, maxTileCol } = tileMatrixLimits;
+          const { maxTileCol: prevMaxTileCol, maxTileRow: prevMaxTileRow } = mergedTileMatrixLimits[mergedTileMatrixLimits.length - 1];
+
+          if (isWide ? minTileCol - 1 <= prevMaxTileCol : minTileRow - 1 <= prevMaxTileRow) {
+            mergedTileMatrixLimits[mergedTileMatrixLimits.length - 1] = {
+              ...mergedTileMatrixLimits[mergedTileMatrixLimits.length - 1],
+              ...(isWide
+                ? { maxTileCol: maxTileCol > prevMaxTileCol ? maxTileCol : prevMaxTileCol }
+                : { maxTileRow: maxTileRow > prevMaxTileRow ? maxTileRow : prevMaxTileRow }),
+            };
+          } else {
+            mergedTileMatrixLimits.push(tileMatrixLimits);
+          }
+        }
+      });
+
+    return mergedTileMatrixLimits;
+  }
+
+  private rangeSpatialRelation(axis: number, [rangeStart, rangeEnd]: [number, number]): RangeSpatialRelation {
+    return Math.min(rangeStart, rangeEnd) > axis ? 'smaller' : Math.max(rangeStart, rangeEnd) < axis ? 'larger' : 'in-range';
+  }
+
+  private trimLineSegment(
+    lineSegment: LineSegment,
+    [axis1Index, axis2Index]: [number, number],
+    [axisRangeValueStart, axisRangeValueEnd]: [number, number]
+  ): SimpleLineSegment {
+    const { start, end } = structuredClone(lineSegment);
+    const [rangeMin, rangeMax] = [Math.min(axisRangeValueStart, axisRangeValueEnd), Math.max(axisRangeValueStart, axisRangeValueEnd)];
+
+    const axis1Range: [number, number] = [start.position[axis1Index], end.position[axis1Index]];
+    const axis2Range: [number, number] = [start.position[axis2Index], end.position[axis2Index]];
+
+    const [trimStart, trimEnd] = [start, end].map(({ position, rangeSpatialRelation }) => {
+      if (rangeSpatialRelation === 'smaller') {
+        position[axis2Index] = this.interpolateLinearLine(axis1Range, axis2Range, rangeMin);
+        position[axis1Index] = rangeMin;
+      }
+
+      if (rangeSpatialRelation === 'larger') {
+        position[axis2Index] = this.interpolateLinearLine(axis1Range, axis2Range, rangeMax);
+        position[axis1Index] = rangeMax;
+      }
+
+      return { position };
+    });
+
+    return {
+      start: trimStart,
+      end: trimEnd,
+    };
   }
 }
 

@@ -1,4 +1,4 @@
-import { Point, type BoundingBox } from '../classes';
+import { BoundingBox, Point } from '../classes';
 import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
