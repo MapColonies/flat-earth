@@ -257,6 +257,11 @@ export class BoundingBox extends Polygon {
       bbox: [minEast, minNorth, maxEast, maxNorth],
       coordRefSys,
     } = boundingBox;
+
+    if (maxNorth < minNorth) {
+      throw new Error('bounding box north bound must be equal or larger than south bound');
+    }
+
     super({
       coordRefSys,
       coordinates: [
