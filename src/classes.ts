@@ -74,12 +74,7 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
    * @param metatile size of a metatile
    * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
    */
-  public minimalBoundingTile<T extends TileMatrixSet>(
-    // boundingBox: BoundingBox,
-    tileMatrixSet: T,
-    tileMatrixId: TileMatrixId<T>,
-    metatile = 1
-  ): Tile<T> | null | undefined {
+  public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): Tile<T> | null | undefined {
     validateMetatile(metatile);
     validateCRS(this.coordRefSys, tileMatrixSet.crs);
 
