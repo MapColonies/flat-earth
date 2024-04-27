@@ -233,8 +233,12 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
 
     // when explicitly asked to reverse the intersection policy (location on the edge of the tile)
     if (reverseIntersectionPolicy) {
-      const tileCol = Math.ceil(tempTileCol) - 1;
-      const tileRow = Math.ceil(tempTileRow) - 1;
+      const onEdgeEastTranslation = east === tileMatrixBoundingBoxMinEast ? 1 : 0;
+      const onEdgeNorthTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth : tileMatrixBoundingBoxMinNorth) ? 1 : 0;
+
+      const tileCol = Math.ceil(tempTileCol) - 1 + onEdgeEastTranslation;
+      const tileRow = Math.ceil(tempTileRow) - 1 + onEdgeNorthTranslation;
+
       return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
     }
 
