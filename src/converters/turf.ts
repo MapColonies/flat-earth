@@ -1,7 +1,9 @@
 import { bbox, feature } from '@turf/turf';
 import type { BBox, Feature } from 'geojson';
 import { Geometry } from '../classes';
+import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { GeoJSONGeometry } from '../types';
+import { validateCRS } from '../validations/validations';
 
 export function geometryToTurfBbox<G extends GeoJSONGeometry>(geometry: Geometry<G>): BBox | undefined {
   const feature = geometryToFeature(geometry);
@@ -14,9 +16,12 @@ export function geometryToTurfBbox<G extends GeoJSONGeometry>(geometry: Geometry
  * @param geometry geometry
  */
 export function geometryToFeature<G extends GeoJSONGeometry>(geometry: Geometry<G>): Feature<G> | undefined {
-  if (geometry.coordRefSys !== 'WGS84') {
+  try {
+    validateCRS(geometry.coordRefSys, TILEMATRIXSET_WORLD_CRS84_QUAD.crs);
+  } catch {
     return undefined;
   }
+
   const geoJSON = geometry.getJSONFG();
   return feature(geoJSON);
 }
