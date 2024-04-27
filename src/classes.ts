@@ -210,7 +210,6 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JS
 
     const stopLoopCondition = (axis: number): boolean => (isWide ? (cornerOfOrigin === 'topLeft' ? axis > endAxis : axis < endAxis) : axis < endAxis);
     for (let axis = startAxis; stopLoopCondition(axis); axis += axisStep) {
-      // TODO: extract this map to a func
       const segmentsInRange: LineSegment[] = lineSegments.map((lineSegment) => {
         const { start, end } = lineSegment;
         return {
