@@ -38,28 +38,45 @@ interface LineSegment extends SimpleLineSegment {
 }
 type RangeSpatialRelation = 'smaller' | 'in-range' | 'larger';
 
+/**
+ * Geometry class
+ */
 export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JSONFG> {
   protected readonly bbox: BBox;
 
+  /**
+   * Geometry constructor
+   * @param geoJSONGeometry
+   */
   protected constructor(protected readonly geoJSONGeometry: G & FG) {
     this.bbox = this.calculateBBox();
     this.validateBBox();
   }
 
+  /**
+   * Gets CRS of the geometry
+   */
   public get coordRefSys(): FG['coordRefSys'] {
     return this.geoJSONGeometry.coordRefSys;
   }
 
+  /**
+   * Gets the "type" property of GeoJSON geometry objects
+   */
   public get type(): G['type'] {
     return this.geoJSONGeometry.type;
   }
 
+  /**
+   * Gets the OGC features and geometries JSON (JSON-FG) of the geometry
+   * @returns JSON-FG representation of the geometry
+   */
   public getJSONFG(): G & FG {
     return this.geoJSONGeometry;
   }
 
   /**
-   * Bounding box of a geometry
+   * Converts geometry to a bounding box
    * @returns bounding box of a geometry
    */
   public toBoundingBox(): BoundingBox {
@@ -151,11 +168,21 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
   protected abstract getPositions(): Position[];
 }
 
+/**
+ * Base geometry class
+ */
 export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JSONFG = JSONFG> extends Geometry<BG, FG> {
+  /**
+   * Base geometry constructor
+   * @param geometry
+   */
   public constructor(geometry: BG & FG) {
     super(geometry);
   }
 
+  /**
+   * Gets GeoJSON "coordinates" property of a geometry, consisting of Positions
+   */
   public get coordinates(): BG['coordinates'] {
     return this.geoJSONGeometry.coordinates;
   }
@@ -394,14 +421,24 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JS
   }
 }
 
+/**
+ * Geometry collection class
+ */
 export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGeometryCollection, FG extends JSONFG = JSONFG> extends Geometry<
   GC,
   FG
 > {
+  /**
+   * Geometry collection constructor
+   * @param geometryCollection
+   */
   public constructor(geometryCollection: GC & FG) {
     super(geometryCollection);
   }
 
+  /**
+   * Gets GeoJSON geometries contained inside the geometry collection
+   */
   public get geometries(): GeoJSONGeometryCollection['geometries'] {
     return this.geoJSONGeometry.geometries;
   }
@@ -419,23 +456,39 @@ export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGe
 }
 
 /**
- * A polygon is an area defined by a closed ring of points.
- * The first and last points of a ring must be the same.
- * Points must be ordered counterclockwise.
+ * Polygon geometry class
  */
 export class Polygon extends BaseGeometry<GeoJSONPolygon> {
+  /**
+   * Polygon geometry constructor
+   * @param polygon
+   */
   public constructor(polygon: PolygonInput) {
     super({ ...polygon, type: 'Polygon' });
   }
 }
 
+/**
+ * Line geometry class
+ */
 export class Line extends BaseGeometry<GeoJSONLineString> {
+  /**
+   * Line geometry constructor
+   * @param lineString
+   */
   public constructor(lineString: LineStringInput) {
     super({ ...lineString, type: 'LineString' });
   }
 }
 
+/**
+ * Point geometry class
+ */
 export class Point extends BaseGeometry<GeoJSONPoint> {
+  /**
+   * Point geometry constructor
+   * @param point
+   */
   public constructor(point: PointInput) {
     super({ ...point, type: 'Point' });
   }
@@ -495,7 +548,14 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
   }
 }
 
+/**
+ * Bounding box geometry class
+ */
 export class BoundingBox extends Polygon {
+  /**
+   * Bounding box geometry constructor
+   * @param boundingBox
+   */
   public constructor(boundingBox: BoundingBoxInput) {
     const {
       bbox: [minEast, minNorth, maxEast, maxNorth],
@@ -516,10 +576,18 @@ export class BoundingBox extends Polygon {
     });
   }
 
+  /**
+   * Gets GeoJSON bounding box
+   */
   public get bBox(): BBox {
     return this.bbox;
   }
 
+  /**
+   * Clamps bounding box extent to that of another bounding box
+   * @param clampingBoundingBox bounding box to clamp to
+   * @returns bounding box with extents clamped to those of `clampingBoundingBox`
+   */
   public clampToBoundingBox(clampingBoundingBox: BoundingBox): BoundingBox {
     const [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] =
       clampingBoundingBox.bBox;

@@ -6,9 +6,22 @@ import type { TileMatrixSet } from './tileMatrixSet';
 import { tileMatrixToBBox } from './tiles';
 import type { TileIndex, TileMatrixId, TileMatrixLimits } from './types';
 
+/**
+ * Tile range class that supports a metatile definition
+ */
 export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
   private readonly tileMatrix: ArrayElement<T['tileMatrices']>;
 
+  /**
+   * Tile range constructor
+   * @param minTileCol minimum tile col
+   * @param minTileRow  minimum tile row
+   * @param maxTileCol maximum tile col
+   * @param maxTileRow maximum tile row
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param metatile size of a metatile
+   */
   public constructor(
     public readonly minTileCol: number,
     public readonly minTileRow: number,
@@ -38,6 +51,10 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
     this.tileMatrix = tileMatrix;
   }
 
+  /**
+   * Convert tile range to an iterator of tile indices
+   * @returns generator function of tile indices in the tile range
+   */
   public *tileGenerator(): Generator<TileIndex<T>, void, void> {
     for (let row = this.minTileRow; row <= this.maxTileRow; row++) {
       for (let col = this.minTileCol; col <= this.maxTileCol; col++) {
@@ -49,7 +66,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
 
   /**
    * Converts tile range into a bounding box
-   * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
+   * @param clamp whether to clamp the output bounding box to the tile matrix's bounding box
    * @returns bounding box
    */
   public toBoundingBox(clamp = true): BoundingBox {

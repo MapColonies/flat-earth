@@ -12,6 +12,14 @@ import type { TileIndex, TileMatrixId } from './types';
 export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
   private readonly tileMatrix: ArrayElement<T['tileMatrices']>;
 
+  /**
+   * Tile constructor
+   * @param col tile column
+   * @param row tile row
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param metatile size of a metatile
+   */
   public constructor(
     public readonly col: number,
     public readonly row: number,
