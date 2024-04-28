@@ -44,6 +44,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
         yield { col, row, tileMatrixId: this.tileMatrixId };
       }
     }
+    return;
   }
 
   /**
