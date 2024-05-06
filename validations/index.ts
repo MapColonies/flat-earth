@@ -46,8 +46,8 @@ const formatTypeScript = async (zodCode: string): Promise<string> => {
 };
 
 const fixOneOfOutput = (zodCode: string): string => {
-  const ttt = zodCode.replaceAll(regexFixOneOfCode, '((result): z.ZodError[] => (result.error ? [...errors, result.error] : errors))(');
-  return ttt;
+  const oneOfFixCode = zodCode.replaceAll(regexFixOneOfCode, '((result): z.ZodError[] => (result.error ? [...errors, result.error] : errors))(');
+  return oneOfFixCode;
 };
 
 const zodCodePostProcessing = (zodCode: string): string => {
