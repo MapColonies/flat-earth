@@ -11,5 +11,6 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src", "validations"],
+  "exclude": ["node_modules", "dist", "build", "tests"],
 }
