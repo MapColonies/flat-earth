@@ -1,4 +1,5 @@
 import type { BBox, Position } from 'geojson';
+import { OGC_CRS_84 } from './constants';
 import { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
@@ -56,8 +57,8 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
   /**
    * Gets CRS of the geometry
    */
-  public get coordRefSys(): FG['coordRefSys'] {
-    return this.geoJSONGeometry.coordRefSys;
+  public get coordRefSys(): NonNullable<FG['coordRefSys']> {
+    return this.geoJSONGeometry.coordRefSys ?? OGC_CRS_84;
   }
 
   /**

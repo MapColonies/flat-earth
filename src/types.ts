@@ -23,7 +23,7 @@ export type GeoJSONLineString = LineString;
 export type GeoJSONPoint = Point;
 
 export interface JSONFG {
-  coordRefSys: TileMatrixSet['crs']; // TODO: change type according to - OGC Features and Geometries JSON - Part 1: Core
+  coordRefSys?: TileMatrixSet['crs']; // TODO: change type according to - OGC Features and Geometries JSON - Part 1: Core
 }
 export type ExtendedGeometry = Geometry & JSONFG;
 export type JSONFGGeometry = ExtendedGeometry;
