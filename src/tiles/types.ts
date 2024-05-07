@@ -1,5 +1,5 @@
 import { ArrayElement } from '../types';
-import type { cornerOfOriginCode } from './constants';
+import type { CORNER_OF_ORIGIN_CODE } from './constants';
 
 /**
  * Tile index
@@ -169,7 +169,7 @@ export interface VariableMatrixWidth {
 /**
  * The corner of the tile matrix (_topLeft_ or _bottomLeft_) used as the origin for numbering tile rows and columns. This corner is also a corner of the (0, 0) tile
  */
-export type CornerOfOriginCode = (typeof cornerOfOriginCode)[number];
+export type CornerOfOriginCode = (typeof CORNER_OF_ORIGIN_CODE)[number];
 
 /**
  * A tile matrix, usually corresponding to a particular zoom level of a TileMatrixSet
