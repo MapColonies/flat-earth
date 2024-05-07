@@ -1,5 +1,5 @@
 import { ArrayElement } from '../types';
-import type { CORNER_OF_ORIGIN_CODE } from './constants';
+import { CORNER_OF_ORIGIN_CODE } from './constants';
 
 /**
  * Tile index
