@@ -1,5 +1,5 @@
 import type { BBox, Position } from 'geojson';
-import { OGC_CRS_84 } from './constants';
+import { DEFAULT_CRS } from './constants';
 import { Tile } from './tiles/tile';
 import type { TileMatrixSet } from './tiles/tileMatrixSet';
 import { TileRange } from './tiles/tileRange';
@@ -8,13 +8,16 @@ import type { TileMatrixId, TileMatrixLimits } from './tiles/types';
 import type {
   ArrayElement,
   BoundingBoxInput,
+  ConcreteCoordRefSys,
+  CoordRefSys,
   GeoJSONBaseGeometry,
   GeoJSONGeometry,
   GeoJSONGeometryCollection,
   GeoJSONLineString,
   GeoJSONPoint,
   GeoJSONPolygon,
-  JSONFG,
+  GeometryCollectionInput,
+  JSONFGFeature,
   LineStringInput,
   PointInput,
   PolygonInput,
@@ -42,23 +45,21 @@ type RangeSpatialRelation = 'smaller' | 'in-range' | 'larger';
 /**
  * Geometry class
  */
-export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JSONFG> {
+export abstract class Geometry<G extends GeoJSONGeometry> {
+  /** CRS of the geometry */
+  public readonly coordRefSys: ConcreteCoordRefSys['coordRefSys'];
   protected readonly bbox: BBox;
+  protected readonly geoJSONGeometry: G;
 
   /**
    * Geometry constructor
-   * @param geoJSONGeometry
+   * @param geometry GeoJSON geometry
    */
-  protected constructor(protected readonly geoJSONGeometry: G & FG) {
+  protected constructor(geometry: G & CoordRefSys) {
     this.bbox = this.calculateBBox();
     this.validateBBox();
-  }
-
-  /**
-   * Gets CRS of the geometry
-   */
-  public get coordRefSys(): NonNullable<FG['coordRefSys']> {
-    return this.geoJSONGeometry.coordRefSys ?? OGC_CRS_84;
+    this.geoJSONGeometry = geometry;
+    this.coordRefSys = geometry.coordRefSys ?? DEFAULT_CRS; // Currently the default JSONFG CRS (in spec draft) doesn't match the CRS of WorldCRS84Quad tile matrix set
   }
 
   /**
@@ -70,10 +71,20 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
 
   /**
    * Gets the OGC features and geometries JSON (JSON-FG) of the geometry
-   * @returns JSON-FG representation of the geometry
+   * @returns JSON-FG feature representation of the geometry
    */
-  public getJSONFG(): G & FG {
-    return this.geoJSONGeometry;
+  public getJSONFG(): JSONFGFeature<G | null, G | null, G> {
+    const jsonFG: JSONFGFeature<null, null, GeoJSONBaseGeometry> = {
+      type: 'Feature',
+      time: null,
+      place: null,
+      geometry: null,
+      properties: null,
+    };
+    if (this.coordRefSys === DEFAULT_CRS) {
+      return { ...jsonFG, geometry: this.geoJSONGeometry };
+    }
+    return { ...jsonFG, place: this.geoJSONGeometry };
   }
 
   /**
@@ -172,17 +183,17 @@ export abstract class Geometry<G extends GeoJSONGeometry, FG extends JSONFG = JS
 /**
  * Base geometry class
  */
-export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JSONFG = JSONFG> extends Geometry<BG, FG> {
+export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geometry<BG> {
   /**
    * Base geometry constructor
-   * @param geometry
+   * @param geometry GeoJSON geometry and CRS
    */
-  public constructor(geometry: BG & FG) {
+  protected constructor(geometry: BG & CoordRefSys) {
     super(geometry);
   }
 
   /**
-   * Gets GeoJSON "coordinates" property of a geometry, consisting of Positions
+   * Gets coordinates of a geometry, consisting of Positions
    */
   public get coordinates(): BG['coordinates'] {
     return this.geoJSONGeometry.coordinates;
@@ -425,16 +436,13 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry, FG extends JS
 /**
  * Geometry collection class
  */
-export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGeometryCollection, FG extends JSONFG = JSONFG> extends Geometry<
-  GC,
-  FG
-> {
+export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
   /**
    * Geometry collection constructor
-   * @param geometryCollection
+   * @param geometryCollection GeoJSON geometry collection and CRS
    */
-  public constructor(geometryCollection: GC & FG) {
-    super(geometryCollection);
+  public constructor(geometryCollection: GeometryCollectionInput) {
+    super({ ...geometryCollection, type: 'GeometryCollection' });
   }
 
   /**
@@ -462,7 +470,7 @@ export class GeometryCollection<GC extends GeoJSONGeometryCollection = GeoJSONGe
 export class Polygon extends BaseGeometry<GeoJSONPolygon> {
   /**
    * Polygon geometry constructor
-   * @param polygon
+   * @param polygon GeoJSON polygon and CRS
    */
   public constructor(polygon: PolygonInput) {
     super({ ...polygon, type: 'Polygon' });
@@ -475,7 +483,7 @@ export class Polygon extends BaseGeometry<GeoJSONPolygon> {
 export class Line extends BaseGeometry<GeoJSONLineString> {
   /**
    * Line geometry constructor
-   * @param lineString
+   * @param lineString GeoJSON linestring and CRS
    */
   public constructor(lineString: LineStringInput) {
     super({ ...lineString, type: 'LineString' });
@@ -488,7 +496,7 @@ export class Line extends BaseGeometry<GeoJSONLineString> {
 export class Point extends BaseGeometry<GeoJSONPoint> {
   /**
    * Point geometry constructor
-   * @param point
+   * @param point GeoJSON point and CRS
    */
   public constructor(point: PointInput) {
     super({ ...point, type: 'Point' });
@@ -555,7 +563,7 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
 export class BoundingBox extends Polygon {
   /**
    * Bounding box geometry constructor
-   * @param boundingBox
+   * @param boundingBox GeoJSON BBox and CRS
    */
   public constructor(boundingBox: BoundingBoxInput) {
     const {
@@ -564,7 +572,6 @@ export class BoundingBox extends Polygon {
     } = boundingBox;
 
     super({
-      coordRefSys,
       coordinates: [
         [
           [minEast, minNorth],
@@ -574,6 +581,7 @@ export class BoundingBox extends Polygon {
           [minEast, minNorth],
         ],
       ],
+      coordRefSys,
     });
   }
 
