@@ -1,11 +1,11 @@
-import type { Geometry, Position } from 'geojson';
+import type { Position } from 'geojson';
 import type { GeoJSONBaseGeometry, GeoJSONGeometry } from './types';
 
 export const flatGeometryCollection = (geoJSONGeometry: GeoJSONGeometry): GeoJSONBaseGeometry[] => {
   return geoJSONGeometry.type === 'GeometryCollection' ? geoJSONGeometry.geometries.flatMap(flatGeometryCollection) : [geoJSONGeometry];
 };
 
-export const flattenGeometryPositions = (geometry: Geometry): Position[] => {
+export const flattenGeometryPositions = (geometry: GeoJSONBaseGeometry): Position[] => {
   switch (geometry.type) {
     case 'Point':
       return [geometry.coordinates];
@@ -13,7 +13,9 @@ export const flattenGeometryPositions = (geometry: Geometry): Position[] => {
       return geometry.coordinates;
     case 'Polygon':
       return geometry.coordinates.flat();
-    default:
-      return [];
+    case 'MultiPoint':
+    case 'MultiLineString':
+    case 'MultiPolygon':
+      throw new Error('multi geometries are currently not supported');
   }
 };
