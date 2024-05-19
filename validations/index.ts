@@ -33,7 +33,7 @@ type ExtendedJsonSchemaObject = JsonSchemaObject &
 type ProcessingRefs = Record<string, boolean>;
 type Definitions = Record<string, ExtendedJsonSchemaObject>;
 
-interface ZodFileContent {
+interface ZodFile {
   filePath: string;
   zodCode: string;
 }
@@ -259,10 +259,10 @@ const saveJsonSchemas = async (schemas: $Refs): Promise<$Refs> => {
   return schemas;
 };
 
-const jsonSchemasToZodFilesContent = async (schemas: $Refs): Promise<ZodFileContent[]> => {
+const jsonSchemasToZodFiles = async (schemas: $Refs): Promise<ZodFile[]> => {
   logger.info('converting json schemas');
   const schemasPath = Object.entries(schemas.paths());
-  const zodFilesContent: ZodFileContent[] = [];
+  const zodFiles: ZodFile[] = [];
 
   for (const [, schemaPath] of schemasPath) {
     logger.info(`converting schema: ${schemaPath}`);
@@ -291,7 +291,7 @@ const jsonSchemasToZodFilesContent = async (schemas: $Refs): Promise<ZodFileCont
         `${safeVarName(name, false)}.ts`
       );
 
-      zodFilesContent.push({
+      zodFiles.push({
         filePath,
         zodCode,
       });
@@ -312,12 +312,12 @@ const jsonSchemasToZodFilesContent = async (schemas: $Refs): Promise<ZodFileCont
     }
   }
 
-  return zodFilesContent;
+  return zodFiles;
 };
 
-const generateZodFiles = async (zodFilesContent: ZodFileContent[]): Promise<void> => {
+const generateZodFiles = async (zodFile: ZodFile[]): Promise<void> => {
   logger.info('generating zod files');
-  for (const { filePath, zodCode } of zodFilesContent) {
+  for (const { filePath, zodCode } of zodFile) {
     logger.info(`generating zod file: ${basename(filePath)}`);
 
     await writeToFile(filePath, zodCode);
@@ -338,7 +338,7 @@ const fixlZodFilesLintIssues = async (): Promise<void> => {
 init()
   .then(resolveJsonSchemas)
   .then(saveJsonSchemas)
-  .then(jsonSchemasToZodFilesContent)
+  .then(jsonSchemasToZodFiles)
   .then(generateZodFiles)
   .then(fixlZodFilesLintIssues)
   .then(() => {
