@@ -237,32 +237,32 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     const height = maxBoundingBoxNorth - minBoundingBoxNorth;
 
     const isWide = width > height;
-    // axis1 follows the movement of the moving range, axis2 is the perpendicular axis to axis1. they are used to access the relevant axis of geometric position
-    const [axis1Index, axis2Index] = isWide ? [1, 0] : [0, 1];
+    // dim1 follows the movement of the moving range, dim2 is the perpendicular dimension to dim1. they are used to access the relevant dimension of geometric position
+    const [dim1, dim2] = isWide ? [1, 0] : [0, 1];
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
-    const [startAxis, endAxis, axisStep]: [number, number, number] = isWide
+    const [rangeMin, rangeMax, step]: [number, number, number] = isWide
       ? cornerOfOrigin === 'topLeft'
         ? [maxBoundingBoxNorth, minBoundingBoxNorth, -tileEffectiveHeight(tileMatrix) * metatile]
         : [minBoundingBoxNorth, maxBoundingBoxNorth, tileEffectiveHeight(tileMatrix) * metatile]
       : [minBoundingBoxEast, maxBoundingBoxEast, tileEffectiveWidth(tileMatrix) * metatile];
 
-    const stopLoopCondition: (axis: number) => boolean = isWide
+    const stopLoopCondition: (range: [number, number]) => boolean = isWide
       ? cornerOfOrigin === 'topLeft'
-        ? (axis): boolean => axis > endAxis
-        : (axis): boolean => axis < endAxis
-      : (axis): boolean => axis < endAxis;
-    for (let axis = startAxis; stopLoopCondition(axis); axis += axisStep) {
+        ? ([rangeStart]): boolean => rangeStart > rangeMax
+        : ([rangeStart]): boolean => rangeStart < rangeMax
+      : ([rangeStart]): boolean => rangeStart < rangeMax;
+    for (let range: [number, number] = [rangeMin, rangeMin + step]; stopLoopCondition(range); range = [range[0] + step, range[1] + step]) {
       const segmentsSpatialRelationToRange: LineSegment[] = lineSegments.map((lineSegment) => {
         const { start, end } = lineSegment;
         return {
           start: {
             position: start.position,
-            rangeSpatialRelation: this.rangeSpatialRelation(start.position[axis1Index], [axis, axis + axisStep]),
+            rangeSpatialRelation: this.rangeSpatialRelation(start.position[dim1], range),
           },
           end: {
             position: end.position,
-            rangeSpatialRelation: this.rangeSpatialRelation(end.position[axis1Index], [axis, axis + axisStep]),
+            rangeSpatialRelation: this.rangeSpatialRelation(end.position[dim1], range),
           },
         };
       });
@@ -286,14 +286,14 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
             (startRangeSpatialRelation === 'in-range' && endRangeSpatialRelation !== 'in-range') ||
             (startRangeSpatialRelation !== 'in-range' && endRangeSpatialRelation === 'in-range')
         )
-        .map((lineSegment) => this.trimLineSegment(lineSegment, [axis1Index, axis2Index], [axis, axis + axisStep]));
+        .map((lineSegment) => this.trimLineSegment(lineSegment, [dim1, dim2], range));
 
-      const mergedSegments = this.mergeSegments(axis2Index, ...segmentsWithin, ...segmentsOverlapping);
+      const mergedSegments = this.mergeSegments(dim2, ...segmentsWithin, ...segmentsOverlapping);
 
       const tileMatrixLimits = mergedSegments.map<TileMatrixLimits<T>>(({ start, end }) => {
         const [minEast, minNorth, maxEast, maxNorth]: BBox = isWide
-          ? [start.position[axis2Index], Math.min(axis, axis + axisStep), end.position[axis2Index], Math.max(axis, axis + axisStep)]
-          : [axis, start.position[axis2Index], axis + axisStep, end.position[axis2Index]];
+          ? [start.position[dim2], Math.min(...range), end.position[dim2], Math.max(...range)]
+          : [range[0], start.position[dim2], range[1], end.position[dim2]];
 
         const minTilePoint = new Point({
           coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
@@ -336,24 +336,24 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
   }
 
   private interpolateLinearLine(
-    [axis1RangeStart, axis1RangeEnd]: [number, number],
-    [axis2RangeStart, axis2RangeEnd]: [number, number],
-    axisRangeValue: number
+    [dim1RangeStart, dim1RangeEnd]: [number, number],
+    [dim2RangeStart, dim2RangeEnd]: [number, number],
+    dim1Value: number
   ): number {
-    return ((axisRangeValue - axis1RangeStart) / (axis1RangeEnd - axis1RangeStart)) * (axis2RangeEnd - axis2RangeStart) + axis2RangeStart;
+    return ((dim1Value - dim1RangeStart) / (dim1RangeEnd - dim1RangeStart)) * (dim2RangeEnd - dim2RangeStart) + dim2RangeStart;
   }
 
-  private mergeSegments(axis2Index: number, ...lineSegments: SimpleLineSegment[]): SimpleLineSegment[] {
+  private mergeSegments(dim2: number, ...lineSegments: SimpleLineSegment[]): SimpleLineSegment[] {
     const mergedSegments: SimpleLineSegment[] = [];
 
     structuredClone(lineSegments)
       .map((lineSegment) => {
-        if (lineSegment.start.position[axis2Index] > lineSegment.end.position[axis2Index]) {
+        if (lineSegment.start.position[dim2] > lineSegment.end.position[dim2]) {
           [lineSegment.start, lineSegment.end] = [lineSegment.end, lineSegment.start];
         }
         return lineSegment;
       })
-      .sort((a, b) => a.start.position[axis2Index] - b.start.position[axis2Index])
+      .sort((a, b) => a.start.position[dim2] - b.start.position[dim2])
       .forEach((lineSegment) => {
         if (mergedSegments.length === 0) {
           mergedSegments.push(lineSegment);
@@ -361,9 +361,9 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           const { start, end } = lineSegment;
           const { end: prevEnd } = mergedSegments[mergedSegments.length - 1];
 
-          if (start.position[axis2Index] <= prevEnd.position[axis2Index]) {
-            mergedSegments[mergedSegments.length - 1].end.position[axis2Index] =
-              end.position[axis2Index] > prevEnd.position[axis2Index] ? end.position[axis2Index] : prevEnd.position[axis2Index];
+          if (start.position[dim2] <= prevEnd.position[dim2]) {
+            mergedSegments[mergedSegments.length - 1].end.position[dim2] =
+              end.position[dim2] > prevEnd.position[dim2] ? end.position[dim2] : prevEnd.position[dim2];
           } else {
             mergedSegments.push(lineSegment);
           }
@@ -401,30 +401,30 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     return mergedTileMatrixLimits;
   }
 
-  private rangeSpatialRelation(axis: number, [rangeStart, rangeEnd]: [number, number]): RangeSpatialRelation {
-    return Math.min(rangeStart, rangeEnd) > axis ? 'smaller' : Math.max(rangeStart, rangeEnd) < axis ? 'larger' : 'in-range';
+  private rangeSpatialRelation(value: number, [rangeStart, rangeEnd]: [number, number]): RangeSpatialRelation {
+    return Math.min(rangeStart, rangeEnd) > value ? 'smaller' : Math.max(rangeStart, rangeEnd) < value ? 'larger' : 'in-range';
   }
 
   private trimLineSegment(
     lineSegment: LineSegment,
-    [axis1Index, axis2Index]: [number, number],
-    [axisRangeValueStart, axisRangeValueEnd]: [number, number]
+    [dim1, dim2]: [number, number],
+    [rangeValueStart, rangeValueEnd]: [number, number]
   ): SimpleLineSegment {
     const { start, end } = structuredClone(lineSegment);
-    const [rangeMin, rangeMax] = [Math.min(axisRangeValueStart, axisRangeValueEnd), Math.max(axisRangeValueStart, axisRangeValueEnd)];
+    const [rangeMin, rangeMax] = [Math.min(rangeValueStart, rangeValueEnd), Math.max(rangeValueStart, rangeValueEnd)];
 
-    const axis1Range: [number, number] = [start.position[axis1Index], end.position[axis1Index]];
-    const axis2Range: [number, number] = [start.position[axis2Index], end.position[axis2Index]];
+    const dim1Range: [number, number] = [start.position[dim1], end.position[dim1]];
+    const dim2Range: [number, number] = [start.position[dim2], end.position[dim2]];
 
     const [trimStart, trimEnd] = [start, end].map(({ position, rangeSpatialRelation }) => {
       if (rangeSpatialRelation === 'smaller') {
-        position[axis2Index] = this.interpolateLinearLine(axis1Range, axis2Range, rangeMin);
-        position[axis1Index] = rangeMin;
+        position[dim2] = this.interpolateLinearLine(dim1Range, dim2Range, rangeMin);
+        position[dim1] = rangeMin;
       }
 
       if (rangeSpatialRelation === 'larger') {
-        position[axis2Index] = this.interpolateLinearLine(axis1Range, axis2Range, rangeMax);
-        position[axis1Index] = rangeMax;
+        position[dim2] = this.interpolateLinearLine(dim1Range, dim2Range, rangeMax);
+        position[dim1] = rangeMax;
       }
 
       return { position };
