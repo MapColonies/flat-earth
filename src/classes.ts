@@ -253,7 +253,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
         : (axis): boolean => axis < endAxis
       : (axis): boolean => axis < endAxis;
     for (let axis = startAxis; stopLoopCondition(axis); axis += axisStep) {
-      const segmentsInRange: LineSegment[] = lineSegments.map((lineSegment) => {
+      const segmentsSpatialRelationToRange: LineSegment[] = lineSegments.map((lineSegment) => {
         const { start, end } = lineSegment;
         return {
           start: {
@@ -267,7 +267,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
         };
       });
 
-      const segmentsWithin = segmentsInRange
+      const segmentsWithin = segmentsSpatialRelationToRange
         .filter(
           ({ start: { rangeSpatialRelation: startRangeSpatialRelation }, end: { rangeSpatialRelation: endRangeSpatialRelation } }) =>
             startRangeSpatialRelation === 'in-range' && endRangeSpatialRelation === 'in-range'
@@ -278,7 +278,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
             end: { position: lineSegment.end.position },
           };
         });
-      const segmentsOverlapping = segmentsInRange
+      const segmentsOverlapping = segmentsSpatialRelationToRange
         .filter(
           ({ start: { rangeSpatialRelation: startRangeSpatialRelation }, end: { rangeSpatialRelation: endRangeSpatialRelation } }) =>
             (startRangeSpatialRelation === 'smaller' && endRangeSpatialRelation === 'larger') ||
