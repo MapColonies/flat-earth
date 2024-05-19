@@ -247,7 +247,11 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
         : [minBoundingBoxNorth, maxBoundingBoxNorth, tileEffectiveHeight(tileMatrix) * metatile]
       : [minBoundingBoxEast, maxBoundingBoxEast, tileEffectiveWidth(tileMatrix) * metatile];
 
-    const stopLoopCondition = (axis: number): boolean => (isWide ? (cornerOfOrigin === 'topLeft' ? axis > endAxis : axis < endAxis) : axis < endAxis);
+    const stopLoopCondition: (axis: number) => boolean = isWide
+      ? cornerOfOrigin === 'topLeft'
+        ? (axis): boolean => axis > endAxis
+        : (axis): boolean => axis < endAxis
+      : (axis): boolean => axis < endAxis;
     for (let axis = startAxis; stopLoopCondition(axis); axis += axisStep) {
       const segmentsInRange: LineSegment[] = lineSegments.map((lineSegment) => {
         const { start, end } = lineSegment;
