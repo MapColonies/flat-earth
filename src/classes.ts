@@ -228,9 +228,10 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     const lineSegments = this.geometryToLineSegments();
 
-    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = this.toBoundingBox()
-      .toTileRange(tileMatrixSet, tileMatrixId, metatile)
-      .toBoundingBox().bBox;
+    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = this.toBoundingBox().expandToTileMatrixCells(
+      tileMatrixSet,
+      tileMatrixId
+    ).bBox;
 
     const width = maxBoundingBoxEast - minBoundingBoxEast;
     const height = maxBoundingBoxNorth - minBoundingBoxNorth;
