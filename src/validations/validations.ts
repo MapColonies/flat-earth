@@ -20,26 +20,10 @@ export function validateCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
  * @param tileMatrixSet tile matrix set to validate `point` against
  */
 export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMatrixSet): void {
-  const {
-    coordinates: [east, north],
-  } = point;
   const { tileMatrices } = tileMatrixSet;
 
   for (const tileMatrix of tileMatrices) {
-    const [tileMatrixSetBoundingBoxMinEast, tileMatrixSetBoundingBoxMinNorth, tileMatrixSetBoundingBoxMaxEast, tileMatrixSetBoundingBoxMaxNorth] =
-      tileMatrixToBBox(tileMatrix);
-
-    if (east < tileMatrixSetBoundingBoxMinEast || east > tileMatrixSetBoundingBoxMaxEast) {
-      throw new RangeError(
-        `point's easting, ${east}, is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
-      );
-    }
-
-    if (north < tileMatrixSetBoundingBoxMinNorth || north > tileMatrixSetBoundingBoxMaxNorth) {
-      throw new RangeError(
-        `point's northing, ${north}, is out of range of tile matrix set's bounding box for tile matrix: ${tileMatrix.identifier.code}`
-      );
-    }
+    validatePointByTileMatrix(point, tileMatrix);
   }
 }
 
@@ -56,11 +40,11 @@ export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix):
     tileMatrixToBBox(tileMatrix);
 
   if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
-    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box`);
+    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
   }
 
   if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
-    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box`);
+    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
   }
 }
 
