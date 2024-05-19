@@ -228,12 +228,12 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     const lineSegments = this.geometryToLineSegments();
 
-    const [minBoundinBoxEast, minBoundinBoxNorth, maxBoundinBoxEast, maxBoundinBoxNorth] = this.toBoundingBox()
+    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = this.toBoundingBox()
       .toTileRange(tileMatrixSet, tileMatrixId, metatile)
       .toBoundingBox().bBox;
 
-    const width = maxBoundinBoxEast - minBoundinBoxEast;
-    const height = maxBoundinBoxNorth - minBoundinBoxNorth;
+    const width = maxBoundingBoxEast - minBoundingBoxEast;
+    const height = maxBoundingBoxNorth - minBoundingBoxNorth;
 
     const isWide = width > height;
     // axis1 follows the movement of the moving range, axis2 is the perpendicular axis to axis1. they are used to access the relevant axis of geometric position
@@ -242,9 +242,9 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     const [startAxis, endAxis, axisStep]: [number, number, number] = isWide
       ? cornerOfOrigin === 'topLeft'
-        ? [maxBoundinBoxNorth, minBoundinBoxNorth, -tileEffectiveHeight(tileMatrix) * metatile]
-        : [minBoundinBoxNorth, maxBoundinBoxNorth, tileEffectiveHeight(tileMatrix) * metatile]
-      : [minBoundinBoxEast, maxBoundinBoxEast, tileEffectiveWidth(tileMatrix) * metatile];
+        ? [maxBoundingBoxNorth, minBoundingBoxNorth, -tileEffectiveHeight(tileMatrix) * metatile]
+        : [minBoundingBoxNorth, maxBoundingBoxNorth, tileEffectiveHeight(tileMatrix) * metatile]
+      : [minBoundingBoxEast, maxBoundingBoxEast, tileEffectiveWidth(tileMatrix) * metatile];
 
     const stopLoopCondition = (axis: number): boolean => (isWide ? (cornerOfOrigin === 'topLeft' ? axis > endAxis : axis < endAxis) : axis < endAxis);
     for (let axis = startAxis; stopLoopCondition(axis); axis += axisStep) {
