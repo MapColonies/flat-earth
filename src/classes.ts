@@ -37,10 +37,10 @@ interface SimpleLineSegment {
 }
 
 interface LineSegment extends SimpleLineSegment {
-  start: { position: Position; rangeSpatialRelation: RangeSpatialRelation };
-  end: { position: Position; rangeSpatialRelation: RangeSpatialRelation };
+  start: { position: Position; rangeSpatialRelation: RangeRelation };
+  end: { position: Position; rangeSpatialRelation: RangeRelation };
 }
-type RangeSpatialRelation = 'smaller' | 'in-range' | 'larger';
+type RangeRelation = 'smaller' | 'in-range' | 'larger';
 
 /**
  * Geometry class
@@ -258,11 +258,11 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
         return {
           start: {
             position: start.position,
-            rangeSpatialRelation: this.rangeSpatialRelation(start.position[dim1], range),
+            rangeSpatialRelation: this.rangeRelation(start.position[dim1], range),
           },
           end: {
             position: end.position,
-            rangeSpatialRelation: this.rangeSpatialRelation(end.position[dim1], range),
+            rangeSpatialRelation: this.rangeRelation(end.position[dim1], range),
           },
         };
       });
@@ -401,7 +401,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     return mergedTileMatrixLimits;
   }
 
-  private rangeSpatialRelation(value: number, [rangeStart, rangeEnd]: [number, number]): RangeSpatialRelation {
+  private rangeRelation(value: number, [rangeStart, rangeEnd]: [number, number]): RangeRelation {
     return Math.min(rangeStart, rangeEnd) > value ? 'smaller' : Math.max(rangeStart, rangeEnd) < value ? 'larger' : 'in-range';
   }
 
