@@ -453,13 +453,6 @@ export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
   }
 
   protected getPositions(): Position[] {
-    if (this.geoJSONGeometry.geometries.length === 0) {
-      // we follow the same convention as turfjs & OpenLayers to return infinity bounds for empty geometry collection
-      return [
-        [Infinity, Infinity],
-        [-Infinity, -Infinity],
-      ];
-    }
     return this.geoJSONGeometry.geometries.flatMap(flatGeometryCollection).flatMap(flattenGeometryPositions);
   }
 }
