@@ -1,3 +1,4 @@
+import { DEFAULT_CRS } from '../constants';
 import type { ArrayElement, Comparison } from '../types';
 import { validateTileMatrix } from '../validations/validations';
 import type {
@@ -14,8 +15,9 @@ import type {
 
 export class TileMatrixSet implements TileMatrixSetType {
   private readonly tileMatrixSet: TileMatrixSetType;
-  // TODO: add validations for TileMatrixSetJSON with json-schema-to-zod?! missing validations on TileMatrixSet / TileMatrix - use ZOD/AJV?
   public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    this.validateCRS(tileMatrixSetJSON.crs);
     this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
   }
 
@@ -194,5 +196,12 @@ export class TileMatrixSet implements TileMatrixSetType {
       ...(title && { title: title.value }),
       ...otherProps,
     };
+  }
+
+  private validateCRS(crs: TileMatrixSetJSON['crs']): void {
+    // currently only the default CRS (OGC:CRS84) is supported
+    if (crs !== DEFAULT_CRS) {
+      throw new Error('unsupported CRS');
+    }
   }
 }
