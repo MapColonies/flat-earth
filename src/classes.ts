@@ -58,6 +58,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   protected constructor(geometry: G & CoordRefSys) {
     this.bbox = this.calculateBBox();
     this.validateBBox();
+    this.validateCRS(geometry.coordRefSys);
     this.geoJSONGeometry = geometry;
     this.coordRefSys = geometry.coordRefSys ?? DEFAULT_CRS; // Currently the default JSONFG CRS (in spec draft) doesn't match the CRS of WorldCRS84Quad tile matrix set
   }
@@ -157,8 +158,13 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
     if (maxNorth < minNorth) {
       throw new Error('bounding box north bound must be equal or larger than south bound');
     }
+  }
 
-    // TODO: complete assertions against CRS
+  private validateCRS(coordRefSys: CoordRefSys['coordRefSys']): void {
+    // currently only the default CRS (OGC:CRS84) is supported
+    if (coordRefSys !== DEFAULT_CRS) {
+      throw new Error('unsupported CRS');
+    }
   }
 
   private calculateBBox(): BBox {
