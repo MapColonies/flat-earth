@@ -1,4 +1,5 @@
-import { BoundingBox, Point } from '../classes';
+import { BoundingBox } from '../geometries/boundingBox';
+import { Point } from '../geometries/point';
 import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';

@@ -1,4 +1,6 @@
-import { BoundingBox, GeoPoint, Polygon } from '../../src/classes';
+import { BoundingBox } from '../../src/geometries/boundingBox';
+import { Point } from '../../src/geometries/point';
+import { Polygon } from '../../src/geometries/polygon';
 import {
   boundingBoxToTileRange,
   expandBoundingBoxToTileGrid,
@@ -269,7 +271,7 @@ describe('#zoomShift', () => {
 
 describe('#geoPointZoomToTile', () => {
   it('should return a tile for a given longitude, latitude & zoom', () => {
-    const geoPoint: GeoPoint = { lon: 30, lat: 30 };
+    const geoPoint: Point = { lon: 30, lat: 30 };
     const zoom: Zoom = 2;
     const expected: Tile = { x: 4, y: 1, z: 2, metatile: 1 };
 
@@ -279,7 +281,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it('should return a tile for a given negative longitude, latitude & zoom', () => {
-    const geoPoint: GeoPoint = { lon: -30, lat: -30 };
+    const geoPoint: Point = { lon: -30, lat: -30 };
     const zoom: Zoom = 2;
     const expected: Tile = { x: 3, y: 2, z: 2, metatile: 1 };
 
@@ -289,7 +291,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it('should return a tile for a given longitude, latitude & zoom with non default metatile', () => {
-    const geoPoint: GeoPoint = { lon: 30, lat: 30 };
+    const geoPoint: Point = { lon: 30, lat: 30 };
     const zoom: Zoom = 2;
     const metatile = 3;
     const expected: Tile = { x: 1, y: 0, z: 2, metatile: 3 };
@@ -300,7 +302,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it('should return a tile for a given longitude, latitude & zoom with non default tile grid', () => {
-    const geoPoint: GeoPoint = { lon: 30, lat: 30 };
+    const geoPoint: Point = { lon: 30, lat: 30 };
     const zoom: Zoom = 2;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
     const expected: Tile = { x: 2, y: 1, z: 2, metatile: 1 };
@@ -311,7 +313,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it('should return a tile for a given longitude, latitude & zoom with non default tile grid & non default metatile', () => {
-    const geoPoint: GeoPoint = { lon: 90, lat: 30 };
+    const geoPoint: Point = { lon: 90, lat: 30 };
     const zoom: Zoom = 2;
     const metatile = 3;
     const tileGrid: TileGrid = TILEGRID_WEB_MERCATOR;
@@ -323,7 +325,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it("should return a tile when longitude is equal to tile grid's bounding box extent", () => {
-    const geoPoint: GeoPoint = { lon: 180, lat: 30 };
+    const geoPoint: Point = { lon: 180, lat: 30 };
     const zoom: Zoom = 2;
     const expected: Tile = { x: 7, y: 1, z: 2, metatile: 1 };
 
@@ -333,7 +335,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it("should return a tile when latitude is equal to tile grid's bounding box extent", () => {
-    const geoPoint: GeoPoint = { lon: 30, lat: -90 };
+    const geoPoint: Point = { lon: 30, lat: -90 };
     const zoom: Zoom = 2;
     const expected: Tile = { x: 4, y: 3, z: 2, metatile: 1 };
 
@@ -343,7 +345,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it("should throw an error when longitude is outside of tile grid's bounding box", () => {
-    const geoPoint: GeoPoint = { lon: -190, lat: 30 };
+    const geoPoint: Point = { lon: -190, lat: 30 };
     const zoom: Zoom = 0;
 
     const badGeoPointZoomToTile = (): void => {
@@ -354,7 +356,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it("should throw an error when latitude is outside of tile grid's bounding box", () => {
-    const geoPoint: GeoPoint = { lon: 30, lat: 100 };
+    const geoPoint: Point = { lon: 30, lat: 100 };
     const zoom: Zoom = 0;
 
     const badGeoPointZoomToTile = (): void => {
@@ -365,7 +367,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it("should throw an error when the zoom level is not part of zoom levels of tile grid's scale set", () => {
-    const geoPoint: GeoPoint = { lon: 30, lat: 30 };
+    const geoPoint: Point = { lon: 30, lat: 30 };
     const zoom: Zoom = 1.5;
 
     const badGeoPointZoomToTile = (): void => {
@@ -376,7 +378,7 @@ describe('#geoPointZoomToTile', () => {
   });
 
   it('should throw an error when metatile is zero or less', () => {
-    const geoPoint: GeoPoint = { lon: 30, lat: 30 };
+    const geoPoint: Point = { lon: 30, lat: 30 };
     const zoom: Zoom = 0;
     const metatile = 0;
 
@@ -390,7 +392,7 @@ describe('#geoPointZoomToTile', () => {
   describe('Bad tile grid', () => {
     test.each(tileGridTests)("should throw an error when the tile grid's $testCaseName", ({ tileGrid, expected }) => {
       const badGeoPointZoomToTile = (): void => {
-        const geoPoint: GeoPoint = { lon: 30, lat: 30 };
+        const geoPoint: Point = { lon: 30, lat: 30 };
         const zoom: Zoom = 0;
 
         geoPointZoomToTile(geoPoint, zoom, undefined, tileGrid);

@@ -1,5 +1,7 @@
-import { Line, Point, Polygon } from '../../src/classes';
 import { geometryToBoundingBox } from '../../src/converters/geometry_converters';
+import { Line } from '../../src/geometries/line';
+import { Point } from '../../src/geometries/point';
+import { Polygon } from '../../src/geometries/polygon';
 import * as measurements from '../../src/measurements/measurements';
 
 test('Haversine distance', () => {

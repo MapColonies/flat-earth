@@ -1,5 +1,7 @@
 import { deepStrictEqual } from 'node:assert/strict';
-import { BoundingBox, Point, type Geometry } from '../classes';
+import { BoundingBox } from '../geometries/boundingBox';
+import type { Geometry } from '../geometries/geometry';
+import { Point } from '../geometries/point';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';

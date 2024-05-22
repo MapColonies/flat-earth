@@ -1,7 +1,7 @@
 import { check, HintError, HintIssue } from '@placemarkio/check-geojson';
 import { kinks } from '@turf/turf';
 import type { Feature, FeatureCollection, Geometry, LineString, MultiLineString, MultiPolygon, Polygon } from 'geojson';
-import { Point } from '../classes';
+import { Point } from '../geometries/point';
 import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { Latitude, Longitude } from '../types';

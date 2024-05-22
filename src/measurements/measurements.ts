@@ -1,7 +1,9 @@
 import { booleanEqual, area as turfArea, distance as turfDistance, type Units } from '@turf/turf';
 import { Geodesic } from 'geographiclib-geodesic';
-import { Geometry, Point, Polygon } from '../classes';
 import { DEFAULT_CRS } from '../constants';
+import type { Geometry } from '../geometries/geometry';
+import type { Point } from '../geometries/point';
+import type { Polygon } from '../geometries/polygon';
 import type { GeoJSONGeometry } from '../types';
 import { validateCRS } from '../validations/validations';
 
