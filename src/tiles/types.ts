@@ -1,4 +1,30 @@
-import type { cornerOfOriginCode } from './constants';
+import { ArrayElement } from '../types';
+import { CORNER_OF_ORIGIN_CODE } from './constants';
+
+/**
+ * Tile index
+ */
+export interface TileIndex<T extends TileMatrixSet> {
+  tileMatrixId: TileMatrixId<T>;
+  col: number;
+  row: number;
+}
+
+/**
+ * The limits for an individual tile matrix of a TileSet's TileMatrixSet, as defined in the OGC 2D TileMatrixSet and TileSet Metadata Standard
+ */
+export interface TileMatrixLimits<T extends TileMatrixSet> {
+  tileMatrixId: TileMatrixId<T>; // NOTE: OGC defines this property as `tileMatrix`. it is renamed to `tileMatrixId` to avoid collision with tileMatrix type
+  minTileRow: number;
+  maxTileRow: number;
+  minTileCol: number;
+  maxTileCol: number;
+}
+
+/**
+ * Tile Matrix Id
+ */
+export type TileMatrixId<T extends TileMatrixSet> = ArrayElement<T['tileMatrices']>['identifier']['code'];
 
 export type URI = string;
 
@@ -143,7 +169,7 @@ export interface VariableMatrixWidth {
 /**
  * The corner of the tile matrix (_topLeft_ or _bottomLeft_) used as the origin for numbering tile rows and columns. This corner is also a corner of the (0, 0) tile
  */
-export type CornerOfOriginCode = (typeof cornerOfOriginCode)[number];
+export type CornerOfOriginCode = (typeof CORNER_OF_ORIGIN_CODE)[number];
 
 /**
  * A tile matrix, usually corresponding to a particular zoom level of a TileMatrixSet

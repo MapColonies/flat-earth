@@ -1,19 +1,20 @@
 import { check, HintError, HintIssue } from '@placemarkio/check-geojson';
 import { kinks } from '@turf/turf';
-import { Geometry, LineString, MultiLineString, Polygon, MultiPolygon, Feature, FeatureCollection } from 'geojson';
-import { TileGrid } from '../tiles/tiles_classes';
-import { TILEGRID_WORLD_CRS84 } from '../tiles/tiles_constants';
-import { GeoPoint } from '../classes';
-import { validateGeoPointByGrid } from './validations';
-import { ValidationIssue, ValidationIssueType, ValidationResult } from './validation_classes';
+import type { Feature, FeatureCollection, Geometry, LineString, MultiLineString, MultiPolygon, Polygon } from 'geojson';
+import { Point } from '../classes';
+import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
+import type { TileMatrixSet } from '../tiles/tileMatrixSet';
+import type { Latitude, Longitude } from '../types';
+import { ValidationIssue, ValidationIssueType, ValidationResult } from './classes';
+import { validatePointByTileMatrixSet } from './validations';
 
 const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'GeometryCollection'];
 
-function innerValidateGeoJsonInGrid(geoJsonObject: Geometry, tileGrid: TileGrid): ValidationResult {
+function innerValidateGeoJsonInTileMatrixSet(geoJsonObject: Geometry, tileMatrixSet: TileMatrixSet): ValidationResult {
   if (geoJsonObject.type === 'Point') {
-    const x = geoJsonObject.coordinates[0];
-    const y = geoJsonObject.coordinates[1];
-    const validationResult = isPointInGrid(x, y, tileGrid);
+    const lon = geoJsonObject.coordinates[0];
+    const lat = geoJsonObject.coordinates[1];
+    const validationResult = isPointInTileMatrixSet(lon, lat, tileMatrixSet);
     if (!validationResult.isValid) {
       return validationResult;
     }
@@ -21,9 +22,9 @@ function innerValidateGeoJsonInGrid(geoJsonObject: Geometry, tileGrid: TileGrid)
   if (geoJsonObject.type === 'Polygon') {
     const coordinates = geoJsonObject.coordinates[0];
     for (const coordinate of coordinates) {
-      const x = coordinate[0];
-      const y = coordinate[1];
-      const validationResult = isPointInGrid(x, y, tileGrid);
+      const lon = coordinate[0];
+      const lat = coordinate[1];
+      const validationResult = isPointInTileMatrixSet(lon, lat, tileMatrixSet);
       if (!validationResult.isValid) {
         return validationResult;
       }
@@ -32,9 +33,9 @@ function innerValidateGeoJsonInGrid(geoJsonObject: Geometry, tileGrid: TileGrid)
     const polygons = geoJsonObject.coordinates;
     for (const polygon of polygons) {
       for (const coordinate of polygon[0]) {
-        const x = coordinate[0];
-        const y = coordinate[1];
-        const validationResult = isPointInGrid(x, y, tileGrid);
+        const lon = coordinate[0];
+        const lat = coordinate[1];
+        const validationResult = isPointInTileMatrixSet(lon, lat, tileMatrixSet);
         if (!validationResult.isValid) {
           return validationResult;
         }
@@ -44,12 +45,12 @@ function innerValidateGeoJsonInGrid(geoJsonObject: Geometry, tileGrid: TileGrid)
   return new ValidationResult(true);
 }
 
-function isPointInGrid(x: number, y: number, tileGrid: TileGrid): ValidationResult {
+function isPointInTileMatrixSet(lon: Longitude, lat: Latitude, tileMatrixSet: TileMatrixSet): ValidationResult {
   try {
-    validateGeoPointByGrid(new GeoPoint(x, y), tileGrid);
+    validatePointByTileMatrixSet(new Point({ coordinates: [lon, lat], coordRefSys: tileMatrixSet.crs }), tileMatrixSet);
   } catch (error) {
     return new ValidationResult(false, [
-      new ValidationIssue(`Point lon: ${x} lat: ${y} is not inside the grid`, ValidationIssueType.GEOJSON_NOT_IN_GRID),
+      new ValidationIssue(`Point lon: ${lon} lat: ${lat} is not inside the tile matrix set`, ValidationIssueType.GEOJSON_NOT_IN_TILEMATRIXSET),
     ]);
   }
 
@@ -121,9 +122,9 @@ export function validateGeoJson(geojson: string): ValidationResult {
     }
   }
 
-  const gridValidationResult = validateGeoJsonInGrid(geojson);
-  if (gridValidationResult.issues !== undefined) {
-    validationIssues.push(...gridValidationResult.issues);
+  const tileMatrixSetValidationResult = validateGeoJsonInTileMatrixSet(geojson);
+  if (tileMatrixSetValidationResult.issues !== undefined) {
+    validationIssues.push(...tileMatrixSetValidationResult.issues);
   }
 
   // Although the RFC 7946 GeoJSON specification does not require polygons to not self intersect we check this here
@@ -153,7 +154,7 @@ export function validateGeoJsonSelfIntersect(geojson: string): ValidationResult 
 }
 
 /**
- * Validates that the input `geojson` is on of the `types`
+ * Validates that the input `geojson` is one of the `types`
  * @param geojson
  * @param types
  */
@@ -178,22 +179,22 @@ export function validateGeoJsonTypes(geojson: string, types: string[]): Validati
 }
 
 /**
- * Validates that the input `geojson` is inside the `tileGrid`
+ * Validates that the input `geojson` is inside the `tileMatrixSet`
  * @param geojson
- * @param tileGrid
+ * @param tileMatrixSet
  */
-export function validateGeoJsonInGrid(geojson: string, tileGrid: TileGrid = TILEGRID_WORLD_CRS84): ValidationResult {
+export function validateGeoJsonInTileMatrixSet(geojson: string, tileMatrixSet: TileMatrixSet = TILEMATRIXSET_WORLD_CRS84_QUAD): ValidationResult {
   const geoJsonObject = JSON.parse(geojson) as FeatureCollection | Geometry;
 
   if (geoJsonObject.type === 'FeatureCollection') {
     for (const feature of geoJsonObject.features) {
-      const validationResult = innerValidateGeoJsonInGrid(feature.geometry, tileGrid);
+      const validationResult = innerValidateGeoJsonInTileMatrixSet(feature.geometry, tileMatrixSet);
       if (!validationResult.isValid) {
         return validationResult;
       }
     }
   } else {
-    return innerValidateGeoJsonInGrid(geoJsonObject, tileGrid);
+    return innerValidateGeoJsonInTileMatrixSet(geoJsonObject, tileMatrixSet);
   }
   return new ValidationResult(true);
 }

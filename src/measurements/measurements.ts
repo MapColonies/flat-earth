@@ -1,8 +1,9 @@
 import { booleanEqual, area as turfArea, distance as turfDistance, type Units } from '@turf/turf';
 import { Geodesic } from 'geographiclib-geodesic';
 import { Geometry, Point, Polygon } from '../classes';
-import { geometryToFeature } from '../converters/turf/turf_converters';
+import { DEFAULT_CRS } from '../constants';
 import type { GeoJSONGeometry } from '../types';
+import { validateCRS } from '../validations/validations';
 
 const geod = Geodesic.WGS84;
 
@@ -11,8 +12,13 @@ const geod = Geodesic.WGS84;
  * @param polygon a polygon
  * @returns polygon's area in square meters
  */
-export function area(polygon: Polygon): number {
-  const feature = geometryToFeature(polygon);
+export function area(polygon: Polygon): number | undefined {
+  try {
+    validateCRS(polygon.coordRefSys, DEFAULT_CRS);
+  } catch {
+    return undefined;
+  }
+  const feature = polygon.getJSONFG();
   return turfArea(feature);
 }
 
@@ -25,9 +31,20 @@ export function area(polygon: Polygon): number {
  * @param options object specifying units for distance output
  * @returns distance in meters
  */
-export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number {
+export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number | undefined {
   // TODO: only a single distance function should exist for distance calculated on the surface of an ellipsoid
-  return turfDistance(from, to, options);
+  try {
+    validateCRS(from.coordRefSys, DEFAULT_CRS);
+    validateCRS(to.coordRefSys, DEFAULT_CRS);
+  } catch {
+    return undefined;
+  }
+  const fromPoint = from.getJSONFG();
+  const toPoint = to.getJSONFG();
+  if (!fromPoint.geometry || !toPoint.geometry) {
+    return undefined;
+  }
+  return turfDistance(fromPoint.geometry, toPoint.geometry, options);
 }
 
 /**
@@ -38,6 +55,12 @@ export function distance(from: Point, to: Point, options: { units?: Units } = { 
  * @returns distance in meters
  */
 export function geodesicDistance(from: Point, to: Point): number | undefined {
+  try {
+    validateCRS(from.coordRefSys, DEFAULT_CRS);
+    validateCRS(to.coordRefSys, DEFAULT_CRS);
+  } catch {
+    return undefined;
+  }
   const [fromLon, fromLat] = from.coordinates;
   const [toLon, toLat] = to.coordinates;
 
@@ -52,7 +75,7 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * @returns true/false if two geometries are equal
  */
 export function geometriesEqual<G extends GeoJSONGeometry>(geometry1: Geometry<G>, geometry2: Geometry<G>): boolean {
-  const feature1 = geometryToFeature(geometry1);
-  const feature2 = geometryToFeature(geometry2);
+  const feature1 = geometry1.getJSONFG();
+  const feature2 = geometry2.getJSONFG();
   return booleanEqual(feature1, feature2);
 }
