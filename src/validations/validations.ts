@@ -6,7 +6,8 @@ import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS, TileMatrix, TileMatrixId } from '../tiles/types';
-import type { ArrayElement, GeoJSONGeometry } from '../types';
+import type { ArrayElement } from '../types';
+import type { GeoJSONGeometry } from '../geometries/types';
 
 export function validateCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
   try {

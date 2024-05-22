@@ -1,4 +1,4 @@
-import type { GeoJSONLineString, LineStringInput } from '../types';
+import type { GeoJSONLineString, LineStringInput } from './types';
 import { BaseGeometry } from './baseGeometry';
 
 /**

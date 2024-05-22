@@ -1,5 +1,5 @@
 import type { Position } from 'geojson';
-import type { GeoJSONBaseGeometry, GeoJSONGeometry } from './types';
+import type { GeoJSONBaseGeometry, GeoJSONGeometry } from './geometries/types';
 
 export const flatGeometryCollection = (geoJSONGeometry: GeoJSONGeometry): GeoJSONBaseGeometry[] => {
   return geoJSONGeometry.type === 'GeometryCollection' ? geoJSONGeometry.geometries.flatMap(flatGeometryCollection) : [geoJSONGeometry];

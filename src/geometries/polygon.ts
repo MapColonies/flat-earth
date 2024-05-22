@@ -1,4 +1,4 @@
-import type { GeoJSONPolygon, PolygonInput } from '../types';
+import type { GeoJSONPolygon, PolygonInput } from './types';
 import { BaseGeometry } from './baseGeometry';
 
 /**

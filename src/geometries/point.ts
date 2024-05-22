@@ -2,8 +2,8 @@ import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
-import type { GeoJSONPoint, PointInput } from '../types';
 import { validateCRS, validateMetatile, validatePointByTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import type { GeoJSONPoint, PointInput } from './types';
 import { BaseGeometry } from './baseGeometry';
 
 /**

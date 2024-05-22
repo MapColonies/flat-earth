@@ -2,9 +2,10 @@ import type { BBox, Position } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
-import type { CoordRefSys, GeoJSONBaseGeometry } from '../types';
+import type { CoordRefSys } from '../types';
 import { flattenGeometryPositions } from '../utilities';
 import { validateCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import type { GeoJSONBaseGeometry } from './types';
 import { Geometry } from './geometry';
 import { Point } from './point';
 

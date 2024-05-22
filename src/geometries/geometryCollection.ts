@@ -1,6 +1,6 @@
 import type { Position } from 'geojson';
-import type { GeoJSONGeometryCollection, GeometryCollectionInput } from '../types';
 import { flatGeometryCollection, flattenGeometryPositions } from '../utilities';
+import type { GeoJSONGeometryCollection, GeometryCollectionInput } from './types';
 import { Geometry } from './geometry';
 
 /**

@@ -4,7 +4,7 @@ import type { Feature, FeatureCollection, Geometry, LineString, MultiLineString,
 import { Point } from '../geometries/point';
 import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import type { Latitude, Longitude } from '../types';
+import type { Latitude, Longitude } from '../geometries/types';
 import { ValidationIssue, ValidationIssueType, ValidationResult } from './classes';
 import { validatePointByTileMatrixSet } from './validations';
 

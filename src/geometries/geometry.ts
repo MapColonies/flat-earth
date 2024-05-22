@@ -4,8 +4,9 @@ import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
-import type { ArrayElement, ConcreteCoordRefSys, CoordRefSys, GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from '../types';
+import type { ArrayElement, ConcreteCoordRefSys, CoordRefSys } from '../types';
 import { validateCRS, validateMetatile } from '../validations/validations';
+import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
 import { BoundingBox } from './boundingBox';
 
 /**
