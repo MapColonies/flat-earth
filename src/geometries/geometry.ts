@@ -3,11 +3,10 @@ import { DEFAULT_CRS } from '../constants';
 import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileMatrixToBBox } from '../tiles/tiles';
-import type { TileMatrixId } from '../tiles/types';
 import type { ArrayElement, ConcreteCoordRefSys, CoordRefSys } from '../types';
 import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
 import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
-import { BoundingBox } from './boundingBox';
+import { positionToTileIndex } from './utilities';
 
 /**
  * Geometry class
@@ -59,11 +58,10 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   /**
    * Find the minimal bounding tile containing the bounding box
    * @param tileMatrixSet tile matrix set for the containing tile lookup
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
    * @param metatile size of a metatile
    * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
    */
-  public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): Tile<T> | null {
+  public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): Tile<T> | null {
     validateMetatile(metatile);
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
@@ -82,7 +80,26 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
       ) {
         return null;
       }
-      const { minTileCol, minTileRow, maxTileCol, maxTileRow } = boundingBox.toTileRange(tileMatrixSet, tileMatrixId, metatile);
+
+      const {
+        cornerOfOrigin = 'topLeft',
+        identifier: { code: tileMatrixId },
+      } = tileMatrix;
+
+      const { col: minTileCol, row: minTileRow } = positionToTileIndex(
+        [boundingBoxMinEast, cornerOfOrigin === 'topLeft' ? boundingBoxMaxNorth : boundingBoxMinNorth],
+        tileMatrixSet,
+        tileMatrixId,
+        false,
+        metatile
+      );
+      const { col: maxTileCol, row: maxTileRow } = positionToTileIndex(
+        [boundingBoxMaxEast, cornerOfOrigin === 'topLeft' ? boundingBoxMinNorth : boundingBoxMaxNorth],
+        tileMatrixSet,
+        tileMatrixId,
+        false,
+        metatile
+      );
       const { scaleDenominator } = tileMatrix;
 
       if (minTileCol === maxTileCol && minTileRow === maxTileRow) {
