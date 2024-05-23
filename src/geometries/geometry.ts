@@ -13,9 +13,10 @@ import { BoundingBox } from './boundingBox';
  * Geometry class
  */
 export abstract class Geometry<G extends GeoJSONGeometry> {
+  /** GeoJSON bounding box (BBox) */
+  public readonly bBox: BBox;
   /** CRS of the geometry */
   public readonly coordRefSys: ConcreteCoordRefSys['coordRefSys'];
-  protected readonly bbox: BBox;
   protected readonly geoJSONGeometry: G;
 
   /**
@@ -23,7 +24,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
    * @param geometry GeoJSON geometry
    */
   protected constructor(geometry: G & CoordRefSys) {
-    this.bbox = this.calculateBBox();
+    this.bBox = this.calculateBBox();
     this.validateBBox();
     this.validateCRS(geometry.coordRefSys);
     this.geoJSONGeometry = geometry;
@@ -82,7 +83,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
     const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
       const tileMatrixBoundingBox = tileMatrixToBBox(tileMatrix);
 
-      const [boundingBoxMinEast, boundingBoxMinNorth, boundingBoxMaxEast, boundingBoxMaxNorth] = boundingBox.bBox;
+      const [boundingBoxMinEast, boundingBoxMinNorth, boundingBoxMaxEast, boundingBoxMaxNorth] = this.bBox;
       const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
         tileMatrixBoundingBox;
 
@@ -120,7 +121,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   }
 
   private validateBBox(): void {
-    const [minEast, minNorth, maxEast, maxNorth] = this.bbox;
+    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
 
     if (maxNorth < minNorth) {
       throw new Error('bounding box north bound must be equal or larger than south bound');

@@ -72,13 +72,10 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     const lineSegments = this.geometryToLineSegments();
 
-    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = this.toBoundingBox().expandToTileMatrixCells(
-      tileMatrixSet,
-      tileMatrixId
-    ).bBox;
+    const [boundingBoxMinEast, boundingBoxMinNorth, boundingBoxMaxEast, boundingBoxMaxNorth] = this.bBox;
 
-    const width = maxBoundingBoxEast - minBoundingBoxEast;
-    const height = maxBoundingBoxNorth - minBoundingBoxNorth;
+    const width = boundingBoxMaxEast - boundingBoxMinEast;
+    const height = boundingBoxMaxNorth - boundingBoxMinNorth;
 
     const isWide = width > height;
     // dim1 follows the movement of the moving range, dim2 is the perpendicular dimension to dim1. they are used to access the relevant dimension of geometric position

@@ -1,4 +1,3 @@
-import type { BBox } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { TileRange } from '../tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
@@ -38,13 +37,6 @@ export class BoundingBox extends Polygon {
   }
 
   /**
-   * Gets GeoJSON bounding box
-   */
-  public get bBox(): BBox {
-    return this.bbox;
-  }
-
-  /**
    * Clamps bounding box extent to that of another bounding box
    * @param clampingBoundingBox bounding box to clamp to
    * @returns bounding box with extents clamped to those of `clampingBoundingBox`
@@ -53,7 +45,7 @@ export class BoundingBox extends Polygon {
     const [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] =
       clampingBoundingBox.bBox;
 
-    const [minEast, minNorth, maxEast, maxNorth] = this.bbox;
+    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
 
     return new BoundingBox({
       bbox: [
@@ -114,7 +106,7 @@ export class BoundingBox extends Polygon {
     validateBoundingBoxByTileMatrix(this, tileMatrix);
 
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
-    const [minEast, minNorth, maxEast, maxNorth] = this.bbox;
+    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
 
     const minTilePoint = new Point({
       coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
@@ -132,7 +124,7 @@ export class BoundingBox extends Polygon {
   }
 
   private snapMinPointToTileMatrixCell<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): Point {
-    const [minEast, minNorth] = this.bbox;
+    const [minEast, minNorth] = this.bBox;
     const width = tileEffectiveWidth(tileMatrix);
     const snappedMinEast = Math.floor(minEast / width) * width;
     const height = tileEffectiveHeight(tileMatrix);
@@ -144,7 +136,7 @@ export class BoundingBox extends Polygon {
   }
 
   private snapMaxPointToTileMatrixCell<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): Point {
-    const [, , maxEast, maxNorth] = this.bbox;
+    const [, , maxEast, maxNorth] = this.bBox;
     const width = tileEffectiveWidth(tileMatrix);
     const snappedMaxEast = Math.ceil(maxEast / width) * width;
     const height = tileEffectiveHeight(tileMatrix);

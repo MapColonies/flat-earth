@@ -5,9 +5,10 @@ import { Point } from '../geometries/point';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
-import type { CRS, TileMatrix, TileMatrixId } from '../tiles/types';
-import type { ArrayElement } from '../types';
-import type { GeoJSONGeometry } from '../geometries/types';
+
+function validateBBoxByTileMatrix(bBox: BBox, coordRefSys: CRS, tileMatrix: TileMatrix): void {
+  throw new Error('not implemented');
+}
 
 export function validateCRSByOtherCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
   try {
@@ -107,8 +108,8 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
  * @param tileMatrix tile matrix
  */
 export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry: Geometry<G>, tileMatrix: TileMatrix): void {
-  const boundingBox = geometry.toBoundingBox();
-  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
+  const bBox = geometry.bBox;
+  validateBBoxByTileMatrix(bBox, geometry.coordRefSys, tileMatrix);
 }
 
 /**
