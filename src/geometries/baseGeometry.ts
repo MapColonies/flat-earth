@@ -8,6 +8,7 @@ import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatr
 import type { GeoJSONBaseGeometry } from './types';
 import { Geometry } from './geometry';
 import { Point } from './point';
+import { positionToTileIndex, snapPositionToMinTileMatrixCell } from './utilities';
 
 interface SimpleLineSegment {
   start: { position: Position };
@@ -73,14 +74,32 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     const lineSegments = this.geometryToLineSegments();
 
     const [boundingBoxMinEast, boundingBoxMinNorth, boundingBoxMaxEast, boundingBoxMaxNorth] = this.bBox;
+    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
-    const width = boundingBoxMaxEast - boundingBoxMinEast;
-    const height = boundingBoxMaxNorth - boundingBoxMinNorth;
+    const { col: minTileCol, row: minTileRow } = positionToTileIndex(
+      [boundingBoxMinEast, cornerOfOrigin === 'topLeft' ? boundingBoxMaxNorth : boundingBoxMinNorth],
+      tileMatrixSet,
+      tileMatrixId,
+      false,
+      metatile
+    );
+    const { col: maxTileCol, row: maxTileRow } = positionToTileIndex(
+      [boundingBoxMaxEast, cornerOfOrigin === 'topLeft' ? boundingBoxMinNorth : boundingBoxMaxNorth],
+      tileMatrixSet,
+      tileMatrixId,
+      false,
+      metatile
+    );
+
+    const [minBoundingBoxEast, minBoundingBoxNorth] = snapPositionToMinTileMatrixCell([minTileCol, minTileRow], tileMatrix);
+    const [maxBoundingBoxEast, maxBoundingBoxNorth] = snapPositionToMinTileMatrixCell([maxTileCol, maxTileRow], tileMatrix);
+
+    const width = maxBoundingBoxEast - minBoundingBoxEast;
+    const height = maxBoundingBoxNorth - minBoundingBoxNorth;
 
     const isWide = width > height;
     // dim1 follows the movement of the moving range, dim2 is the perpendicular dimension to dim1. they are used to access the relevant dimension of geometric position
     const [dim1, dim2] = isWide ? [1, 0] : [0, 1];
-    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
     const [rangeMin, rangeMax, step]: [number, number, number] = isWide
       ? cornerOfOrigin === 'topLeft'
