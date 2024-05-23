@@ -1,6 +1,5 @@
 import type { Position } from 'geojson';
-import { flatGeometryCollection, flattenGeometryPositions } from '../utilities';
-import type { GeoJSONGeometryCollection, GeometryCollectionInput } from './types';
+import type { GeoJSONBaseGeometry, GeoJSONGeometry, GeoJSONGeometryCollection, GeometryCollectionInput } from './types';
 import { Geometry } from './geometry';
 
 /**
@@ -23,6 +22,14 @@ export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
   }
 
   protected getPositions(): Position[] {
-    return this.geoJSONGeometry.geometries.flatMap(flatGeometryCollection).flatMap(flattenGeometryPositions);
+    return this.geoJSONGeometry.geometries
+      .flatMap((geometry) => this.flatGeometryCollection(geometry))
+      .flatMap((geometry) => this.flatGeometryPositions(geometry));
+  }
+
+  private flatGeometryCollection(geoJSONGeometry: GeoJSONGeometry): GeoJSONBaseGeometry[] {
+    return geoJSONGeometry.type === 'GeometryCollection'
+      ? geoJSONGeometry.geometries.flatMap((geometry) => this.flatGeometryCollection(geometry))
+      : [geoJSONGeometry];
   }
 }
