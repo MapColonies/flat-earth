@@ -57,17 +57,6 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   }
 
   /**
-   * Converts geometry to a bounding box
-   * @returns bounding box of a geometry
-   */
-  public toBoundingBox(): BoundingBox {
-    return new BoundingBox({
-      bbox: this.bbox,
-      coordRefSys: this.coordRefSys,
-    });
-  }
-
-  /**
    * Find the minimal bounding tile containing the bounding box
    * @param tileMatrixSet tile matrix set for the containing tile lookup
    * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
@@ -77,8 +66,6 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): Tile<T> | null {
     validateMetatile(metatile);
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
-
-    const boundingBox = this.toBoundingBox();
 
     const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
       const tileMatrixBoundingBox = tileMatrixToBBox(tileMatrix);
