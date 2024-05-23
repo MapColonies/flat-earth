@@ -5,7 +5,7 @@ import type { Geometry } from '../geometries/geometry';
 import type { Point } from '../geometries/point';
 import type { Polygon } from '../geometries/polygon';
 import type { GeoJSONGeometry } from '../geometries/types';
-import { validateCRS } from '../validations/validations';
+import { validateCRSByOtherCRS } from '../validations/validations';
 
 const geod = Geodesic.WGS84;
 
@@ -16,7 +16,7 @@ const geod = Geodesic.WGS84;
  */
 export function area(polygon: Polygon): number | undefined {
   try {
-    validateCRS(polygon.coordRefSys, DEFAULT_CRS);
+    validateCRSByOtherCRS(polygon.coordRefSys, DEFAULT_CRS);
   } catch {
     return undefined;
   }
@@ -36,8 +36,8 @@ export function area(polygon: Polygon): number | undefined {
 export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number | undefined {
   // TODO: only a single distance function should exist for distance calculated on the surface of an ellipsoid
   try {
-    validateCRS(from.coordRefSys, DEFAULT_CRS);
-    validateCRS(to.coordRefSys, DEFAULT_CRS);
+    validateCRSByOtherCRS(from.coordRefSys, DEFAULT_CRS);
+    validateCRSByOtherCRS(to.coordRefSys, DEFAULT_CRS);
   } catch {
     return undefined;
   }
@@ -58,8 +58,8 @@ export function distance(from: Point, to: Point, options: { units?: Units } = { 
  */
 export function geodesicDistance(from: Point, to: Point): number | undefined {
   try {
-    validateCRS(from.coordRefSys, DEFAULT_CRS);
-    validateCRS(to.coordRefSys, DEFAULT_CRS);
+    validateCRSByOtherCRS(from.coordRefSys, DEFAULT_CRS);
+    validateCRSByOtherCRS(to.coordRefSys, DEFAULT_CRS);
   } catch {
     return undefined;
   }

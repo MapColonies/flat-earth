@@ -9,7 +9,7 @@ import type { CRS, TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement } from '../types';
 import type { GeoJSONGeometry } from '../geometries/types';
 
-export function validateCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
+export function validateCRSByOtherCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
   try {
     deepStrictEqual(geometryCRS, tileMatrixSetCRS);
   } catch (err) {

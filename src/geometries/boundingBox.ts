@@ -4,7 +4,7 @@ import { TileRange } from '../tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
 import type { ArrayElement } from '../types';
-import { validateBoundingBoxByTileMatrix, validateCRS, validateMetatile } from '../validations/validations';
+import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
 import type { BoundingBoxInput } from './types';
 import { Point } from './point';
 import { Polygon } from './polygon';
@@ -75,7 +75,7 @@ export class BoundingBox extends Polygon {
   public expandToTileMatrixCells<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>): BoundingBox {
     // TODO: consider metatile
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRS(this.coordRefSys, tileMatrixSet.crs);
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
     if (!tileMatrix) {
@@ -104,7 +104,7 @@ export class BoundingBox extends Polygon {
   public toTileRange<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): TileRange<T> {
     validateMetatile(metatile);
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRS(this.coordRefSys, tileMatrixSet.crs);
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
     if (!tileMatrix) {

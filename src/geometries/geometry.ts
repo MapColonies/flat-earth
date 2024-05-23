@@ -5,7 +5,7 @@ import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
 import type { ArrayElement, ConcreteCoordRefSys, CoordRefSys } from '../types';
-import { validateCRS, validateMetatile } from '../validations/validations';
+import { validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
 import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
 import { BoundingBox } from './boundingBox';
 
@@ -75,7 +75,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
    */
   public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): Tile<T> | null {
     validateMetatile(metatile);
-    validateCRS(this.coordRefSys, tileMatrixSet.crs);
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const boundingBox = this.toBoundingBox();
 

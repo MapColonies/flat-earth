@@ -4,7 +4,7 @@ import { tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import type { CoordRefSys } from '../types';
 import { flattenGeometryPositions } from '../utilities';
-import { validateCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { GeoJSONBaseGeometry } from './types';
 import { Geometry } from './geometry';
 import { Point } from './point';
@@ -56,7 +56,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
   ): Generator<TileMatrixLimits<T>[]> {
     validateMetatile(metatile);
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRS(this.coordRefSys, tileMatrixSet.crs);
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
     const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);

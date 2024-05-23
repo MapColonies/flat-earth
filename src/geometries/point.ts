@@ -2,7 +2,7 @@ import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
-import { validateCRS, validateMetatile, validatePointByTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import { validateCRSByOtherCRS, validateMetatile, validatePointByTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { GeoJSONPoint, PointInput } from './types';
 import { BaseGeometry } from './baseGeometry';
 
@@ -29,7 +29,7 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
   public toTile<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, reverseIntersectionPolicy: boolean, metatile = 1): Tile<T> {
     validateMetatile(metatile);
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRS(this.coordRefSys, tileMatrixSet.crs);
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
     const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
