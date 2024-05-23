@@ -3,7 +3,6 @@ import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import type { CoordRefSys } from '../types';
-import { flattenGeometryPositions } from '../utilities';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { GeoJSONBaseGeometry } from './types';
 import { Geometry } from './geometry';
@@ -173,7 +172,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
   }
 
   protected getPositions(): Position[] {
-    return flattenGeometryPositions(this.geoJSONGeometry);
+    return this.flatGeometryPositions(this.geoJSONGeometry);
   }
 
   private geometryToLineSegments(): SimpleLineSegment[] {

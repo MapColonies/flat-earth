@@ -120,6 +120,21 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
     return tile;
   }
 
+  protected flatGeometryPositions(geometry: GeoJSONBaseGeometry): Position[] {
+    switch (geometry.type) {
+      case 'Point':
+        return [geometry.coordinates];
+      case 'LineString':
+        return geometry.coordinates;
+      case 'Polygon':
+        return geometry.coordinates.flat();
+      case 'MultiPoint':
+      case 'MultiLineString':
+      case 'MultiPolygon':
+        throw new Error('multi geometries are currently not supported');
+    }
+  }
+
   private validateBBox(): void {
     const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
 
