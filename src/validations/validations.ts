@@ -5,9 +5,13 @@ import { Point } from '../geometries/point';
 import { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
+import type { CoordRefSysJSON } from '../types';
 
-function validateBBoxByTileMatrix(bBox: BBox, coordRefSys: CRS, tileMatrix: TileMatrix): void {
-  throw new Error('not implemented');
+export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
+  // currently only the default CRS (OGC:CRS84) is supported
+  if (coordRefSys !== undefined && !SUPPORTED_CRS.includes(coordRefSys)) {
+    throw new Error('unsupported CRS');
+  }
 }
 
 export function validateCRSByOtherCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
