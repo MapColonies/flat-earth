@@ -7,7 +7,7 @@ import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatr
 import type { GeoJSONBaseGeometry } from './types';
 import { Geometry } from './geometry';
 import { Point } from './point';
-import { positionToTileIndex, snapPositionToMinTileMatrixCell } from './utilities';
+import { positionToTileIndex } from './utilities';
 
 interface SimpleLineSegment {
   start: { position: Position };

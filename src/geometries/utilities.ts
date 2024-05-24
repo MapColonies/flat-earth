@@ -48,21 +48,3 @@ export function positionToTileIndex<T extends TileMatrixSet>(
 
   return { col, row, tileMatrixId };
 }
-
-export function snapPositionToMinTileMatrixCell<T extends TileMatrixSet>(position: Position, tileMatrix: ArrayElement<T['tileMatrices']>): Position {
-  const [minEast, minNorth] = position;
-  const width = tileEffectiveWidth(tileMatrix);
-  const snappedMinEast = Math.floor(minEast / width) * width;
-  const height = tileEffectiveHeight(tileMatrix);
-  const snappedMinNorth = Math.floor(minNorth / height) * height;
-  return [avoidNegativeZero(snappedMinEast), avoidNegativeZero(snappedMinNorth)];
-}
-
-export function snapPositionToMaxTileMatrixCell<T extends TileMatrixSet>(position: Position, tileMatrix: ArrayElement<T['tileMatrices']>): Position {
-  const [, , maxEast, maxNorth] = position;
-  const width = tileEffectiveWidth(tileMatrix);
-  const snappedMaxEast = Math.ceil(maxEast / width) * width;
-  const height = tileEffectiveHeight(tileMatrix);
-  const snappedMaxNorth = Math.ceil(maxNorth / height) * height;
-  return [avoidNegativeZero(snappedMaxEast), avoidNegativeZero(snappedMaxNorth)];
-}
