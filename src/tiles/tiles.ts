@@ -106,3 +106,26 @@ export function tileEffectiveWidth(tileMatrix: TileMatrix): number {
   const { cellSize, tileWidth } = tileMatrix;
   return cellSize * tileWidth;
 }
+
+export function tileIndexToPosition<T extends TileMatrixSet>(tileIndex: TileIndex<T>, tileMatrixSet: T, metatile = 1): Position {
+  const { col, row, tileMatrixId } = tileIndex;
+
+  const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+  if (!tileMatrix) {
+    throw new Error('tile matrix id is not part of the given tile matrix set');
+  }
+
+  const width = tileEffectiveWidth(tileMatrix) * metatile;
+  const height = tileEffectiveHeight(tileMatrix) * metatile;
+
+  const {
+    pointOfOrigin: [originX, originY],
+    cornerOfOrigin = 'topLeft',
+  } = tileMatrix;
+
+  const east = originX + col * width;
+  // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+  const north = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
+
+  return [east, north];
+}
