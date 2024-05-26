@@ -1,23 +1,13 @@
 import type { BBox, Position } from 'geojson';
 import type { ArrayElement } from '../types';
-import { validateTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import type { TileIndex, TileMatrix, TileMatrixId } from './types';
 
-/**
- * Calculates GeoJSON bbox for a tile matrix and input height and width
- * @param tileMatrix tile matrix
- * @param matrixHeight tile matrix height
- * @param matrixWidth tile matrix width
- * @returns GeoJSON bbox
- */
 export function tileMatrixToBBox<T extends TileMatrixSet>(
   tileMatrix: ArrayElement<T['tileMatrices']>,
   matrixHeight: number = tileMatrix.matrixHeight,
   matrixWidth: number = tileMatrix.matrixWidth
 ): BBox {
-  validateTileMatrix(tileMatrix);
-
   if (matrixHeight < 0 || matrixWidth < 0) {
     throw new Error('tile matrix dimensions must be non-negative integers');
   }
@@ -90,7 +80,8 @@ export function positionToTileIndex<T extends TileMatrixSet>(
   const width = tileEffectiveWidth(tileMatrix) * metatile;
   const height = tileEffectiveHeight(tileMatrix) * metatile;
 
-  const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] = tileMatrixToBBox(tileMatrix);
+  const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
+    tileMatrixToBBox(tileMatrix);
   const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
   const tempTileCol = (east - tileMatrixBoundingBoxMinEast) / width;
