@@ -1,11 +1,12 @@
 import type { BBox, Position } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import { tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
+import { clampBBoxToTileMeatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
+import type { CoordRefSys } from '../types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
-import { positionToTileIndex } from '../tiles/tiles';
 import { Geometry } from './geometry';
 import { Point } from './point';
+import type { GeoJSONBaseGeometry } from './types';
 
 interface SimpleLineSegment {
   start: { position: Position };
@@ -62,34 +63,22 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
       throw new Error('tile matrix id is not part of the given tile matrix set');
     }
 
-    if (this instanceof Point) {
-      const { col, row } = this.toTile(tileMatrixSet, tileMatrixId, false);
+    if (this.geoJSONGeometry.type === 'Point') {
+      const [minEast, minNorth] = this.bBox;
+      const { col, row } = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, false, metatile);
+
       yield [{ tileMatrixId, minTileRow: row, maxTileRow: row, minTileCol: col, maxTileCol: col }];
       return;
     }
 
     const lineSegments = this.geometryToLineSegments();
 
-    const [boundingBoxMinEast, boundingBoxMinNorth, boundingBoxMaxEast, boundingBoxMaxNorth] = this.bBox;
-    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
-
-    const { col: minTileCol, row: minTileRow } = positionToTileIndex(
-      [boundingBoxMinEast, cornerOfOrigin === 'topLeft' ? boundingBoxMaxNorth : boundingBoxMinNorth],
+    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = clampBBoxToTileMeatrix(
+      this.bBox,
       tileMatrixSet,
       tileMatrixId,
-      false,
       metatile
     );
-    const { col: maxTileCol, row: maxTileRow } = positionToTileIndex(
-      [boundingBoxMaxEast, cornerOfOrigin === 'topLeft' ? boundingBoxMinNorth : boundingBoxMaxNorth],
-      tileMatrixSet,
-      tileMatrixId,
-      false,
-      metatile
-    );
-
-    const [minBoundingBoxEast, minBoundingBoxNorth] = snapPositionToMinTileMatrixCell([minTileCol, minTileRow], tileMatrix);
-    const [maxBoundingBoxEast, maxBoundingBoxNorth] = snapPositionToMinTileMatrixCell([maxTileCol, maxTileRow], tileMatrix);
 
     const width = maxBoundingBoxEast - minBoundingBoxEast;
     const height = maxBoundingBoxNorth - minBoundingBoxNorth;
@@ -97,6 +86,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     const isWide = width > height;
     // dim1 follows the movement of the moving range, dim2 is the perpendicular dimension to dim1. they are used to access the relevant dimension of geometric position
     const [dim1, dim2] = isWide ? [1, 0] : [0, 1];
+    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
     const [rangeMin, rangeMax, step]: [number, number, number] = isWide
       ? cornerOfOrigin === 'topLeft'
