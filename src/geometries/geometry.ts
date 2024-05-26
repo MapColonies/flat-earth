@@ -103,7 +103,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
       const { scaleDenominator } = tileMatrix;
 
       if (minTileCol === maxTileCol && minTileRow === maxTileRow) {
-        return { tile: new Tile(minTileCol, minTileRow, tileMatrixSet, tileMatrixId, metatile), scaleDenominator };
+        return { tile: new Tile({ col: minTileCol, row: minTileRow, tileMatrixId }, tileMatrixSet, metatile), scaleDenominator };
       }
 
       return null;

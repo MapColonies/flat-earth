@@ -70,7 +70,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
    * @returns bounding box
    */
   public toBoundingBox(clamp = true): BoundingBox {
-    const tile = new Tile(this.minTileCol, this.minTileRow, this.tileMatrixSet, this.tileMatrixId, this.metatile);
+    const tile = new Tile({ col: this.minTileCol, row: this.minTileRow, tileMatrixId: this.tileMatrixId }, this.tileMatrixSet, this.metatile);
     const {
       coordinates: [east, north],
     } = tile.toPoint();

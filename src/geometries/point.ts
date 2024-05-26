@@ -59,7 +59,7 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
       const tileCol = Math.ceil(tempTileCol) - 1 + onEdgeEastTranslation;
       const tileRow = Math.ceil(tempTileRow) - 1 + onEdgeNorthTranslation;
 
-      return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
+      return new Tile({ col: tileCol, row: tileRow, tileMatrixId }, tileMatrixSet, metatile);
     }
 
     // when east/north is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90 in wgs84)
@@ -69,6 +69,6 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
     const tileCol = Math.floor(tempTileCol) - onEdgeEastTranslation;
     const tileRow = Math.floor(tempTileRow) - onEdgeNorthTranslation;
 
-    return new Tile(tileCol, tileRow, tileMatrixSet, tileMatrixId, metatile);
+    return new Tile({ col: tileCol, row: tileRow, tileMatrixId }, tileMatrixSet, metatile);
   }
 }
