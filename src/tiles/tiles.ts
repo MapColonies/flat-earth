@@ -41,6 +41,26 @@ export function avoidNegativeZero(value: number): number {
   return value;
 }
 
+export function clampBBoxToTileMeatrix<T extends TileMatrixSet>(bBox: BBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): BBox {
+  const [minEast, minNorth, maxEast, maxNorth] = bBox;
+  const tileIndexMin = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, false, metatile);
+  const [bBoxMinEast, bBoxMinNorth] = tileIndexToPosition(tileIndexMin, tileMatrixSet, metatile);
+  const tileIndexMax = positionToTileIndex([maxEast, maxNorth], tileMatrixSet, tileMatrixId, true, metatile);
+  const [bBoxMaxEast, bBoxMaxNorth] = tileIndexToPosition(tileIndexMax, tileMatrixSet, metatile);
+  return [bBoxMinEast, bBoxMinNorth, bBoxMaxEast, bBoxMaxNorth];
+}
+
+export function clampPositionToTileMeatrix<T extends TileMatrixSet>(
+  position: Position,
+  tileMatrixSet: T,
+  tileMatrixId: TileMatrixId<T>,
+  reverseIntersectionPolicy: boolean,
+  metatile = 1
+): Position {
+  const tileIndex = positionToTileIndex(position, tileMatrixSet, tileMatrixId, reverseIntersectionPolicy, metatile);
+  return tileIndexToPosition(tileIndex, tileMatrixSet, metatile);
+}
+
 export function clampValues(value: number, minValue: number, maxValue: number): number {
   if (value < minValue) {
     return minValue;
