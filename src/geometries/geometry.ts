@@ -2,11 +2,10 @@ import type { BBox, Position } from 'geojson';
 import { DEFAULT_CRS } from '../constants';
 import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import { tileMatrixToBBox } from '../tiles/tiles';
-import type { ArrayElement, ConcreteCoordRefSys, CoordRefSys } from '../types';
+import { positionToTileIndex, tileMatrixToBBox } from '../tiles/tiles';
+import type { ArrayElement } from '../types';
 import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
 import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
-import { positionToTileIndex } from './utilities';
 
 /**
  * Geometry class

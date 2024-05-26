@@ -2,12 +2,10 @@ import type { BBox, Position } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
-import type { CoordRefSys } from '../types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
-import type { GeoJSONBaseGeometry } from './types';
+import { positionToTileIndex } from '../tiles/tiles';
 import { Geometry } from './geometry';
 import { Point } from './point';
-import { positionToTileIndex } from './utilities';
 
 interface SimpleLineSegment {
   start: { position: Position };
@@ -159,8 +157,14 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           coordinates: [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
           coordRefSys: this.coordRefSys,
         });
-        const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false);
-        const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true);
+        const {
+          tileIndex: { col: minTileCol },
+          tileIndex: { row: minTileRow },
+        } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false);
+        const {
+          tileIndex: { col: maxTileCol },
+          tileIndex: { row: maxTileRow },
+        } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true);
 
         return { minTileCol, maxTileCol, minTileRow, maxTileRow, tileMatrixId };
       });

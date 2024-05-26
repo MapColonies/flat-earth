@@ -117,8 +117,14 @@ export class BoundingBox extends Polygon {
       coordRefSys: this.coordRefSys,
     });
 
-    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false, metatile);
-    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true, metatile);
+    const {
+      tileIndex: { col: minTileCol },
+      tileIndex: { row: minTileRow },
+    } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false, metatile);
+    const {
+      tileIndex: { col: maxTileCol },
+      tileIndex: { row: maxTileRow },
+    } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true, metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixSet, tileMatrixId, metatile);
   }
