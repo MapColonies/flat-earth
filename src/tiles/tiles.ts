@@ -32,12 +32,26 @@ export function avoidNegativeZero(value: number): number {
 }
 
 export function clampBBoxToTileMatrix<T extends TileMatrixSet>(bBox: BBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): BBox {
+  const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+  if (!tileMatrix) {
+    throw new Error('tile matrix id is not part of the given tile matrix set');
+  }
+
+  const { cornerOfOrigin = 'topLeft' } = tileMatrix;
+
   const [minEast, minNorth, maxEast, maxNorth] = bBox;
   const tileIndexMin = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, false, metatile);
   const [bBoxMinEast, bBoxMinNorth] = tileIndexToPosition(tileIndexMin, tileMatrixSet, metatile);
   const tileIndexMax = positionToTileIndex([maxEast, maxNorth], tileMatrixSet, tileMatrixId, true, metatile);
   const [bBoxMaxEast, bBoxMaxNorth] = tileIndexToPosition(tileIndexMax, tileMatrixSet, metatile);
-  return [bBoxMinEast, bBoxMinNorth, bBoxMaxEast, bBoxMaxNorth];
+
+  return [
+    bBoxMinEast,
+    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
+    bBoxMinNorth + (cornerOfOrigin === 'topLeft' ? -1 : 0) * tileEffectiveHeight(tileMatrix) * metatile,
+    bBoxMaxEast + tileEffectiveWidth(tileMatrix) * metatile,
+    bBoxMaxNorth + (cornerOfOrigin === 'topLeft' ? 0 : 1) * tileEffectiveHeight(tileMatrix) * metatile,
+  ];
 }
 
 export function clampPositionToTileMatrix<T extends TileMatrixSet>(
