@@ -1,9 +1,11 @@
 import type { BBox, Position } from 'geojson';
 import { DEFAULT_CRS } from '../constants';
+import { decodeFromJSON, encodeToJSON } from '../crs/crs';
 import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { positionToTileIndex, tileMatrixToBBox } from '../tiles/tiles';
-import type { ArrayElement } from '../types';
+import type { CRS as CRSType } from '../tiles/types';
+import type { ArrayElement, CoordRefSysJSON } from '../types';
 import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
 import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
 
@@ -14,19 +16,19 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   /** GeoJSON bounding box (BBox) */
   public readonly bBox: BBox;
   /** CRS of the geometry */
-  public readonly coordRefSys: ConcreteCoordRefSys['coordRefSys'];
+  public readonly coordRefSys: CRSType;
   protected readonly geoJSONGeometry: G;
 
   /**
    * Geometry constructor
    * @param geometry GeoJSON geometry
    */
-  protected constructor(geometry: G & CoordRefSys) {
+  protected constructor(geometry: G & CoordRefSysJSON) {
+    this.geoJSONGeometry = geometry;
     this.bBox = this.calculateBBox();
     this.validateBBox();
     validateCRS(geometry.coordRefSys);
-    this.geoJSONGeometry = geometry;
-    this.coordRefSys = geometry.coordRefSys ?? DEFAULT_CRS; // Currently the default JSONFG CRS (in spec draft) doesn't match the CRS of WorldCRS84Quad tile matrix set
+    this.coordRefSys = decodeFromJSON(geometry.coordRefSys ?? DEFAULT_CRS); // Currently the default JSONFG CRS (in spec draft) doesn't match the CRS of WorldCRS84Quad tile matrix set
   }
 
   /**
@@ -48,7 +50,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
       geometry: null,
       properties: null,
     };
-    if (this.coordRefSys === DEFAULT_CRS) {
+    if (encodeToJSON(this.coordRefSys) === DEFAULT_CRS) {
       return { ...jsonFG, geometry: this.geoJSONGeometry };
     }
     return { ...jsonFG, place: this.geoJSONGeometry };

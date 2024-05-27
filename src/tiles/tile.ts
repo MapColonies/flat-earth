@@ -1,3 +1,4 @@
+import { encodeToJSON } from '../crs/crs';
 import { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
 import type { ArrayElement } from '../types';
@@ -51,9 +52,11 @@ export class Tile<T extends TileMatrixSet> {
       coordinates: [east, north],
     } = this.toPoint();
     const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
-    const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: this.tileMatrixSet.crs });
+    const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
     return clamp
-      ? tileBoundingBox.clampToBoundingBox(new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: this.tileMatrixSet.crs }))
+      ? tileBoundingBox.clampToBoundingBox(
+          new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
+        )
       : tileBoundingBox;
   }
 
@@ -76,7 +79,7 @@ export class Tile<T extends TileMatrixSet> {
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     const north = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
-    return new Point({ coordinates: [east, north], coordRefSys: this.tileMatrixSet.crs });
+    return new Point({ coordinates: [east, north], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
   }
 
   /**
@@ -91,6 +94,8 @@ export class Tile<T extends TileMatrixSet> {
 
     const { metatile } = this;
     const [minEast, minNorth, maxEast, maxNorth] = this.toBoundingBox(true).bBox;
+    const minTilePoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
+    const maxTilePoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
     const {
       tileIndex: { col: minTileCol },
       tileIndex: { row: minTileRow },

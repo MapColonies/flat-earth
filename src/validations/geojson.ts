@@ -1,10 +1,11 @@
 import { check, HintError, HintIssue } from '@placemarkio/check-geojson';
 import { kinks } from '@turf/turf';
 import type { Feature, FeatureCollection, Geometry, LineString, MultiLineString, MultiPolygon, Polygon } from 'geojson';
+import { encodeToJSON } from '../crs/crs';
 import { Point } from '../geometries/point';
+import type { Latitude, Longitude } from '../geometries/types';
 import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import type { Latitude, Longitude } from '../geometries/types';
 import { ValidationIssue, ValidationIssueType, ValidationResult } from './classes';
 import { validatePointByTileMatrixSet } from './validations';
 
@@ -47,7 +48,7 @@ function innerValidateGeoJsonInTileMatrixSet(geoJsonObject: Geometry, tileMatrix
 
 function isPointInTileMatrixSet(lon: Longitude, lat: Latitude, tileMatrixSet: TileMatrixSet): ValidationResult {
   try {
-    validatePointByTileMatrixSet(new Point({ coordinates: [lon, lat], coordRefSys: tileMatrixSet.crs }), tileMatrixSet);
+    validatePointByTileMatrixSet(new Point({ coordinates: [lon, lat], coordRefSys: encodeToJSON(tileMatrixSet.crs) }), tileMatrixSet);
   } catch (error) {
     return new ValidationResult(false, [
       new ValidationIssue(`Point lon: ${lon} lat: ${lat} is not inside the tile matrix set`, ValidationIssueType.GEOJSON_NOT_IN_TILEMATRIXSET),

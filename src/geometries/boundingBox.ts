@@ -1,12 +1,13 @@
+import { encodeToJSON } from '../crs/crs';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { TileRange } from '../tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
 import type { ArrayElement } from '../types';
 import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
-import type { BoundingBoxInput } from './types';
 import { Point } from './point';
 import { Polygon } from './polygon';
+import type { BoundingBoxInput } from './types';
 
 /**
  * Bounding box geometry class
@@ -54,7 +55,7 @@ export class BoundingBox extends Polygon {
         clampValues(maxEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
         clampValues(maxNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
       ],
-      coordRefSys: this.coordRefSys,
+      coordRefSys: encodeToJSON(this.coordRefSys),
     });
   }
 
@@ -83,7 +84,7 @@ export class BoundingBox extends Polygon {
       coordinates: [maxPointEast, maxPointNorth],
     } = this.snapMaxPointToTileMatrixCell(tileMatrix);
 
-    return new BoundingBox({ bbox: [minPointEast, minPointNorth, maxPointEast, maxPointNorth], coordRefSys: this.coordRefSys });
+    return new BoundingBox({ bbox: [minPointEast, minPointNorth, maxPointEast, maxPointNorth], coordRefSys: encodeToJSON(this.coordRefSys) });
   }
 
   /**
@@ -110,11 +111,11 @@ export class BoundingBox extends Polygon {
 
     const minTilePoint = new Point({
       coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
-      coordRefSys: this.coordRefSys,
+      coordRefSys: encodeToJSON(this.coordRefSys),
     });
     const maxTilePoint = new Point({
       coordinates: [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
-      coordRefSys: this.coordRefSys,
+      coordRefSys: encodeToJSON(this.coordRefSys),
     });
 
     const {
@@ -137,7 +138,7 @@ export class BoundingBox extends Polygon {
     const snappedMinNorth = Math.floor(minNorth / height) * height;
     return new Point({
       coordinates: [avoidNegativeZero(snappedMinEast), avoidNegativeZero(snappedMinNorth)],
-      coordRefSys: this.coordRefSys,
+      coordRefSys: encodeToJSON(this.coordRefSys),
     });
   }
 
@@ -149,7 +150,7 @@ export class BoundingBox extends Polygon {
     const snappedMaxNorth = Math.ceil(maxNorth / height) * height;
     return new Point({
       coordinates: [avoidNegativeZero(snappedMaxEast), avoidNegativeZero(snappedMaxNorth)],
-      coordRefSys: this.coordRefSys,
+      coordRefSys: encodeToJSON(this.coordRefSys),
     });
   }
 }

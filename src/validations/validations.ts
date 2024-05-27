@@ -1,11 +1,16 @@
 import { deepStrictEqual } from 'node:assert/strict';
-import { BoundingBox } from '../geometries/boundingBox';
+import { BBox } from 'geojson';
+import { SUPPORTED_CRS } from '../constants';
+import { encodeToJSON } from '../crs/crs';
+import type { BoundingBox } from '../geometries/boundingBox';
 import type { Geometry } from '../geometries/geometry';
 import { Point } from '../geometries/point';
-import { TileMatrixSet } from '../tiles/tileMatrixSet';
+import type { GeoJSONGeometry } from '../geometries/types';
+import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
-import type { CoordRefSysJSON } from '../types';
+import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
+import type { ArrayElement, CoordRefSysJSON } from '../types';
 
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
@@ -14,7 +19,7 @@ export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   }
 }
 
-export function validateCRSByOtherCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
+export function validateCRSByOtherCRS(geometryCRS: CRSType, tileMatrixSetCRS: CRSType): void {
   try {
     deepStrictEqual(geometryCRS, tileMatrixSetCRS);
   } catch (err) {
@@ -95,8 +100,8 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
  */
 export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
   const [minEast, minNorth, maxEast, maxNorth] = boundingBox.bBox;
-  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: boundingBox.coordRefSys });
-  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: boundingBox.coordRefSys });
+  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
+  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
 
   try {
     validatePointByTileMatrix(minPoint, tileMatrix);

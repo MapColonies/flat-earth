@@ -1,8 +1,9 @@
 import type { BBox, Position } from 'geojson';
+import { encodeToJSON } from '../crs/crs';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
-import type { CoordRefSys } from '../types';
+import type { CoordRefSysJSON } from '../types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Geometry } from './geometry';
 import { Point } from './point';
@@ -28,7 +29,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
    * Base geometry constructor
    * @param geometry GeoJSON geometry and CRS
    */
-  protected constructor(geometry: BG & CoordRefSys) {
+  protected constructor(geometry: BG & CoordRefSysJSON) {
     super(geometry);
   }
 
@@ -141,11 +142,11 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
         const minTilePoint = new Point({
           coordinates: [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
-          coordRefSys: this.coordRefSys,
+          coordRefSys: encodeToJSON(this.coordRefSys),
         });
         const maxTilePoint = new Point({
           coordinates: [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
-          coordRefSys: this.coordRefSys,
+          coordRefSys: encodeToJSON(this.coordRefSys),
         });
         const {
           tileIndex: { col: minTileCol },
