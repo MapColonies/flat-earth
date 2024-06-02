@@ -1,12 +1,38 @@
 import { deepStrictEqual } from 'node:assert/strict';
-import { BoundingBox, Point, type Geometry } from '../classes';
-import { TileMatrixSet } from '../tiles/tileMatrixSet';
+import { BBox } from 'geojson';
+import { SUPPORTED_CRS } from '../constants';
+import { encodeToJSON } from '../crs/crs';
+import type { BoundingBox } from '../geometries/boundingBox';
+import type { Geometry } from '../geometries/geometry';
+import { Point } from '../geometries/point';
+import type { GeoJSONGeometry } from '../geometries/types';
+import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
-import type { CRS, TileMatrix, TileMatrixId } from '../tiles/types';
-import type { ArrayElement, GeoJSONGeometry } from '../types';
+import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
+import type { ArrayElement, CoordRefSysJSON } from '../types';
 
-export function validateCRS(geometryCRS: CRS, tileMatrixSetCRS: CRS): void {
+function validateBBoxByTileMatrix(bBox: BBox, coordRefSys: CRSType, tileMatrix: TileMatrix): void {
+  const [minEast, minNorth, maxEast, maxNorth] = bBox;
+  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(coordRefSys) });
+  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(coordRefSys) });
+
+  try {
+    validatePointByTileMatrix(minPoint, tileMatrix);
+    validatePointByTileMatrix(maxPoint, tileMatrix);
+  } catch (err) {
+    throw new RangeError(`bounding box is not within the tile matrix`);
+  }
+}
+
+export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
+  // currently only the default CRS (OGC:CRS84) is supported
+  if (coordRefSys !== undefined && !SUPPORTED_CRS.includes(coordRefSys)) {
+    throw new Error('unsupported CRS');
+  }
+}
+
+export function validateCRSByOtherCRS(geometryCRS: CRSType, tileMatrixSetCRS: CRSType): void {
   try {
     deepStrictEqual(geometryCRS, tileMatrixSetCRS);
   } catch (err) {
@@ -87,8 +113,8 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
  */
 export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
   const [minEast, minNorth, maxEast, maxNorth] = boundingBox.bBox;
-  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: boundingBox.coordRefSys });
-  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: boundingBox.coordRefSys });
+  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
+  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
 
   try {
     validatePointByTileMatrix(minPoint, tileMatrix);
@@ -104,8 +130,8 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
  * @param tileMatrix tile matrix
  */
 export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry: Geometry<G>, tileMatrix: TileMatrix): void {
-  const boundingBox = geometry.toBoundingBox();
-  validateBoundingBoxByTileMatrix(boundingBox, tileMatrix);
+  const bBox = geometry.bBox;
+  validateBBoxByTileMatrix(bBox, geometry.coordRefSys, tileMatrix);
 }
 
 /**

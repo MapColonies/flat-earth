@@ -1,32 +1,31 @@
-import { BoundingBox, Point } from '../classes';
+import { encodeToJSON } from '../crs/crs';
+import { BoundingBox } from '../geometries/boundingBox';
+import { Point } from '../geometries/point';
 import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
 import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles';
-import type { TileIndex, TileMatrixId } from './types';
+import type { TileIndex } from './types';
 
 /**
  * Tile class that supports a metatile definition
  */
-export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
+export class Tile<T extends TileMatrixSet> {
   private readonly tileMatrix: ArrayElement<T['tileMatrices']>;
 
   /**
    * Tile constructor
-   * @param col tile column
-   * @param row tile row
+   * @param tileIndex tile index
    * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
    * @param metatile size of a metatile
    */
   public constructor(
-    public readonly col: number,
-    public readonly row: number,
+    public readonly tileIndex: TileIndex<T>,
     private readonly tileMatrixSet: T,
-    public readonly tileMatrixId: TileMatrixId<T>,
     public readonly metatile = 1
   ) {
+    const { col, row, tileMatrixId } = tileIndex;
     validateMetatile(metatile);
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
@@ -53,9 +52,11 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
       coordinates: [east, north],
     } = this.toPoint();
     const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
-    const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: this.tileMatrixSet.crs });
+    const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
     return clamp
-      ? tileBoundingBox.clampToBoundingBox(new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: this.tileMatrixSet.crs }))
+      ? tileBoundingBox.clampToBoundingBox(
+          new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
+        )
       : tileBoundingBox;
   }
 
@@ -64,7 +65,8 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
    * @returns point of the tile origin, determined by `cornerOfOrigin` property of the tile matrix
    */
   public toPoint(): Point {
-    const { col, row, metatile } = this;
+    const { col, row } = this.tileIndex;
+    const { metatile } = this;
     const width = tileEffectiveWidth(this.tileMatrix) * metatile;
     const height = tileEffectiveHeight(this.tileMatrix) * metatile;
 
@@ -77,7 +79,7 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
     const north = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
-    return new Point({ coordinates: [east, north], coordRefSys: this.tileMatrixSet.crs });
+    return new Point({ coordinates: [east, north], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
   }
 
   /**
@@ -92,10 +94,16 @@ export class Tile<T extends TileMatrixSet> implements TileIndex<T> {
 
     const { metatile } = this;
     const [minEast, minNorth, maxEast, maxNorth] = this.toBoundingBox(true).bBox;
-    const minTilePoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: this.tileMatrixSet.crs });
-    const maxTilePoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: this.tileMatrixSet.crs });
-    const { col: minTileCol, row: minTileRow } = minTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, false, metatile);
-    const { col: maxTileCol, row: maxTileRow } = maxTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, true, metatile);
+    const minTilePoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
+    const maxTilePoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
+    const {
+      tileIndex: { col: minTileCol },
+      tileIndex: { row: minTileRow },
+    } = minTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, false, metatile);
+    const {
+      tileIndex: { col: maxTileCol },
+      tileIndex: { row: maxTileRow },
+    } = maxTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, true, metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, this.tileMatrixSet, targetTileMatrix.identifier.code, metatile);
   }

@@ -1,4 +1,5 @@
-import { BoundingBox } from '../classes';
+import { encodeToJSON } from '../crs/crs';
+import { BoundingBox } from '../geometries/boundingBox';
 import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Tile } from './tile';
@@ -70,7 +71,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
    * @returns bounding box
    */
   public toBoundingBox(clamp = true): BoundingBox {
-    const tile = new Tile(this.minTileCol, this.minTileRow, this.tileMatrixSet, this.tileMatrixId, this.metatile);
+    const tile = new Tile({ col: this.minTileCol, row: this.minTileRow, tileMatrixId: this.tileMatrixId }, this.tileMatrixSet, this.metatile);
     const {
       coordinates: [east, north],
     } = tile.toPoint();
@@ -80,10 +81,12 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
       (this.maxTileRow - this.minTileRow) * this.metatile + 1,
       (this.maxTileCol - this.minTileCol) * this.metatile + 1
     );
-    const tileRangeBoundingBox = new BoundingBox({ bbox: tileRangeBBox, coordRefSys: this.tileMatrixSet.crs });
+    const tileRangeBoundingBox = new BoundingBox({ bbox: tileRangeBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
 
     return clamp
-      ? tileRangeBoundingBox.clampToBoundingBox(new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: this.tileMatrixSet.crs }))
+      ? tileRangeBoundingBox.clampToBoundingBox(
+          new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
+        )
       : tileRangeBoundingBox;
   }
 }
