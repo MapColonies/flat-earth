@@ -1,10 +1,9 @@
 import type { BBox, Position } from 'geojson';
 import { DEFAULT_CRS } from '../constants';
 import { decodeFromJSON, encodeToJSON } from '../crs/crs';
-import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { positionToTileIndex, tileMatrixToBBox } from '../tiles/tiles';
-import type { CRS as CRSType } from '../tiles/types';
+import type { CRS as CRSType, TileIndex } from '../tiles/types';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
 import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
 import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
@@ -57,12 +56,12 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   }
 
   /**
-   * Find the minimal bounding tile containing the bounding box
+   * Find the tile index of minimal bounding tile containing the bounding box
    * @param tileMatrixSet tile matrix set for the containing tile lookup
    * @param metatile size of a metatile
-   * @returns tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
+   * @returns {@link tiles/types!TileIndex | tile index} of a tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
    */
-  public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): Tile<T> | null {
+  public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): TileIndex<T> | null {
     validateMetatile(metatile);
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
@@ -104,7 +103,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
       const { scaleDenominator } = tileMatrix;
 
       if (minTileCol === maxTileCol && minTileRow === maxTileRow) {
-        return { tile: new Tile({ col: minTileCol, row: minTileRow, tileMatrixId }, tileMatrixSet, metatile), scaleDenominator };
+        return { tile: { col: minTileCol, row: minTileRow, tileMatrixId }, scaleDenominator };
       }
 
       return null;
