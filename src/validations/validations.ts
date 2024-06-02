@@ -1,29 +1,13 @@
 import { deepStrictEqual } from 'node:assert/strict';
-import { BBox } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
 import { encodeToJSON } from '../crs/crs';
 import type { BoundingBox } from '../geometries/boundingBox';
-import type { Geometry } from '../geometries/geometry';
 import { Point } from '../geometries/point';
-import type { GeoJSONGeometry } from '../geometries/types';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
-
-function validateBBoxByTileMatrix(bBox: BBox, coordRefSys: CRSType, tileMatrix: TileMatrix): void {
-  const [minEast, minNorth, maxEast, maxNorth] = bBox;
-  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(coordRefSys) });
-  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(coordRefSys) });
-
-  try {
-    validatePointByTileMatrix(minPoint, tileMatrix);
-    validatePointByTileMatrix(maxPoint, tileMatrix);
-  } catch (err) {
-    throw new RangeError(`bounding box is not within the tile matrix`);
-  }
-}
 
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
@@ -122,16 +106,6 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
   } catch (err) {
     throw new RangeError(`bounding box is not within the tile matrix`);
   }
-}
-
-/**
- * Validates that the input `geometry` is a valid with respect to `tileMatrixSet`
- * @param geometry geometry
- * @param tileMatrix tile matrix
- */
-export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry: Geometry<G>, tileMatrix: TileMatrix): void {
-  const bBox = geometry.bBox;
-  validateBBoxByTileMatrix(bBox, geometry.coordRefSys, tileMatrix);
 }
 
 /**
