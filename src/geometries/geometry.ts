@@ -61,7 +61,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
    * @param metatile size of a metatile
    * @returns {@link tiles/types!TileIndex | tile index} of a tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
    */
-  public minimalBoundingTile<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): TileIndex<T> | null {
+  public findMinimalBoundingTileIndex<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): TileIndex<T> | null {
     validateMetatile(metatile);
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
