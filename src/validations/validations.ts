@@ -1,13 +1,27 @@
 import { deepStrictEqual } from 'node:assert/strict';
+import { type Position } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
-import { encodeToJSON } from '../crs/crs';
 import type { BoundingBox } from '../geometries/boundingBox';
-import { Point } from '../geometries/point';
+import type { Point } from '../geometries/point';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
+
+function validatePositionByTileMatrix(position: Position, tileMatrix: TileMatrix): void {
+  const [east, north] = position;
+  const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
+    tileMatrixToBBox(tileMatrix);
+
+  if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
+    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+  }
+
+  if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
+    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+  }
+}
 
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
@@ -97,12 +111,10 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
  */
 export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
   const [minEast, minNorth, maxEast, maxNorth] = boundingBox.bBox;
-  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
-  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
 
   try {
-    validatePointByTileMatrix(minPoint, tileMatrix);
-    validatePointByTileMatrix(maxPoint, tileMatrix);
+    validatePositionByTileMatrix([minEast, minNorth], tileMatrix);
+    validatePositionByTileMatrix([maxEast, maxNorth], tileMatrix);
   } catch (err) {
     throw new RangeError(`bounding box is not within the tile matrix`);
   }
