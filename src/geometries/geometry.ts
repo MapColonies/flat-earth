@@ -150,7 +150,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   private calculateBBox(): BBox {
     // we follow the same convention as turfjs & OpenLayers to return infinity bounds for empty geometry collection
     let [minEast, minNorth, maxEast, maxNorth] = [Infinity, Infinity, -Infinity, -Infinity];
-    const positions = this.getPositions();
+    const positions = this.getAllPositions();
 
     for (const [east, north] of positions) {
       minEast = east < minEast ? east : minEast;
@@ -162,5 +162,5 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
     return [minEast, minNorth, maxEast, maxNorth];
   }
 
-  protected abstract getPositions(): Position[];
+  protected abstract getAllPositions(): Position[];
 }

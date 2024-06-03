@@ -166,13 +166,13 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     return;
   }
 
-  protected getPositions(): Position[] {
+  protected getAllPositions(): Position[] {
     return this.flatGeometryPositions(this.geoJSONGeometry);
   }
 
   private geometryToLineSegments(): SimpleLineSegment[] {
     const lineSegments: SimpleLineSegment[] = [];
-    const positions = this.getPositions();
+    const positions = this.getAllPositions();
 
     positions.forEach((position, index) => {
       if (index < positions.length - 1) {
