@@ -77,8 +77,8 @@ export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix):
  * @param metatile the metatile size
  */
 export function validateMetatile(metatile: number): void {
-  if (metatile <= 0) {
-    throw new Error('metatile must be larger than 0');
+  if (metatile < 1 || !Number.isSafeInteger(metatile)) {
+    throw new Error('metatile must be an integer with a value of at least 1');
   }
 }
 
@@ -87,20 +87,21 @@ export function validateMetatile(metatile: number): void {
  * @param tileMatrix the tile matrix to validate
  */
 export function validateTileMatrix(tileMatrix: TileMatrix): void {
-  if (tileMatrix.matrixWidth < 1) {
-    throw new Error('width of tile matrix must be at least 1');
+  const { matrixHeight, matrixWidth, tileHeight, tileWidth } = tileMatrix;
+  if (matrixWidth < 1 && Number.isSafeInteger(matrixWidth)) {
+    throw new Error('width of tile matrix must be an integer with a value of at least 1');
   }
 
-  if (tileMatrix.matrixHeight < 1) {
-    throw new Error('height of tile matrix must be at least 1');
+  if (matrixHeight < 1 && Number.isSafeInteger(matrixHeight)) {
+    throw new Error('height of tile matrix must be an integer with a value of at least 1');
   }
 
-  if (tileMatrix.tileWidth < 1) {
-    throw new Error('tile width of a tile matrix must be at least 1');
+  if (tileWidth < 1 && Number.isSafeInteger(tileWidth)) {
+    throw new Error('tile width of a tile matrix must be an integer with a value of at least 1');
   }
 
-  if (tileMatrix.tileHeight < 1) {
-    throw new Error('tile height of a tile matrix must be at least 1');
+  if (tileHeight < 1 && Number.isSafeInteger(tileHeight)) {
+    throw new Error('tile height of a tile matrix must be an integer with a value of at least 1');
   }
 }
 
@@ -157,5 +158,21 @@ export function validateTileRangeByTileMatrix<T extends TileMatrixSet>(tileRange
 
   if (minTileRow < 0 || minTileRow > maxTileRow) {
     throw new RangeError("tile range's minimum row index is out of range of the tile matrix");
+  }
+
+  if (!Number.isSafeInteger(maxTileCol)) {
+    throw new Error('maximum col index must be an integer');
+  }
+
+  if (!Number.isSafeInteger(maxTileRow)) {
+    throw new Error('maximum row index must be an integer');
+  }
+
+  if (!Number.isSafeInteger(minTileCol)) {
+    throw new Error('minimum col index must be an integer');
+  }
+
+  if (!Number.isSafeInteger(minTileRow)) {
+    throw new Error('minimum row index must be an integer');
   }
 }
