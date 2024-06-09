@@ -1,5 +1,5 @@
 import type { ArrayElement, Comparison } from '../types';
-import { validateCRS, validateTileMatrix } from '../validations/validations';
+import { validateTileMatrix } from '../validations/validations';
 import type {
   BoundingBox2D,
   CRS,
@@ -16,7 +16,7 @@ export class TileMatrixSet implements TileMatrixSetType {
   private readonly tileMatrixSet: TileMatrixSetType;
   public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRS(tileMatrixSetJSON.crs);
+    // validateCRS(tileMatrixSetJSON.crs); // TODO: needs a different validation
     this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
   }
 
