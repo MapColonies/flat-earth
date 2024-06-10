@@ -63,7 +63,11 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
    * @param metatile size of a metatile
    * @returns generator function of tile matrix limits containing the geometry
    */
-  public *toTileMatrixLimits<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): Generator<TileMatrixLimits<T>> {
+  public *toTileMatrixLimits<T extends TileMatrixSet>(
+    tileMatrixSet: T,
+    tileMatrixId: TileMatrixId<T>,
+    metatile = 1
+  ): Generator<TileMatrixLimits<T>, undefined> {
     validateMetatile(metatile);
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
