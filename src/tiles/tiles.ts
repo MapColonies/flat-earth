@@ -144,13 +144,13 @@ export function tileIndexToPosition<T extends TileMatrixSet>(tileIndex: TileInde
   const height = tileEffectiveHeight(tileMatrix) * metatile;
 
   const {
-    pointOfOrigin: [originX, originY],
+    pointOfOrigin: [originEast, originNorth],
     cornerOfOrigin = 'topLeft',
   } = tileMatrix;
 
-  const east = originX + col * width;
+  const east = originEast + col * width;
   // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-  const north = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
+  const north = originNorth + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
   return [east, north];
 }
