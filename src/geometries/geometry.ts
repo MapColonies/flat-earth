@@ -140,7 +140,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   }
 
   private validateBBox(): void {
-    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
+    const [, minNorth, , maxNorth] = this.bBox;
 
     if (maxNorth < minNorth) {
       throw new Error('bounding box north bound must be equal or larger than south bound');
