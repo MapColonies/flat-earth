@@ -142,21 +142,24 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   private validateBBox(): void {
     const [, minNorth, , maxNorth] = this.bBox;
 
-    this.bBox.forEach((value) => {
-      if (!Number.isFinite(value) && !(this.geoJSONGeometry.type === 'GeometryCollection' && this.geoJSONGeometry.geometries.length === 0)) {
-        throw new Error('bounding box elements must be finite numbers that are neither infinite nor NaN');
-      }
-    });
-
     if (maxNorth < minNorth) {
       throw new Error('bounding box north bound must be equal or larger than south bound');
     }
+  }
+
+  private validatePositions(positions: Position[]): void {
+    positions.flat().forEach((value) => {
+      if (!Number.isFinite(value)) {
+        throw new Error("geometry's positions must consist of finite numbers that are neither infinite nor NaN");
+      }
+    });
   }
 
   private calculateBBox(): BBox {
     // we follow the same convention as turfjs & OpenLayers to return infinity bounds for empty geometry collection
     let [minEast, minNorth, maxEast, maxNorth] = [Infinity, Infinity, -Infinity, -Infinity];
     const positions = this.getAllPositions();
+    this.validatePositions(positions);
 
     for (const [east, north] of positions) {
       minEast = east < minEast ? east : minEast;

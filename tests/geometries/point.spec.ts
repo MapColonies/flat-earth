@@ -38,7 +38,7 @@ describe('Point', () => {
       fc.assert(fc.property(...arbitraries, predicate));
     });
 
-    it("should throw an error when geometry's bounding box bounds are not finite or are NaN", () => {
+    it("should throw an error when geometry's coordinates are not finite or are NaN", () => {
       const coordinates = fc.oneof(
         fc.tuple(fc.double({ noNaN: true }), nonFinite()),
         fc.tuple(nonFinite(), fc.double({ noNaN: true })),
@@ -60,7 +60,7 @@ describe('Point', () => {
               bbox,
               coordRefSys,
             })
-        ).toThrow(new Error('bounding box elements must be finite numbers that are neither infinite nor NaN'));
+        ).toThrow(new Error("geometry's positions must consist of finite numbers that are neither infinite nor NaN"));
       };
       fc.assert(fc.property(...arbitraries, predicate));
     });
