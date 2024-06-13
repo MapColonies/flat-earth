@@ -3,5 +3,9 @@
   "extends": ["@map-colonies/eslint-config/jest", "@map-colonies/eslint-config/ts-base"],
   "parserOptions": {
     "project": "./tsconfig.lint.json"
-  }
+  },
+  "rules": {
+    "jest/no-standalone-expect": ["error", { "additionalTestBlockFunctions": ["it", "it.only"] }]
+  },
+  "plugins": ["jest-extended"]
 }
