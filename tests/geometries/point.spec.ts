@@ -39,7 +39,11 @@ describe('Point', () => {
     });
 
     it("should throw an error when geometry's bounding box bounds are not finite or are NaN", () => {
-      const coordinates = fc.oneof(fc.tuple(fc.double(), nonFinite()), fc.tuple(nonFinite(), fc.double()), fc.tuple(nonFinite(), nonFinite()));
+      const coordinates = fc.oneof(
+        fc.tuple(fc.double({ noNaN: true }), nonFinite()),
+        fc.tuple(nonFinite(), fc.double({ noNaN: true })),
+        fc.tuple(nonFinite(), nonFinite())
+      );
       const bbox = fc.option(
         coordinates.chain(([east, north]) => {
           return fc.tuple(fc.constant(east), fc.constant(north), fc.constant(east), fc.constant(north));
