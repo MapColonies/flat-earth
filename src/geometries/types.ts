@@ -26,11 +26,11 @@ export type PointInput = Omit<GeoJSONPoint, 'type'> & CoordRefSysJSON;
 export type BoundingBoxInput = { bbox: BBox } & CoordRefSysJSON;
 
 export type JSONFG<E, G extends E | null> = {
-  time: object | null;
+  time: Record<string, unknown> | null;
   place: G | (G & CoordRefSysJSON);
   conformsTo?: string[];
   featureType?: string | string[];
-  featureSchema?: string | object;
+  featureSchema?: string | Record<string, unknown>;
 } & CoordRefSysJSON;
 
 export type JSONFGFeature<G extends Geometry | null, P extends E | null, E> = Feature<G> & JSONFG<E, P>; // TODO: not strictly typed as in json-fg schemas
