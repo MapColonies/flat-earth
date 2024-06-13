@@ -9,20 +9,6 @@ import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
 
-function validatePositionByTileMatrix(position: Position, tileMatrix: TileMatrix): void {
-  const [east, north] = position;
-  const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
-    tileMatrixToBBox(tileMatrix);
-
-  if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
-    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
-  }
-
-  if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
-    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
-  }
-}
-
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
   if (coordRefSys !== undefined && !SUPPORTED_CRS.includes(coordRefSys)) {
@@ -60,6 +46,25 @@ export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix):
   const {
     coordinates: [east, north],
   } = point;
+  const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
+    tileMatrixToBBox(tileMatrix);
+
+  if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
+    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+  }
+
+  if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
+    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+  }
+}
+
+/**
+ * Validates that the input `position` is valid with respect to `tileMatrix`
+ * @param position position to validate
+ * @param tileMatrix tile matrix to validate `position` against
+ */
+export function validatePositionByTileMatrix(position: Position, tileMatrix: TileMatrix): void {
+  const [east, north] = position;
   const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
     tileMatrixToBBox(tileMatrix);
 
