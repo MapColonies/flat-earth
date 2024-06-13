@@ -142,6 +142,12 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   private validateBBox(): void {
     const [, minNorth, , maxNorth] = this.bBox;
 
+    this.bBox.forEach((value) => {
+      if (!Number.isFinite(value) && !(this.geoJSONGeometry.type === 'GeometryCollection' && this.geoJSONGeometry.geometries.length === 0)) {
+        throw new Error('bounding box elements must be finite numbers that are neither infinite nor NaN');
+      }
+    });
+
     if (maxNorth < minNorth) {
       throw new Error('bounding box north bound must be equal or larger than south bound');
     }
