@@ -173,7 +173,7 @@ export class TileMatrixSet implements TileMatrixSetType {
   private encodeToJSON(): TileMatrixSetJSON {
     const { crs, tileMatrices, boundingBox, description, identifier, keywords, title, ...otherProps } = this;
 
-    const crsJSON = typeof crs === 'object' && 'wkt' in crs ? { wkt: JSON.parse(crs.wkt) as object } : crs;
+    const crsJSON = typeof crs === 'object' && 'wkt' in crs ? { wkt: JSON.parse(crs.wkt) as Record<string, unknown> } : crs;
     const tileMatricesJSON = tileMatrices.map((tileMaxtrixJSON) => {
       const { identifier, ...otherProps } = tileMaxtrixJSON;
       return {
