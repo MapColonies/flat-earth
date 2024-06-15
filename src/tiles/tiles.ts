@@ -1,5 +1,6 @@
 import type { BBox, Position } from 'geojson';
 import type { ArrayElement } from '../types';
+import { validatePositionByTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import type { TileIndex, TileMatrix, TileMatrixId } from './types';
 
@@ -84,12 +85,13 @@ export function positionToTileIndex<T extends TileMatrixSet>(
   reverseIntersectionPolicy: boolean,
   metatile = 1
 ): TileIndex<T> {
-  const [east, north] = position;
-
   const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
   if (!tileMatrix) {
     throw new Error('tile matrix id is not part of the given tile matrix set');
   }
+  validatePositionByTileMatrix(position, tileMatrix);
+
+  const [east, north] = position;
 
   const width = tileEffectiveWidth(tileMatrix) * metatile;
   const height = tileEffectiveHeight(tileMatrix) * metatile;
