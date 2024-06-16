@@ -114,9 +114,12 @@ export function positionToTileIndex<T extends TileMatrixSet>(
     return { col, row, tileMatrixId };
   }
 
-  // when east/north is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90 in wgs84)
-  const onEdgeEastTranslation = east === tileMatrixBoundingBoxMaxEast ? 1 : 0;
-  const onEdgeNorthTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) ? 1 : 0;
+  // when east/north is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90 in wgs84) and the point's position coincides with (meta)tile edge
+  const onEdgeEastTranslation = east === tileMatrixBoundingBoxMaxEast && Number.isSafeInteger(tempTileCol) ? 1 : 0;
+  const onEdgeNorthTranslation =
+    north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) && Number.isSafeInteger(tempTileRow)
+      ? 1
+      : 0;
 
   const col = Math.floor(tempTileCol) - onEdgeEastTranslation;
   const row = Math.floor(tempTileRow) - onEdgeNorthTranslation;
