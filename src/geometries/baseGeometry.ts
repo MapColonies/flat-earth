@@ -109,7 +109,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
       : [minBoundingBoxEast, maxBoundingBoxEast, tileEffectiveWidth(tileMatrix) * metatile];
 
     const stopLoopCondition: (range: [number, number]) => boolean =
-      isWide && cornerOfOrigin === 'topLeft' ? ([rangeStart]): boolean => rangeStart > rangeMax : ([rangeStart]): boolean => rangeStart < rangeMax;
+      isWide && cornerOfOrigin === 'topLeft' ? ([rangeStart]): boolean => rangeStart >= rangeMax : ([rangeStart]): boolean => rangeStart <= rangeMax;
     for (let range: [number, number] = [rangeMin, rangeMin + step]; stopLoopCondition(range); range = [range[0] + step, range[1] + step]) {
       const spansInRange = this.calculateSpansInRange(linearRingsSegments, range, [dim1, dim2]);
       let mergedRanges: NumericRange[];
