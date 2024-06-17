@@ -3,7 +3,6 @@ import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import type { CoordRefSysJSON } from '../types';
-import { mean } from '../utilities';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Geometry } from './geometry';
 import type { GeoJSONBaseGeometry } from './types';
@@ -114,6 +113,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     for (let range: [number, number] = [rangeMin, rangeMin + step]; stopLoopCondition(range); range = [range[0] + step, range[1] + step]) {
       const spansInRange = this.calculateSpansInRange(linearRingsSegments, range, [dim1, dim2]);
       let mergedRanges: NumericRange[];
+
       switch (this.geoJSONGeometry.type) {
         case 'LineString': {
           mergedRanges = this.spansToBoundingRanges(dim2, ...spansInRange.flat());
@@ -131,20 +131,18 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
       }
 
       const tileMatrixLimits = mergedRanges.map((perpendicularRange) => {
-        const rangeMean = mean(...range);
-
         const { col: startTileCol, row: startTileRow } = positionToTileIndex(
-          isWide ? [perpendicularRange.start, rangeMean] : [rangeMean, perpendicularRange.start],
+          isWide ? [perpendicularRange.start, range[0]] : [range[0], perpendicularRange.start],
           tileMatrixSet,
           tileMatrixId,
           false,
           metatile
         );
         const { col: endTileCol, row: endTileRow } = positionToTileIndex(
-          isWide ? [perpendicularRange.end, rangeMean] : [rangeMean, perpendicularRange.end],
+          isWide ? [perpendicularRange.end, range[0]] : [range[0], perpendicularRange.end],
           tileMatrixSet,
           tileMatrixId,
-          true,
+          false,
           metatile
         );
 
