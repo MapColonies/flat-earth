@@ -27,7 +27,17 @@ export function validateBBox(bbox: BBox): void {
  */
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
-  if (coordRefSys !== undefined && !SUPPORTED_CRS.includes(coordRefSys)) {
+  if (
+    coordRefSys !== undefined &&
+    !SUPPORTED_CRS.some((supportedCoordRefSys) => {
+      try {
+        validateCRSByOtherCRS(supportedCoordRefSys, coordRefSys);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    })
+  ) {
     throw new Error('unsupported CRS');
   }
 }
