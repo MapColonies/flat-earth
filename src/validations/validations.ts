@@ -6,7 +6,7 @@ import type { Point } from '../geometries/point';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
-import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
+import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSetJSON } from '../tiles/types';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
 
 /**
@@ -47,7 +47,7 @@ export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
  * @param crs1 first CRS
  * @param crs2 second CRS
  */
-export function validateCRSByOtherCRS(crs1: CRSType, crs2: CRSType): void {
+export function validateCRSByOtherCRS<T extends CRSType | TileMatrixSetJSON['crs']>(crs1: T, crs2: T): void {
   try {
     deepStrictEqual(crs1, crs2);
   } catch (err) {
