@@ -148,16 +148,6 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   }
 
   private validatePositions(positions: Position[]): void {
-    if (this.geoJSONGeometry.type === 'Point' && positions.length !== 1) {
-      throw new Error('geometry must include exactly 1 coordinate');
-      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    } else if (this.geoJSONGeometry.type === 'LineString' && positions.length < 2) {
-      throw new Error('geometry must include at least 2 coordinates');
-      // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    } else if (this.geoJSONGeometry.type === 'Polygon' && positions.length < 3) {
-      throw new Error('geometry must include at least 3 coordinates');
-    }
-
     positions.flat().forEach((value) => {
       if (!Number.isFinite(value)) {
         throw new Error("geometry's positions must consist of finite numbers that are neither infinite nor NaN");
