@@ -28,11 +28,16 @@ export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   }
 }
 
-export function validateCRSByOtherCRS(geometryCRS: CRSType, tileMatrixSetCRS: CRSType): void {
+/**
+ * Validates that the input `crs1` equals `crs2`
+ * @param crs1 first CRS
+ * @param crs2 second CRS
+ */
+export function validateCRSByOtherCRS(crs1: CRSType, crs2: CRSType): void {
   try {
-    deepStrictEqual(geometryCRS, tileMatrixSetCRS);
+    deepStrictEqual(crs1, crs2);
   } catch (err) {
-    throw new Error("geometry's and tile matrix set's CRS do not match");
+    throw new Error('CRS mismatch');
   }
 }
 
