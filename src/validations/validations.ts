@@ -1,5 +1,5 @@
 import { deepStrictEqual } from 'node:assert/strict';
-import { type Position } from 'geojson';
+import { type BBox, type Position } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
 import type { BoundingBox } from '../geometries/boundingBox';
 import type { Point } from '../geometries/point';
@@ -8,6 +8,18 @@ import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
+
+/**
+ * Validates that the input `bbox` is valid
+ * @param bbox BBox to validate
+ */
+export function validateBBox(bbox: BBox): void {
+  const [, minNorth, , maxNorth] = bbox;
+
+  if (maxNorth < minNorth) {
+    throw new Error('bounding box north bound must be equal or larger than south bound');
+  }
+}
 
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported

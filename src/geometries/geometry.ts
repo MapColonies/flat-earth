@@ -25,7 +25,6 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
   protected constructor(geometry: G & CoordRefSysJSON) {
     this.geoJSONGeometry = geometry;
     this.bBox = this.calculateBBox();
-    this.validateBBox();
     validateCRS(geometry.coordRefSys);
     this.coordRefSys = decodeFromJSON(geometry.coordRefSys ?? DEFAULT_CRS); // Currently the default JSONFG CRS (in spec draft) doesn't match the CRS of WorldCRS84Quad tile matrix set
   }
@@ -136,14 +135,6 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
       case 'MultiLineString':
       case 'MultiPolygon':
         throw new Error('multi geometries are currently not supported');
-    }
-  }
-
-  private validateBBox(): void {
-    const [, minNorth, , maxNorth] = this.bBox;
-
-    if (maxNorth < minNorth) {
-      throw new Error('bounding box north bound must be equal or larger than south bound');
     }
   }
 
