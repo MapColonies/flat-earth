@@ -21,6 +21,10 @@ export function validateBBox(bbox: BBox): void {
   }
 }
 
+/**
+ * Validates that the input `coordRefSys` is valid
+ * @param coordRefSys CRS to validate
+ */
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
   if (coordRefSys !== undefined && !SUPPORTED_CRS.includes(coordRefSys)) {
