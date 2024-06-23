@@ -1,5 +1,5 @@
 import type { BBox, Position } from 'geojson';
-import type { ArrayElement } from '../types';
+import type { ArrayElement, ReverseIntersectionPolicy } from '../types';
 import { validatePositionByTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import type { TileIndex, TileMatrix, TileMatrixId } from './types';
@@ -41,9 +41,9 @@ export function clampBBoxToTileMatrix<T extends TileMatrixSet>(bBox: BBox, tileM
   const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
   const [minEast, minNorth, maxEast, maxNorth] = bBox;
-  const tileIndexMin = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, false, metatile);
+  const tileIndexMin = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, 'none', metatile);
   const [bBoxMinEast, bBoxMinNorth] = tileIndexToPosition(tileIndexMin, tileMatrixSet, metatile);
-  const tileIndexMax = positionToTileIndex([maxEast, maxNorth], tileMatrixSet, tileMatrixId, true, metatile);
+  const tileIndexMax = positionToTileIndex([maxEast, maxNorth], tileMatrixSet, tileMatrixId, 'both', metatile);
   const [bBoxMaxEast, bBoxMaxNorth] = tileIndexToPosition(tileIndexMax, tileMatrixSet, metatile);
 
   return [
@@ -59,7 +59,7 @@ export function clampPositionToTileMatrix<T extends TileMatrixSet>(
   position: Position,
   tileMatrixSet: T,
   tileMatrixId: TileMatrixId<T>,
-  reverseIntersectionPolicy: boolean,
+  reverseIntersectionPolicy: ReverseIntersectionPolicy,
   metatile = 1
 ): Position {
   const tileIndex = positionToTileIndex(position, tileMatrixSet, tileMatrixId, reverseIntersectionPolicy, metatile);
@@ -82,7 +82,7 @@ export function positionToTileIndex<T extends TileMatrixSet>(
   position: Position,
   tileMatrixSet: T,
   tileMatrixId: TileMatrixId<T>,
-  reverseIntersectionPolicy: boolean,
+  reverseIntersectionPolicy: ReverseIntersectionPolicy = 'none',
   metatile = 1
 ): TileIndex<T> {
   const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
@@ -103,27 +103,50 @@ export function positionToTileIndex<T extends TileMatrixSet>(
   const tempTileCol = (east - tileMatrixBoundingBoxMinEast) / width;
   const tempTileRow = (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth - north : north - tileMatrixBoundingBoxMinNorth) / height;
 
-  // when explicitly asked to reverse the intersection policy (location on the edge of the tile)
-  if (reverseIntersectionPolicy) {
-    const onEdgeEastTranslation = east === tileMatrixBoundingBoxMinEast ? 1 : 0;
-    const onEdgeNorthTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth : tileMatrixBoundingBoxMinNorth) ? 1 : 0;
+  let col: TileIndex<T>['col'];
+  let row: TileIndex<T>['row'];
+  switch (reverseIntersectionPolicy) {
+    case 'both': {
+      // when explicitly asked to reverse the intersection policy (location on the edge of the tile)
+      const onEdgeEastTranslation = east === tileMatrixBoundingBoxMinEast ? 1 : 0;
+      const onEdgeNorthTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth : tileMatrixBoundingBoxMinNorth) ? 1 : 0;
 
-    const col = Math.ceil(tempTileCol) - 1 + onEdgeEastTranslation;
-    const row = Math.ceil(tempTileRow) - 1 + onEdgeNorthTranslation;
+      col = Math.ceil(tempTileCol) - 1 + onEdgeEastTranslation;
+      row = Math.ceil(tempTileRow) - 1 + onEdgeNorthTranslation;
+      break;
+    }
+    case 'col': {
+      const onEdgeEastTranslation = east === tileMatrixBoundingBoxMinEast ? 1 : 0;
+      const onEdgeNorthTranslation =
+        north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) && Number.isSafeInteger(tempTileRow)
+          ? 1
+          : 0;
 
-    return { col, row, tileMatrixId };
+      col = Math.ceil(tempTileCol) - 1 + onEdgeEastTranslation;
+      row = Math.floor(tempTileRow) - onEdgeNorthTranslation;
+      break;
+    }
+    case 'row': {
+      const onEdgeEastTranslation = east === tileMatrixBoundingBoxMaxEast && Number.isSafeInteger(tempTileCol) ? 1 : 0;
+      const onEdgeNorthTranslation = north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMaxNorth : tileMatrixBoundingBoxMinNorth) ? 1 : 0;
+
+      col = Math.floor(tempTileCol) - onEdgeEastTranslation;
+      row = Math.ceil(tempTileRow) - 1 + onEdgeNorthTranslation;
+      break;
+    }
+    case 'none': {
+      // when east/north is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90 in wgs84) and the point's position coincides with (meta)tile edge
+      const onEdgeEastTranslation = east === tileMatrixBoundingBoxMaxEast && Number.isSafeInteger(tempTileCol) ? 1 : 0;
+      const onEdgeNorthTranslation =
+        north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) && Number.isSafeInteger(tempTileRow)
+          ? 1
+          : 0;
+
+      col = Math.floor(tempTileCol) - onEdgeEastTranslation;
+      row = Math.floor(tempTileRow) - onEdgeNorthTranslation;
+      break;
+    }
   }
-
-  // when east/north is on the maximum edge of the tile matrix (e.g. lon = 180 lat = 90 in wgs84) and the point's position coincides with (meta)tile edge
-  const onEdgeEastTranslation = east === tileMatrixBoundingBoxMaxEast && Number.isSafeInteger(tempTileCol) ? 1 : 0;
-  const onEdgeNorthTranslation =
-    north === (cornerOfOrigin === 'topLeft' ? tileMatrixBoundingBoxMinNorth : tileMatrixBoundingBoxMaxNorth) && Number.isSafeInteger(tempTileRow)
-      ? 1
-      : 0;
-
-  const col = Math.floor(tempTileCol) - onEdgeEastTranslation;
-  const row = Math.floor(tempTileRow) - onEdgeNorthTranslation;
-
   return { col, row, tileMatrixId };
 }
 

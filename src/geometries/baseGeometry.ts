@@ -1,7 +1,7 @@
 import type { Position } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
-import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
+import type { CornerOfOriginCode, TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import type { CoordRefSysJSON } from '../types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Geometry } from './geometry';
@@ -79,7 +79,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     if (this.geoJSONGeometry.type === 'Point') {
       const [minEast, minNorth] = this.bBox;
-      const { col, row } = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, false, metatile);
+      const { col, row } = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, 'none', metatile);
 
       yield { tileMatrixId, minTileRow: row, maxTileRow: row, minTileCol: col, maxTileCol: col };
       return;
@@ -130,19 +130,19 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           throw new Error('unsupported geometry type');
       }
 
-      const tileMatrixLimits = mergedRanges.map((perpendicularRange) => {
+      const tileMatrixLimits = mergedRanges.map(({ start: startRange, end: endRange }) => {
         const { col: startTileCol, row: startTileRow } = positionToTileIndex(
-          isWide ? [perpendicularRange.start, range[0]] : [range[0], perpendicularRange.start],
+          isWide ? [startRange, range[0]] : [range[0], startRange],
           tileMatrixSet,
           tileMatrixId,
-          false,
+          this.useReverseIntersectionPolicy({ start: startRange, end: endRange }, isWide, cornerOfOrigin) ? (isWide ? 'col' : 'row') : 'none',
           metatile
         );
         const { col: endTileCol, row: endTileRow } = positionToTileIndex(
-          isWide ? [perpendicularRange.end, range[0]] : [range[0], perpendicularRange.end],
+          isWide ? [endRange, range[0]] : [range[0], endRange],
           tileMatrixSet,
           tileMatrixId,
-          false,
+          this.useReverseIntersectionPolicy({ start: endRange, end: startRange }, isWide, cornerOfOrigin) ? (isWide ? 'col' : 'row') : 'none',
           metatile
         );
 
@@ -449,5 +449,13 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
       start: trimStart,
       end: trimEnd,
     };
+  }
+
+  private useReverseIntersectionPolicy(
+    { start: startRange, end: endRange }: NumericRange,
+    isWide: boolean,
+    cornerOfOrigin: CornerOfOriginCode
+  ): boolean {
+    return isWide ? startRange > endRange : cornerOfOrigin === 'topLeft' ? startRange < endRange : startRange > endRange;
   }
 }

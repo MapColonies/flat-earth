@@ -89,14 +89,14 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
         [boundingBoxMinEast, cornerOfOrigin === 'topLeft' ? boundingBoxMaxNorth : boundingBoxMinNorth],
         tileMatrixSet,
         tileMatrixId,
-        false,
+        'none',
         metatile
       );
       const { col: maxTileCol, row: maxTileRow } = positionToTileIndex(
         [boundingBoxMaxEast, cornerOfOrigin === 'topLeft' ? boundingBoxMinNorth : boundingBoxMaxNorth],
         tileMatrixSet,
         tileMatrixId,
-        false,
+        'none',
         metatile
       );
       const { scaleDenominator } = tileMatrix;
