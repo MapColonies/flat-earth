@@ -259,7 +259,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     linearRings.forEach((linearRing) => {
       const linearRingSegments: SimpleLineSegment[] = [];
       linearRing.forEach((position, index) => {
-        if (index < linearRing.length - 1) {
+        if (index < linearRing.length - 1 && !(position[0] === linearRing[index + 1][0] && position[1] === linearRing[index + 1][1])) {
           linearRingSegments.push({
             start: { position },
             end: { position: linearRing[index + 1] },
