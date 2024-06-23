@@ -41,17 +41,28 @@ export function clampBBoxToTileMatrix<T extends TileMatrixSet>(bBox: BBox, tileM
   const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
   const [minEast, minNorth, maxEast, maxNorth] = bBox;
-  const tileIndexMin = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, 'none', metatile);
-  const [bBoxMinEast, bBoxMinNorth] = tileIndexToPosition(tileIndexMin, tileMatrixSet, metatile);
-  const tileIndexMax = positionToTileIndex([maxEast, maxNorth], tileMatrixSet, tileMatrixId, 'both', metatile);
-  const [bBoxMaxEast, bBoxMaxNorth] = tileIndexToPosition(tileIndexMax, tileMatrixSet, metatile);
+  const tileIndexMin = positionToTileIndex(
+    [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
+    tileMatrixSet,
+    tileMatrixId,
+    'none',
+    metatile
+  );
+  const minPosition = tileIndexToPosition(tileIndexMin, tileMatrixSet, metatile);
+  const tileIndexMax = positionToTileIndex(
+    [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
+    tileMatrixSet,
+    tileMatrixId,
+    'both',
+    metatile
+  );
+  const maxPosition = tileIndexToPosition(tileIndexMax, tileMatrixSet, metatile);
 
   return [
-    bBoxMinEast,
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    bBoxMinNorth + (cornerOfOrigin === 'topLeft' ? -1 : 0) * tileEffectiveHeight(tileMatrix) * metatile,
-    bBoxMaxEast + tileEffectiveWidth(tileMatrix) * metatile,
-    bBoxMaxNorth + (cornerOfOrigin === 'topLeft' ? 0 : 1) * tileEffectiveHeight(tileMatrix) * metatile,
+    minPosition[0],
+    cornerOfOrigin === 'topLeft' ? maxPosition[1] - tileEffectiveHeight(tileMatrix) * metatile : minPosition[1],
+    maxPosition[0] + tileEffectiveWidth(tileMatrix) * metatile,
+    cornerOfOrigin === 'topLeft' ? minPosition[1] : maxPosition[1] + tileEffectiveHeight(tileMatrix) * metatile,
   ];
 }
 
