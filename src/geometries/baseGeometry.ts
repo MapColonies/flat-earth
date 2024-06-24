@@ -301,6 +301,14 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
         (startRangeSpatialRelation !== 'in-range' && endRangeSpatialRelation === 'in-range')
       ) {
         const trimmedLineSegment = this.trimLineSegment(lineSegment, [dim1, dim2], range);
+
+        if (
+          trimmedLineSegment.start.position[0] === trimmedLineSegment.end.position[0] &&
+          trimmedLineSegment.start.position[1] === trimmedLineSegment.end.position[1]
+        ) {
+          continue;
+        }
+
         lineSegmentsInRange.push({
           start: { position: trimmedLineSegment.start.position, rangeSpatialRelation: startRangeSpatialRelation },
           end: { position: trimmedLineSegment.end.position, rangeSpatialRelation: endRangeSpatialRelation },
