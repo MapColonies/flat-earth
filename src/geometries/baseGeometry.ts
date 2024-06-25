@@ -1,8 +1,8 @@
-import type { Position } from 'geojson';
+import type { BBox, Position } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
+import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from '../tiles/tiles';
 import type { CornerOfOriginCode, TileMatrixId, TileMatrixLimits } from '../tiles/types';
-import type { CoordRefSysJSON } from '../types';
+import type { CoordRefSysJSON, ReverseIntersectionPolicy } from '../types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Geometry } from './geometry';
 import type { GeoJSONBaseGeometry } from './types';
@@ -102,11 +102,14 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     const [dim1, dim2] = isWide ? [1, 0] : [0, 1];
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
+    const tileHeight = tileEffectiveHeight(tileMatrix) * metatile;
+    const tileWidth = tileEffectiveWidth(tileMatrix) * metatile;
+
     const [rangeMin, rangeMax, step]: [number, number, number] = isWide
       ? cornerOfOrigin === 'topLeft'
-        ? [maxBoundingBoxNorth, minBoundingBoxNorth, -tileEffectiveHeight(tileMatrix) * metatile]
-        : [minBoundingBoxNorth, maxBoundingBoxNorth, tileEffectiveHeight(tileMatrix) * metatile]
-      : [minBoundingBoxEast, maxBoundingBoxEast, tileEffectiveWidth(tileMatrix) * metatile];
+        ? [maxBoundingBoxNorth, minBoundingBoxNorth, -tileHeight]
+        : [minBoundingBoxNorth, maxBoundingBoxNorth, tileHeight]
+      : [minBoundingBoxEast, maxBoundingBoxEast, tileWidth];
 
     const stopLoopCondition: (range: [number, number]) => boolean =
       isWide && cornerOfOrigin === 'topLeft' ? ([rangeStart]): boolean => rangeStart > rangeMax : ([rangeStart]): boolean => rangeStart < rangeMax;
@@ -116,7 +119,11 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
       switch (this.geoJSONGeometry.type) {
         case 'LineString': {
-          mergedRanges = this.spansToBoundingRanges(dim2, ...spansInRange.flat());
+          mergedRanges = spansInRange
+            .flat()
+            .map((span) => span.lineSegments)
+            .flat()
+            .map((lineSegment) => this.segmentToRange(dim2, lineSegment));
           break;
         }
         case 'Polygon': {
@@ -130,19 +137,31 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           throw new Error('unsupported geometry type');
       }
 
-      const tileMatrixLimits = mergedRanges.map(({ start: startRange, end: endRange }) => {
+      const tileMatrixLimits = mergedRanges.map(({ start, end }) => {
+        const min = Math.min(start, end);
+        const max = Math.max(start, end);
+        const [startRange, endRange] = isWide ? [min, max] : cornerOfOrigin === 'topLeft' ? [max, min] : [min, max];
+
+        const [startReverseIntersectionPolicy, endReverseIntersectionPolicy] = this.getRangeReverseIntersectionPolicy(
+          { start: startRange, end: endRange },
+          isWide,
+          cornerOfOrigin,
+          isWide ? tileWidth : tileHeight,
+          [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth]
+        );
+
         const { col: startTileCol, row: startTileRow } = positionToTileIndex(
           isWide ? [startRange, range[0]] : [range[0], startRange],
           tileMatrixSet,
           tileMatrixId,
-          this.useReverseIntersectionPolicy({ start: startRange, end: endRange }, isWide, cornerOfOrigin) ? (isWide ? 'col' : 'row') : 'none',
+          startReverseIntersectionPolicy,
           metatile
         );
         const { col: endTileCol, row: endTileRow } = positionToTileIndex(
           isWide ? [endRange, range[0]] : [range[0], endRange],
           tileMatrixSet,
           tileMatrixId,
-          this.useReverseIntersectionPolicy({ start: endRange, end: startRange }, isWide, cornerOfOrigin) ? (isWide ? 'col' : 'row') : 'none',
+          endReverseIntersectionPolicy,
           metatile
         );
 
@@ -459,11 +478,33 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     };
   }
 
-  private useReverseIntersectionPolicy(
+  private getRangeReverseIntersectionPolicy(
     { start: startRange, end: endRange }: NumericRange,
     isWide: boolean,
-    cornerOfOrigin: CornerOfOriginCode
-  ): boolean {
-    return isWide ? startRange > endRange : cornerOfOrigin === 'topLeft' ? startRange < endRange : startRange > endRange;
+    cornerOfOrigin: CornerOfOriginCode,
+    tileSize: number,
+    [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth]: BBox
+  ): [Exclude<ReverseIntersectionPolicy, 'both'>, Exclude<ReverseIntersectionPolicy, 'both'>] {
+    const isOnMinBounds =
+      startRange === endRange &&
+      (isWide ? endRange === minBoundingBoxEast : cornerOfOrigin === 'topLeft' ? endRange === maxBoundingBoxNorth : endRange === minBoundingBoxNorth);
+    const isOnMaxBounds =
+      startRange === endRange &&
+      (isWide ? endRange === maxBoundingBoxEast : cornerOfOrigin === 'topLeft' ? endRange === minBoundingBoxNorth : endRange === maxBoundingBoxNorth);
+
+    if (isOnMinBounds) {
+      return ['none', 'none'];
+    }
+
+    if (isOnMaxBounds) {
+      return isWide ? ['col', 'col'] : ['row', 'row'];
+    }
+
+    const isSegmentBetweenTiles = startRange === endRange && startRange % tileSize === 0;
+    if (isSegmentBetweenTiles) {
+      return isWide ? ['col', 'none'] : ['row', 'none'];
+    }
+
+    return isWide ? ['none', 'col'] : ['none', 'row'];
   }
 }
