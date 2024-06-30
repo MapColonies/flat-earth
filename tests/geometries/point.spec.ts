@@ -5,11 +5,17 @@ import { Point } from '../../src/geometries/point';
 import type { GeoJSONPoint, PointInput } from '../../src/geometries/types';
 import { TileMatrixSet } from '../../src/tiles/tileMatrixSet';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from '../../src/tiles/tileMatrixSets/worldCRS84Quad';
-import type { TileMatrixId, TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../src/tiles/types';
+import type { TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../src/tiles/types';
 import { generatePointInput } from './helpers/geometries';
-import { getTileMatrix, tileMatrixToBBox } from './helpers/tiles';
-import { generateNonFinite, isSafeInteger } from './helpers/utilities';
-import { ConstructorTestCase, BadConstructorTestCase, ToTileMatrixLimitsTestCase, BadToTileMatrixLimitsTestCase } from './helpers/types';
+import { generateNonFinite, isSafeInteger } from './helpers/propertyTest';
+import { generateTileMatrixToBBox, getTileMatrix, tileMatrixToBBox } from './helpers/tiles';
+import {
+  BadConstructorTestCase,
+  BadToTileMatrixLimitsTestCase,
+  ConstructorTestCase,
+  ToTileMatrixLimitsTestCase,
+  type ToTileMatrixLimitsArgs,
+} from './helpers/types';
 
 const tileMatrixSetJSONs = [TILEMATRIXSETJSON_WORLD_CRS84_QUAD];
 
@@ -127,6 +133,7 @@ describe('Point', () => {
         const arbitraries = [pointInput] as const;
         const predicate = (pointInput: PointInput) => {
           const point = new Point(pointInput);
+
           expect(point).toBeInstanceOf(Point);
         };
         fc.assert(fc.property(...arbitraries, predicate));
@@ -407,28 +414,30 @@ describe('Point', () => {
     });
 
     describe('#property-test', () => {
-      let pointInput: fc.Arbitrary<PointInput>;
-      beforeAll(() => {
-        pointInput = generatePointInput();
-      });
+      const toTileMatrixLimitsArgs = fc
+        .constantFrom(...tileMatrixSetJSONs)
+        .map((tileMatrixSetJSON) => {
+          return {
+            tileMatrixSetJSON,
+            tileMatrixId: fc.constantFrom(...tileMatrixSetJSON.tileMatrices.map((tileMatrixJSON) => tileMatrixJSON.id)),
+          };
+        })
+        .chain(({ tileMatrixId, tileMatrixSetJSON }) => {
+          const bBox = tileMatrixId.map((tileMatrixId) => tileMatrixToBBox(tileMatrixSetJSON, tileMatrixId));
+
+          return fc.record({
+            tileMatrixId,
+            tileMatrixSet: fc.constant(new TileMatrixSet(tileMatrixSetJSON)),
+            metatile: fc.integer({ min: 1 }),
+            geometry: generatePointInput({ bBox }).chain((pointInput) =>
+              fc.constant(new Point({ ...pointInput, ...{ coordRefSys: tileMatrixSetJSON.crs } }))
+            ),
+          });
+        });
 
       it('should yield a tile matrix limits only once and then complete for a point inside the tile matrix bounding box', () => {
-        const tileMatrixSetJSON = fc.constantFrom(...tileMatrixSetJSONs);
-        const tileMatrixId = tileMatrixSetJSON.chain((tileMatrixSetJSON) =>
-          fc.constantFrom(...tileMatrixSetJSON.tileMatrices.map((tileMatrixJSON) => tileMatrixJSON.id))
-        );
-        const metatile = fc.integer({ min: 1 });
-        const bBox = tileMatrixToBBox(tileMatrixSetJSON, tileMatrixId);
-        pointInput = generatePointInput({ bBox });
-        const arbitraries = [pointInput, tileMatrixSetJSON, tileMatrixId, metatile] as const;
-        const predicate = (
-          pointInput: PointInput,
-          tileMatrixSetJSON: TileMatrixSetJSON,
-          tileMatrixId: TileMatrixId<TileMatrixSet>,
-          metatile: number
-        ) => {
-          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
-          const point = new Point({ ...pointInput, ...{ coordRefSys: tileMatrixSetJSON.crs } });
+        const arbitraries = [toTileMatrixLimitsArgs] as const;
+        const predicate = ({ geometry: point, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Point>) => {
           const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
           if (!tileMatrix) {
             throw new Error('tile matrix id is not part of the given tile matrix set');
@@ -471,20 +480,15 @@ describe('Point', () => {
       });
 
       it('should throw an error if metatile is not an integer equal to or larger than 1', () => {
-        const tileMatrixSetJSON = fc.constantFrom(...tileMatrixSetJSONs);
-        const tileMatrixId = fc.string();
         const metatile = fc.double().filter((number) => !(Number.isSafeInteger(number) && number >= 1));
-        const arbitraries = [pointInput, tileMatrixSetJSON, tileMatrixId, metatile] as const;
-        const predicate = (
-          pointInput: PointInput,
-          tileMatrixSetJSON: TileMatrixSetJSON,
-          tileMatrixId: TileMatrixId<TileMatrixSet>,
-          metatile: number
-        ) => {
-          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
-          const point = new Point(pointInput);
-
+        const arbitraries = [
+          fc.tuple(toTileMatrixLimitsArgs, metatile).chain(([{ metatile: _, ...args }, metatile]) => {
+            return fc.constant({ ...args, metatile });
+          }),
+        ] as const;
+        const predicate = ({ geometry: point, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Point>) => {
           const generator = point.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+
           expect(() => {
             generator.next();
           }).toThrow(new Error('metatile must be an integer with a value of at least 1'));
@@ -513,21 +517,21 @@ describe('Point', () => {
               return fc.constant({ ...tileMatrixSetJSON, ...{ crs } });
             })
         );
-        const tileMatrixId = fc.string();
-        const metatile = fc.integer({ min: 1 });
-        const arbitraries = [pointInput, tileMatrixSetJSON, tileMatrixId, metatile, crs] as const;
-        const predicate = (
-          pointInput: PointInput,
-          tileMatrixSetJSON: TileMatrixSetJSON,
-          tileMatrixId: TileMatrixId<TileMatrixSet>,
-          metatile: number,
-          crs?: TileMatrixSetJSON['crs']
-        ) => {
-          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
-
-          const point = new Point({ ...pointInput, ...{ crs } });
-
+        const pointInput = generatePointInput();
+        const arbitraries = [
+          fc
+            .tuple(toTileMatrixLimitsArgs, pointInput, tileMatrixSetJSON, crs)
+            .chain(([{ geometry: _, tileMatrixSet: _tileMatrixSet, ...args }, pointInput, tileMatrixSetJSON, crs]) =>
+              fc.constant({
+                ...args,
+                tileMatrixSet: new TileMatrixSet(tileMatrixSetJSON),
+                geometry: new Point({ ...pointInput, ...{ coordRefSys: crs } }),
+              })
+            ),
+        ] as const;
+        const predicate = ({ geometry: point, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Point>) => {
           const generator = point.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+
           expect(() => {
             generator.next();
           }).toThrow(new Error('CRS mismatch'));
@@ -536,22 +540,17 @@ describe('Point', () => {
       });
 
       it('should throw an error if tile matrix identifier is not part of tile matrix set', () => {
-        const tileMatrixSetJSON = fc.constantFrom(...tileMatrixSetJSONs);
-        const tileMatrixId = tileMatrixSetJSON.chain((tileMatrixSetJSON) =>
-          fc.string().filter((identifier) => !tileMatrixSetJSON.tileMatrices.map((tileMatrixJSON) => tileMatrixJSON.id).includes(identifier))
-        );
-        const metatile = fc.integer({ min: 1 });
-        const arbitraries = [pointInput, tileMatrixSetJSON, tileMatrixId, metatile] as const;
-        const predicate = (
-          pointInput: PointInput,
-          tileMatrixSetJSON: TileMatrixSetJSON,
-          tileMatrixId: TileMatrixId<TileMatrixSet>,
-          metatile: number
-        ) => {
-          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
-          const point = new Point({ ...pointInput, ...{ coordRefSys: tileMatrixSetJSON.crs } });
-
+        const arbitraries = [
+          toTileMatrixLimitsArgs.chain(({ tileMatrixSet, tileMatrixId, ...args }) =>
+            fc
+              .string()
+              .filter((identifier) => tileMatrixSet.tileMatrices.every(({ identifier: { code } }) => code !== identifier))
+              .chain((tileMatrixId) => fc.constant({ ...args, tileMatrixSet, tileMatrixId }))
+          ),
+        ] as const;
+        const predicate = ({ geometry: point, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Point>) => {
           const generator = point.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+
           expect(() => {
             generator.next();
           }).toThrow(new Error('tile matrix id is not part of the given tile matrix set'));
@@ -561,25 +560,46 @@ describe('Point', () => {
 
       it('should throw an error if geometry lies outside of the tile matrix bounding box', () => {
         const tileMatrixSetJSON = fc.constantFrom(...tileMatrixSetJSONs);
+        const crs = tileMatrixSetJSON.map((tileMatrixSetJSON) => tileMatrixSetJSON.crs);
         const tileMatrixId = tileMatrixSetJSON.chain((tileMatrixSetJSON) =>
           fc.constantFrom(...tileMatrixSetJSON.tileMatrices.map((tileMatrixJSON) => tileMatrixJSON.id))
         );
-        const metatile = fc.integer({ min: 1 });
-        const bBox = tileMatrixToBBox(tileMatrixSetJSON, tileMatrixId);
-        pointInput = bBox.chain(([minEast, minNorth, maxEast, maxNorth]) =>
-          generatePointInput().filter(({ coordinates: [east, north] }) => east < minEast || east > maxEast || north < minNorth || north > maxNorth)
+        const tileMatrixBBox = generateTileMatrixToBBox(tileMatrixSetJSON, tileMatrixId);
+        const coordinates = tileMatrixBBox.chain(([tileMatrixMinEast, tileMatrixMinNorth, tileMatrixMaxEast, tileMatrixMaxNorth]) =>
+          fc.oneof(
+            fc.tuple(
+              fc.float({ noDefaultInfinity: true, noNaN: true, min: Math.fround(tileMatrixMaxEast), minExcluded: true }),
+              fc.float({ noDefaultInfinity: true, noNaN: true })
+            ),
+            fc.tuple(
+              fc.float({ noDefaultInfinity: true, noNaN: true, max: Math.fround(tileMatrixMinEast), maxExcluded: true }),
+              fc.float({ noDefaultInfinity: true, noNaN: true })
+            ),
+            fc.tuple(
+              fc.float({ noDefaultInfinity: true, noNaN: true }),
+              fc.float({ noDefaultInfinity: true, noNaN: true, min: Math.fround(tileMatrixMaxNorth), minExcluded: true })
+            ),
+            fc.tuple(
+              fc.float({ noDefaultInfinity: true, noNaN: true }),
+              fc.float({ noDefaultInfinity: true, noNaN: true, max: Math.fround(tileMatrixMinNorth), maxExcluded: true })
+            )
+          )
         );
-        const arbitraries = [pointInput, tileMatrixSetJSON, tileMatrixId, metatile] as const;
-        const predicate = (
-          pointInput: PointInput,
-          tileMatrixSetJSON: TileMatrixSetJSON,
-          tileMatrixId: TileMatrixId<TileMatrixSet>,
-          metatile: number
-        ) => {
-          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
-          const point = new Point({ ...pointInput, ...{ coordRefSys: tileMatrixSetJSON.crs } });
-
+        const pointInput = generatePointInput({ coordinates });
+        const arbitraries = [
+          fc
+            .tuple(toTileMatrixLimitsArgs, pointInput, tileMatrixSetJSON, crs)
+            .chain(([{ geometry: _, tileMatrixSet: _tileMatrixSet, ...args }, lineInput, tileMatrixSetJSON, crs]) =>
+              fc.constant({
+                ...args,
+                tileMatrixSet: new TileMatrixSet(tileMatrixSetJSON),
+                geometry: new Point({ ...lineInput, ...{ coordRefSys: crs } }),
+              })
+            ),
+        ] as const;
+        const predicate = ({ geometry: point, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Point>) => {
           const generator = point.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+
           expect(() => {
             generator.next();
           }).toThrow(RangeError);

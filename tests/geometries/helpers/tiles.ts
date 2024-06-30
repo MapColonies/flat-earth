@@ -16,32 +16,37 @@ export const getTileMatrix = <T extends TileMatrixSet>(
   });
 };
 
-export const tileMatrixToBBox = (tileMatrixSetJSON: fc.Arbitrary<TileMatrixSetJSON>, tileMatrixId: fc.Arbitrary<string>): fc.Arbitrary<BBox> => {
-  return fc.tuple(tileMatrixSetJSON, tileMatrixId).map(([tileMatrixSetJSON, tileMatrixId]) => {
-    const tileMatrixJSON = tileMatrixSetJSON.tileMatrices.find(({ id: comparedTileMatrixId }) => {
-      return comparedTileMatrixId === tileMatrixId;
-    });
+export const generateTileMatrixToBBox = (
+  tileMatrixSetJSON: fc.Arbitrary<TileMatrixSetJSON>,
+  tileMatrixId: fc.Arbitrary<string>
+): fc.Arbitrary<BBox> => {
+  return fc.tuple(tileMatrixSetJSON, tileMatrixId).map(([tileMatrixSetJSON, tileMatrixId]) => tileMatrixToBBox(tileMatrixSetJSON, tileMatrixId));
+};
 
-    if (!tileMatrixJSON) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
-    }
-    const {
-      cellSize,
-      cornerOfOrigin = 'topLeft',
-      tileHeight,
-      tileWidth,
-      matrixHeight,
-      matrixWidth,
-      pointOfOrigin: [eastOrigin, northOrigin],
-    } = tileMatrixJSON;
-
-    const tileMatrixHeight = cellSize * tileHeight * matrixHeight;
-    const tileMatrixWidth = cellSize * tileWidth * matrixWidth;
-
-    const [minNorth, maxNorth] =
-      cornerOfOrigin === 'topLeft' ? [northOrigin - tileMatrixHeight, northOrigin] : [northOrigin, northOrigin + tileMatrixHeight];
-    const [minEast, maxEast] = [eastOrigin, eastOrigin + tileMatrixWidth];
-
-    return [minEast, minNorth, maxEast, maxNorth];
+export const tileMatrixToBBox = (tileMatrixSetJSON: TileMatrixSetJSON, tileMatrixId: string): BBox => {
+  const tileMatrixJSON = tileMatrixSetJSON.tileMatrices.find(({ id: comparedTileMatrixId }) => {
+    return comparedTileMatrixId === tileMatrixId;
   });
+
+  if (!tileMatrixJSON) {
+    throw new Error('tile matrix id is not part of the given tile matrix set');
+  }
+  const {
+    cellSize,
+    cornerOfOrigin = 'topLeft',
+    tileHeight,
+    tileWidth,
+    matrixHeight,
+    matrixWidth,
+    pointOfOrigin: [eastOrigin, northOrigin],
+  } = tileMatrixJSON;
+
+  const tileMatrixHeight = cellSize * tileHeight * matrixHeight;
+  const tileMatrixWidth = cellSize * tileWidth * matrixWidth;
+
+  const [minNorth, maxNorth] =
+    cornerOfOrigin === 'topLeft' ? [northOrigin - tileMatrixHeight, northOrigin] : [northOrigin, northOrigin + tileMatrixHeight];
+  const [minEast, maxEast] = [eastOrigin, eastOrigin + tileMatrixWidth];
+
+  return [minEast, minNorth, maxEast, maxNorth];
 };
