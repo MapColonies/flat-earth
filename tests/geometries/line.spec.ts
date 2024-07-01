@@ -858,7 +858,7 @@ describe('Line', () => {
         expected: new Error('tile matrix id is not part of the given tile matrix set'),
       },
       {
-        case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
+        case: 'for a line end outside the tile matrix bounding box with low scale tile matrix',
         coordinates: [
           [180.1, -90],
           [180, -90],
@@ -868,7 +868,7 @@ describe('Line', () => {
         expected: new RangeError("point's easting, 180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
       },
       {
-        case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
+        case: 'for a line end outside the tile matrix bounding box with low scale tile matrix',
         coordinates: [
           [180, -90.1],
           [180, -90],
@@ -878,7 +878,7 @@ describe('Line', () => {
         expected: new RangeError("point's northing, -90.1, is out of range of tile matrix bounding box of tile matrix: 0"),
       },
       {
-        case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
+        case: 'for a line end outside the tile matrix bounding box with low scale tile matrix',
         coordinates: [
           [-180.1, 90],
           [-180, 90],
@@ -888,7 +888,7 @@ describe('Line', () => {
         expected: new RangeError("point's easting, -180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
       },
       {
-        case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
+        case: 'for a line end outside the tile matrix bounding box with low scale tile matrix',
         coordinates: [
           [-180, 90.1],
           [-180, 90],
@@ -898,7 +898,7 @@ describe('Line', () => {
         expected: new RangeError("point's northing, 90.1, is out of range of tile matrix bounding box of tile matrix: 0"),
       },
       {
-        case: 'for a point outside the tile matrix bounding box with low scale tile matrix with non-default metatile (2)',
+        case: 'for a line end outside the tile matrix bounding box with low scale tile matrix with non-default metatile (2)',
         coordinates: [
           [180.1, -90],
           [180, -90],
@@ -909,7 +909,7 @@ describe('Line', () => {
         expected: new RangeError("point's easting, 180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
       },
       {
-        case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
+        case: 'for a line end outside the tile matrix bounding box with high scale tile matrix',
         coordinates: [
           [180, 90],
           [-180, 90],
@@ -919,7 +919,7 @@ describe('Line', () => {
         expected: new RangeError("point's easting, 180, is out of range of tile matrix bounding box of tile matrix: 23"),
       },
       {
-        case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
+        case: 'for a line end outside the tile matrix bounding box with high scale tile matrix',
         coordinates: [
           [179.9999999999868, -90],
           [-180, 90],
