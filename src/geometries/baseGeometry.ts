@@ -244,7 +244,12 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
       })
       .reduce<NumericRange[]>((agg, span, index) => {
         const { start, end } = this.spanToBoundingRange(dim, span);
-        return (index & 1) === 0 ? [...agg, { start, end }] : agg.toSpliced(agg.length - 1, 1, { ...agg[agg.length - 1], ...{ end } });
+        if ((index & 1) === 0) {
+          return [...agg, { start, end }];
+        } else {
+          agg.splice(agg.length - 1, 1, { ...agg[agg.length - 1], ...{ end } });
+          return agg;
+        }
       }, []);
 
     return boundingRanges;
