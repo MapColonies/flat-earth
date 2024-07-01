@@ -7,6 +7,8 @@ type Concrete<Type> = {
 export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
 export type Comparison = 'equal' | 'closest' | 'lower' | 'higher';
+export type ReverseIntersectionPolicy = 'none' | 'both' | 'row' | 'col';
+
 export interface CoordRefSys {
   coordRefSys?: TileMatrixSet['crs']; // TODO: change type according to - OGC Features and Geometries JSON - Part 1: Core
 }

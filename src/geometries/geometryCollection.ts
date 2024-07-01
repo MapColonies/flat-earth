@@ -21,7 +21,7 @@ export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
     return this.geoJSONGeometry.geometries;
   }
 
-  protected getPositions(): Position[] {
+  protected getAllPositions(): Position[] {
     return this.geoJSONGeometry.geometries
       .flatMap((geometry) => this.flatGeometryCollection(geometry))
       .flatMap((geometry) => this.flatGeometryPositions(geometry));

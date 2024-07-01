@@ -71,13 +71,13 @@ export class Tile<T extends TileMatrixSet> {
     const height = tileEffectiveHeight(this.tileMatrix) * metatile;
 
     const {
-      pointOfOrigin: [originX, originY],
+      pointOfOrigin: [originEast, originNorth],
       cornerOfOrigin = 'topLeft',
     } = this.tileMatrix;
 
-    const east = originX + col * width;
+    const east = originEast + col * width;
     // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    const north = originY + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
+    const north = originNorth + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
 
     return new Point({ coordinates: [east, north], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
   }
