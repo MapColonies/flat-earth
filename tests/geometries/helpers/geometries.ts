@@ -1,7 +1,7 @@
 import { fc } from '@fast-check/jest';
 import type { BBox, Position } from 'geojson';
 import { SUPPORTED_CRS } from '../../../src/constants';
-import type { GeoJSONBaseGeometry, LineStringInput, PointInput } from '../../../src/geometries/types';
+import type { GeoJSONBaseGeometry, LineStringInput, PointInput, PolygonInput } from '../../../src/geometries/types';
 import type { TileMatrixSetJSON } from '../../../src/tiles/types';
 
 type TransformGeometryPositionType<T, TO> = T extends Position ? TO : T extends (infer U)[] ? TransformGeometryPositionType<U, TO>[] : never;
@@ -64,7 +64,7 @@ export const generateLineInput = ({
   const lineInput = (
     coordinates?.chain((positions) => {
       return fc.constant(
-        positions.map<[number, number]>(([east, north]) => {
+        positions.map(([east, north]) => {
           return [east, north];
         })
       );
@@ -89,4 +89,46 @@ export const generateLineInput = ({
   );
 
   return lineInput;
+};
+
+// Notice: currently does not generates holes
+export const generatePolygonInput = ({
+  bBox,
+  coordinates,
+  crs,
+}: GenerateGeometryInput<PolygonInput['coordinates']> = {}): fc.Arbitrary<PolygonInput> => {
+  const polygonInput = (
+    coordinates?.chain((positions) => {
+      return fc.constant(
+        positions.map((ring) =>
+          ring.map(([east, north]) => {
+            return [east, north];
+          })
+        )
+      );
+    }) ??
+    (bBox
+      ? bBox.chain(([minEast, minNorth, maxEast, maxNorth]) =>
+          fc.tuple(
+            fc.array(
+              fc.tuple(
+                fc.float({ min: Math.fround(minEast), max: Math.fround(maxEast), noNaN: true, minExcluded: true, maxExcluded: true }),
+                fc.float({ min: Math.fround(minNorth), max: Math.fround(maxNorth), noNaN: true, minExcluded: true, maxExcluded: true })
+              ),
+              { minLength: 3 }
+            )
+          )
+        )
+      : fc.tuple(
+          fc.array(fc.tuple(fc.float({ noDefaultInfinity: true, noNaN: true }), fc.float({ noDefaultInfinity: true, noNaN: true })), { minLength: 3 })
+        ))
+  ).chain((coordinates) =>
+    fc.record({
+      coordinates: fc.constant(coordinates),
+      bbox: fc.option(fc.constant(coordinatesToBBox(coordinates)), { nil: undefined }),
+      coordRefSys: fc.option(crs ?? fc.constantFrom(...SUPPORTED_CRS), { nil: undefined }),
+    })
+  );
+
+  return polygonInput;
 };
