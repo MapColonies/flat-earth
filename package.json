@@ -30,7 +30,6 @@
     "@fast-check/jest": "^1.8.2",
     "@map-colonies/eslint-config": "^4.0.0",
     "@map-colonies/prettier-config": "0.0.1",
-    "@turf/random": "^7.0.0",
     "@types/geojson": "7946.0.14",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.14.2",
@@ -52,7 +51,7 @@
     "@placemarkio/check-geojson": "^0.1.12",
     "@turf/boolean-concave": "^6.5.0",
     "@turf/boolean-valid": "^6.5.0",
-    "@turf/turf": "^7.0.0-alpha.2",
+    "@turf/turf": "^7.0.0",
     "geographiclib-geodesic": "^2.0.0"
   },
   "directories": {
