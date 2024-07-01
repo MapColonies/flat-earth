@@ -12,7 +12,9 @@ interface GenerateGeometryInput<T extends GeoJSONBaseGeometry['coordinates']> {
   crs?: fc.Arbitrary<TileMatrixSetJSON['crs']>;
 }
 
-export const coordinatesToBBox = <T extends GeoJSONBaseGeometry['coordinates'] | Transform<GeoJSONBaseGeometry['coordinates'], [number, number]>>(
+export const coordinatesToBBox = <
+  T extends GeoJSONBaseGeometry['coordinates'] | TransformGeometryPositionType<GeoJSONBaseGeometry['coordinates'], [number, number]>,
+>(
   coordinates: T
 ): BBox => {
   const initialValue: { easts: number[]; norths: number[] } = { easts: [], norths: [] };
