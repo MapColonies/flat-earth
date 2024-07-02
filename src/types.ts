@@ -1,6 +1,6 @@
 import type { TileMatrixSet, TileMatrixSetJSON } from './tiles/types';
 
-type Concrete<Type> = {
+type NonOptional<Type> = {
   [Property in keyof Type]-?: Type[Property];
 };
 
@@ -13,5 +13,5 @@ export interface CoordRefSys {
 export interface CoordRefSysJSON {
   coordRefSys?: TileMatrixSetJSON['crs']; // TODO: change type according to - OGC Features and Geometries JSON - Part 1: Core
 }
-export type ConcreteCoordRefSys = Concrete<CoordRefSys>;
-export type ConcreteCoordRefSysJSON = Concrete<CoordRefSysJSON>;
+export type ConcreteCoordRefSys = NonOptional<CoordRefSys>;
+export type ConcreteCoordRefSysJSON = NonOptional<CoordRefSysJSON>;
