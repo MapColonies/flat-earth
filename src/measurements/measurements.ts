@@ -76,7 +76,7 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
  * @param geometry2
  * @returns true/false if two geometries are equal
  */
-export function geometriesEqual<G extends GeoJSONGeometry>(geometry1: Geometry<G>, geometry2: Geometry<G>): boolean {
+export function geometriesEqual<G extends GeoJSONGeometry, T extends G>(geometry1: Geometry<G>, geometry2: Geometry<T>): boolean {
   const feature1 = geometry1.getJSONFG();
   const feature2 = geometry2.getJSONFG();
   return booleanEqual(feature1, feature2);
