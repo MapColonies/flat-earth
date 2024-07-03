@@ -5,12 +5,12 @@ import { encodeToJSON } from '../crs/crs';
 import type { BoundingBox } from '../geometries/boundingBox';
 import type { Geometry } from '../geometries/geometry';
 import { Point } from '../geometries/point';
-import type { GeoJSONGeometry } from '../geometries/types';
+import type { CoordRefSysJSON, GeoJSONGeometry } from '../geometries/types';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
-import type { ArrayElement, CoordRefSysJSON } from '../types';
+import type { ArrayElement } from '../utils/types';
 
 function validateBBoxByTileMatrix(bBox: BBox, coordRefSys: CRSType, tileMatrix: TileMatrix): void {
   const [minEast, minNorth, maxEast, maxNorth] = bBox;

@@ -1,5 +1,5 @@
 import type { BBox, Position } from 'geojson';
-import type { ArrayElement } from '../types';
+import type { ArrayElement } from '../utils/types';
 import type { TileMatrixSet } from './tileMatrixSet';
 import type { TileIndex, TileMatrix, TileMatrixId } from './types';
 

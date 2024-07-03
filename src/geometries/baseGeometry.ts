@@ -3,11 +3,10 @@ import { encodeToJSON } from '../crs/crs';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId, TileMatrixLimits } from '../tiles/types';
-import type { CoordRefSysJSON } from '../types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Geometry } from './geometry';
 import { Point } from './point';
-import type { GeoJSONBaseGeometry } from './types';
+import type { CoordRefSysJSON, GeoJSONBaseGeometry } from './types';
 
 interface SimpleLineSegment {
   start: { position: Position };

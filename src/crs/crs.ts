@@ -1,4 +1,4 @@
-import type { ConcreteCoordRefSys, ConcreteCoordRefSysJSON } from '../types';
+import type { ConcreteCoordRefSys, ConcreteCoordRefSysJSON } from '../geometries/types';
 
 export function decodeFromJSON(coordRefSysJSON: ConcreteCoordRefSysJSON['coordRefSys']): ConcreteCoordRefSys['coordRefSys'] {
   return typeof coordRefSysJSON === 'object' && 'wkt' in coordRefSysJSON ? { wkt: JSON.stringify(coordRefSysJSON.wkt) } : coordRefSysJSON;
