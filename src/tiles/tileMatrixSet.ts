@@ -16,7 +16,6 @@ export class TileMatrixSet implements TileMatrixSetType {
   private readonly tileMatrixSet: TileMatrixSetType;
   public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    // validateCRS(tileMatrixSetJSON.crs); // TODO: needs a different validation
     this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
   }
 
