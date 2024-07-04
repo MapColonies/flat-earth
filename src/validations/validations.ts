@@ -100,11 +100,15 @@ export function validatePositionByTileMatrix(position: Position, tileMatrix: Til
     tileMatrixToBBox(tileMatrix);
 
   if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
-    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+    throw new RangeError(
+      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on east axis. Bounds: ${tileMatrixBoundingBoxMinEast}-${tileMatrixBoundingBoxMaxEast}, east value: ${east}.`
+    );
   }
 
   if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
-    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+    throw new RangeError(
+      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on north axis. Bounds: ${tileMatrixBoundingBoxMinNorth}-${tileMatrixBoundingBoxMaxNorth}, north value: ${north}.`
+    );
   }
 }
 
