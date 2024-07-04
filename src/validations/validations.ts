@@ -89,13 +89,13 @@ export function validatePositionByTileMatrix(position: Position, tileMatrix: Til
 
   if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
     throw new RangeError(
-      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on east axis. Bounds: ${tileMatrixBoundingBoxMinEast}-${tileMatrixBoundingBoxMaxEast}, east value: ${east}.`
+      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on east axis. bounds: [${tileMatrixBoundingBoxMinEast},${tileMatrixBoundingBoxMaxEast}], east value: ${east}`
     );
   }
 
   if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
     throw new RangeError(
-      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on north axis. Bounds: ${tileMatrixBoundingBoxMinNorth}-${tileMatrixBoundingBoxMaxNorth}, north value: ${north}.`
+      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on north axis. bounds: [${tileMatrixBoundingBoxMinNorth},${tileMatrixBoundingBoxMaxNorth}], north value: ${north}`
     );
   }
 }
