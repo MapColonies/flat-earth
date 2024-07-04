@@ -124,6 +124,7 @@ export function validateMetatile(metatile: number): void {
  */
 export function validateTileMatrix(tileMatrix: TileMatrix): void {
   const { matrixHeight, matrixWidth, tileHeight, tileWidth } = tileMatrix;
+
   if (matrixWidth < 1 && Number.isSafeInteger(matrixWidth)) {
     throw new Error('width of tile matrix must be an integer with a value of at least 1');
   }
