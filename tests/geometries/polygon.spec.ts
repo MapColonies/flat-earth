@@ -7,10 +7,11 @@ import { Polygon } from '../../src/geometries/polygon';
 import type { GeoJSONPolygon, PolygonInput } from '../../src/geometries/types';
 import { TileMatrixSet } from '../../src/tiles/tileMatrixSet';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from '../../src/tiles/tileMatrixSets/worldCRS84Quad';
+import { tileMatrixToBBox } from '../../src/tiles/tiles';
 import type { TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../src/tiles/types';
 import { generatePolygonInput } from './helpers/geometries';
 import { generateNonFinite, isSafeInteger } from './helpers/propertyTest';
-import { generateTileMatrixToBBox, getTileMatrix, tileMatrixToBBox } from './helpers/tiles';
+import { generateTileMatrixToBBox } from './helpers/tiles';
 import type {
   BadConstructorTestCase,
   BadToTileMatrixLimitsTestCase,
@@ -874,11 +875,18 @@ describe('Polygon', () => {
           };
         })
         .chain(({ tileMatrixId, tileMatrixSetJSON }) => {
-          const bBox = tileMatrixId.map((tileMatrixId) => tileMatrixToBBox(tileMatrixSetJSON, tileMatrixId));
+          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
+          const bBox = tileMatrixId.map((tileMatrixId) => {
+            const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+            if (!tileMatrix) {
+              throw new Error('tile matrix id is not part of the given tile matrix set');
+            }
+            return tileMatrixToBBox(tileMatrix);
+          });
 
           return fc.record({
             tileMatrixId,
-            tileMatrixSet: fc.constant(new TileMatrixSet(tileMatrixSetJSON)),
+            tileMatrixSet: fc.constant(tileMatrixSet),
             metatile: fc.integer({ min: 1 }),
             geometry: generatePolygonInput({ bBox }).chain((lineInput) =>
               fc.constant(new Polygon({ ...lineInput, ...{ coordRefSys: tileMatrixSetJSON.crs } }))
@@ -889,7 +897,7 @@ describe('Polygon', () => {
       it('should yield a tile matrix limits and finally complete for a polygon that is completely within the tile matrix bounding box', () => {
         const arbitraries = [toTileMatrixLimitsArgs] as const;
         const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Polygon>) => {
-          const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
+          const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
           if (!tileMatrix) {
             throw new Error('tile matrix id is not part of the given tile matrix set');
           }

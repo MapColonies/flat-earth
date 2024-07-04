@@ -7,9 +7,11 @@ import { Line } from '../../src/geometries/line';
 import type { GeoJSONLineString, LineStringInput } from '../../src/geometries/types';
 import { TileMatrixSet } from '../../src/tiles/tileMatrixSet';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from '../../src/tiles/tileMatrixSets/worldCRS84Quad';
+import { tileMatrixToBBox } from '../../src/tiles/tiles';
 import type { TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../src/tiles/types';
 import { generateLineInput } from './helpers/geometries';
-import { generateTileMatrixToBBox, getTileMatrix, tileMatrixToBBox } from './helpers/tiles';
+import { generateNonFinite, isSafeInteger } from './helpers/propertyTest';
+import { generateTileMatrixToBBox } from './helpers/tiles';
 import type {
   BadConstructorTestCase,
   BadToTileMatrixLimitsTestCase,
@@ -17,7 +19,6 @@ import type {
   ToTileMatrixLimitsArgs,
   ToTileMatrixLimitsTestCase,
 } from './helpers/types';
-import { generateNonFinite, isSafeInteger } from './helpers/propertyTest';
 
 const tileMatrixSetJSONs = [TILEMATRIXSETJSON_WORLD_CRS84_QUAD];
 
@@ -971,11 +972,18 @@ describe('Line', () => {
           };
         })
         .chain(({ tileMatrixId, tileMatrixSetJSON }) => {
-          const bBox = tileMatrixId.map((tileMatrixId) => tileMatrixToBBox(tileMatrixSetJSON, tileMatrixId));
+          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
+          const bBox = tileMatrixId.map((tileMatrixId) => {
+            const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+            if (!tileMatrix) {
+              throw new Error('tile matrix id is not part of the given tile matrix set');
+            }
+            return tileMatrixToBBox(tileMatrix);
+          });
 
           return fc.record({
             tileMatrixId,
-            tileMatrixSet: fc.constant(new TileMatrixSet(tileMatrixSetJSON)),
+            tileMatrixSet: fc.constant(tileMatrixSet),
             metatile: fc.integer({ min: 1 }),
             geometry: generateLineInput({ bBox }).chain((lineInput) =>
               fc.constant(new Line({ ...lineInput, ...{ coordRefSys: tileMatrixSetJSON.crs } }))
@@ -986,7 +994,7 @@ describe('Line', () => {
       it('should yield a tile matrix limits and finally complete for a line that is completely within the tile matrix bounding box', () => {
         const arbitraries = [toTileMatrixLimitsArgs] as const;
         const predicate = ({ geometry: line, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Line>) => {
-          const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
+          const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
           if (!tileMatrix) {
             throw new Error('tile matrix id is not part of the given tile matrix set');
           }

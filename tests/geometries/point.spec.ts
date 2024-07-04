@@ -5,10 +5,11 @@ import { Point } from '../../src/geometries/point';
 import type { GeoJSONPoint, PointInput } from '../../src/geometries/types';
 import { TileMatrixSet } from '../../src/tiles/tileMatrixSet';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from '../../src/tiles/tileMatrixSets/worldCRS84Quad';
+import { tileMatrixToBBox } from '../../src/tiles/tiles';
 import type { TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../src/tiles/types';
 import { generatePointInput } from './helpers/geometries';
 import { generateNonFinite, isSafeInteger } from './helpers/propertyTest';
-import { generateTileMatrixToBBox, getTileMatrix, tileMatrixToBBox } from './helpers/tiles';
+import { generateTileMatrixToBBox } from './helpers/tiles';
 import {
   BadConstructorTestCase,
   BadToTileMatrixLimitsTestCase,
@@ -414,6 +415,7 @@ describe('Point', () => {
     });
 
     describe('#property-test', () => {
+      // const toTileMatrixLimitsArgs2 = toTileMatrixLimitsArgsGenerator<Point, PointInput>(tileMatrixSetJSONs, generatePointInput, Point);
       const toTileMatrixLimitsArgs = fc
         .constantFrom(...tileMatrixSetJSONs)
         .map((tileMatrixSetJSON) => {
@@ -423,11 +425,18 @@ describe('Point', () => {
           };
         })
         .chain(({ tileMatrixId, tileMatrixSetJSON }) => {
-          const bBox = tileMatrixId.map((tileMatrixId) => tileMatrixToBBox(tileMatrixSetJSON, tileMatrixId));
+          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
+          const bBox = tileMatrixId.map((tileMatrixId) => {
+            const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+            if (!tileMatrix) {
+              throw new Error('tile matrix id is not part of the given tile matrix set');
+            }
+            return tileMatrixToBBox(tileMatrix);
+          });
 
           return fc.record({
             tileMatrixId,
-            tileMatrixSet: fc.constant(new TileMatrixSet(tileMatrixSetJSON)),
+            tileMatrixSet: fc.constant(tileMatrixSet),
             metatile: fc.integer({ min: 1 }),
             geometry: generatePointInput({ bBox }).chain((pointInput) =>
               fc.constant(new Point({ ...pointInput, ...{ coordRefSys: tileMatrixSetJSON.crs } }))
@@ -438,7 +447,7 @@ describe('Point', () => {
       it('should yield a tile matrix limits only once and then complete for a point inside the tile matrix bounding box', () => {
         const arbitraries = [toTileMatrixLimitsArgs] as const;
         const predicate = ({ geometry: point, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Point>) => {
-          const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
+          const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
           if (!tileMatrix) {
             throw new Error('tile matrix id is not part of the given tile matrix set');
           }
