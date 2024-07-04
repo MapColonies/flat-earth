@@ -429,7 +429,6 @@ describe('Point', () => {
     });
 
     describe('#property-test', () => {
-      // const toTileMatrixLimitsArgs2 = toTileMatrixLimitsArgsGenerator<Point, PointInput>(tileMatrixSetJSONs, generatePointInput, Point);
       const toTileMatrixLimitsArgs = fc
         .constantFrom(...tileMatrixSetJSONs)
         .map((tileMatrixSetJSON) => {
