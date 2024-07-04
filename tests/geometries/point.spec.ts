@@ -353,28 +353,28 @@ describe('Point', () => {
         coordinates: [180.1, -90],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's easting, 180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on east axis. bounds: [-180,180], east value: 180.1'),
       },
       {
         case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
         coordinates: [180, -90.1],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's northing, -90.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on north axis. bounds: [-90,90], north value: -90.1'),
       },
       {
         case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
         coordinates: [-180.1, 90],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's easting, -180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on east axis. bounds: [-180,180], east value: -180.1'),
       },
       {
         case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
         coordinates: [-180, 90.1],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's northing, 90.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on north axis. bounds: [-90,90], north value: 90.1'),
       },
       {
         case: 'for a point outside the tile matrix bounding box with low scale tile matrix with non-default metatile (2)',
@@ -382,7 +382,7 @@ describe('Point', () => {
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
         metatile: 2,
-        expected: new RangeError("point's easting, 180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on east axis. bounds: [-180,180], east value: 180.1'),
       },
     ];
 

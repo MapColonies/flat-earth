@@ -745,7 +745,7 @@ describe('Polygon', () => {
         ],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's easting, 180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on east axis. bounds: [-180,180], east value: 180.1'),
       },
       {
         case: 'for a polygon vertex outside the tile matrix bounding box with low scale tile matrix',
@@ -759,7 +759,7 @@ describe('Polygon', () => {
         ],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's northing, -90.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on north axis. bounds: [-90,90], north value: -90.1'),
       },
       {
         case: 'for a polygon vertex outside the tile matrix bounding box with low scale tile matrix',
@@ -773,7 +773,7 @@ describe('Polygon', () => {
         ],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's easting, -180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on east axis. bounds: [-180,180], east value: -180.1'),
       },
       {
         case: 'for a polygon vertex outside the tile matrix bounding box with low scale tile matrix',
@@ -787,7 +787,7 @@ describe('Polygon', () => {
         ],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
-        expected: new RangeError("point's northing, 90.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on north axis. bounds: [-90,90], north value: 90.1'),
       },
       {
         case: 'for a polygon vertex outside the tile matrix bounding box with low scale tile matrix with non-default metatile (2)',
@@ -802,7 +802,7 @@ describe('Polygon', () => {
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '0',
         metatile: 2,
-        expected: new RangeError("point's easting, 180.1, is out of range of tile matrix bounding box of tile matrix: 0"),
+        expected: new RangeError('point out of bounds of tile matrix 0 on east axis. bounds: [-180,180], east value: 180.1'),
       },
       {
         case: 'for a polygon vertex outside the tile matrix bounding box with high scale tile matrix',
@@ -816,7 +816,7 @@ describe('Polygon', () => {
         ],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '23',
-        expected: new RangeError("point's easting, 180, is out of range of tile matrix bounding box of tile matrix: 23"),
+        expected: new RangeError('point out of bounds of tile matrix 23 on east axis. bounds: [-180,179.9999999999868], east value: 180'),
       },
       {
         case: 'for a polygon vertex outside the tile matrix bounding box with high scale tile matrix',
@@ -830,7 +830,7 @@ describe('Polygon', () => {
         ],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '23',
-        expected: new RangeError("point's northing, -90, is out of range of tile matrix bounding box of tile matrix: 23"),
+        expected: new RangeError('point out of bounds of tile matrix 23 on north axis. bounds: [-89.9999999999934,90], north value: -90'),
       },
     ];
 
