@@ -74,19 +74,7 @@ export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMa
  * @param tileMatrix tile matrix to validate `point` against
  */
 export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix): void {
-  const {
-    coordinates: [east, north],
-  } = point;
-  const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
-    tileMatrixToBBox(tileMatrix);
-
-  if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
-    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
-  }
-
-  if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
-    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
-  }
+  validatePositionByTileMatrix(point.coordinates, tileMatrix);
 }
 
 /**
