@@ -384,6 +384,20 @@ describe('Point', () => {
         metatile: 2,
         expected: new RangeError('point out of bounds of tile matrix 0 on east axis. bounds: [-180,180], east value: 180.1'),
       },
+      {
+        case: 'for a point outside the tile matrix bounding box with high scale tile matrix',
+        coordinates: [180, 90],
+        tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
+        tileMatrixId: '23',
+        expected: new RangeError('point out of bounds of tile matrix 23 on east axis. bounds: [-180,179.9999999999868], east value: 180'),
+      },
+      {
+        case: 'for a point outside the tile matrix bounding box with high scale tile matrix',
+        coordinates: [179.9999999999868, -90],
+        tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
+        tileMatrixId: '23',
+        expected: new RangeError('point out of bounds of tile matrix 23 on north axis. bounds: [-89.9999999999934,90], north value: -90'),
+      },
     ];
 
     it.each(testCases)(
