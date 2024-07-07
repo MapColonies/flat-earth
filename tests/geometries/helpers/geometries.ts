@@ -12,6 +12,10 @@ interface GenerateGeometryInput<T extends GeoJSONBaseGeometry['coordinates']> {
   crs?: fc.Arbitrary<TileMatrixSetJSON['crs']>;
 }
 
+interface PolygonInputOptions {
+  closeLinearRing?: boolean;
+}
+
 export const coordinatesToBBox = <
   T extends GeoJSONBaseGeometry['coordinates'] | TransformGeometryPositionType<GeoJSONBaseGeometry['coordinates'], [number, number]>,
 >(
@@ -96,7 +100,8 @@ export const generatePolygonInput = ({
   bBox,
   coordinates,
   crs,
-}: GenerateGeometryInput<PolygonInput['coordinates']> = {}): fc.Arbitrary<PolygonInput> => {
+  closeLinearRing,
+}: GenerateGeometryInput<PolygonInput['coordinates']> & PolygonInputOptions = {}): fc.Arbitrary<PolygonInput> => {
   const polygonInput = (
     coordinates?.chain((positions) => {
       return fc.constant(
@@ -122,13 +127,17 @@ export const generatePolygonInput = ({
       : fc.tuple(
           fc.array(fc.tuple(fc.float({ noDefaultInfinity: true, noNaN: true }), fc.float({ noDefaultInfinity: true, noNaN: true })), { minLength: 3 })
         ))
-  ).chain((coordinates) =>
-    fc.record({
+  ).chain((coordinates) => {
+    if (closeLinearRing !== false) {
+      coordinates[0].push(coordinates[0][0]);
+    }
+
+    return fc.record({
       coordinates: fc.constant(coordinates),
       bbox: fc.option(fc.constant(coordinatesToBBox(coordinates)), { nil: undefined }),
       coordRefSys: fc.option(crs ?? fc.constantFrom(...SUPPORTED_CRS), { nil: undefined }),
-    })
-  );
+    });
+  });
 
   return polygonInput;
 };
