@@ -1,42 +1,57 @@
 import { deepStrictEqual } from 'node:assert/strict';
-import { BBox } from 'geojson';
+import { type BBox, type Position } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
-import { encodeToJSON } from '../crs/crs';
 import type { BoundingBox } from '../geometries/boundingBox';
-import type { Geometry } from '../geometries/geometry';
-import { Point } from '../geometries/point';
-import type { GeoJSONGeometry } from '../geometries/types';
+import type { Point } from '../geometries/point';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
-import type { CRS as CRSType, TileMatrix, TileMatrixId } from '../tiles/types';
+import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSetJSON } from '../tiles/types';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
 
-function validateBBoxByTileMatrix(bBox: BBox, coordRefSys: CRSType, tileMatrix: TileMatrix): void {
-  const [minEast, minNorth, maxEast, maxNorth] = bBox;
-  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(coordRefSys) });
-  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(coordRefSys) });
+/**
+ * Validates that the input `bbox` is valid
+ * @param bbox BBox to validate
+ */
+export function validateBBox(bbox: BBox): void {
+  const [, minNorth, , maxNorth] = bbox;
 
-  try {
-    validatePointByTileMatrix(minPoint, tileMatrix);
-    validatePointByTileMatrix(maxPoint, tileMatrix);
-  } catch (err) {
-    throw new RangeError(`bounding box is not within the tile matrix`);
+  if (maxNorth < minNorth) {
+    throw new Error('bounding box north bound must be equal or larger than south bound');
   }
 }
 
+/**
+ * Validates that the input `coordRefSys` is valid
+ * @param coordRefSys CRS to validate
+ */
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
-  if (coordRefSys !== undefined && !SUPPORTED_CRS.includes(coordRefSys)) {
+  if (
+    coordRefSys !== undefined &&
+    !SUPPORTED_CRS.some((supportedCoordRefSys) => {
+      try {
+        validateCRSByOtherCRS(supportedCoordRefSys, coordRefSys);
+        return true;
+      } catch (err) {
+        return false;
+      }
+    })
+  ) {
     throw new Error('unsupported CRS');
   }
 }
 
-export function validateCRSByOtherCRS(geometryCRS: CRSType, tileMatrixSetCRS: CRSType): void {
+/**
+ * Validates that the input `crs1` equals `crs2`
+ * @param crs1 first CRS
+ * @param crs2 second CRS
+ */
+export function validateCRSByOtherCRS<T extends CRSType | TileMatrixSetJSON['crs']>(crs1: T, crs2: T): void {
   try {
-    deepStrictEqual(geometryCRS, tileMatrixSetCRS);
+    deepStrictEqual(crs1, crs2);
   } catch (err) {
-    throw new Error("geometry's and tile matrix set's CRS do not match");
+    throw new Error('CRS mismatch');
   }
 }
 
@@ -59,18 +74,29 @@ export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMa
  * @param tileMatrix tile matrix to validate `point` against
  */
 export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix): void {
-  const {
-    coordinates: [east, north],
-  } = point;
+  validatePositionByTileMatrix(point.coordinates, tileMatrix);
+}
+
+/**
+ * Validates that the input `position` is valid with respect to `tileMatrix`
+ * @param position position to validate
+ * @param tileMatrix tile matrix to validate `position` against
+ */
+export function validatePositionByTileMatrix(position: Position, tileMatrix: TileMatrix): void {
+  const [east, north] = position;
   const [tileMatrixBoundingBoxMinEast, tileMatrixBoundingBoxMinNorth, tileMatrixBoundingBoxMaxEast, tileMatrixBoundingBoxMaxNorth] =
     tileMatrixToBBox(tileMatrix);
 
   if (east < tileMatrixBoundingBoxMinEast || east > tileMatrixBoundingBoxMaxEast) {
-    throw new RangeError(`point's easting, ${east}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+    throw new RangeError(
+      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on east axis. bounds: [${tileMatrixBoundingBoxMinEast},${tileMatrixBoundingBoxMaxEast}], east value: ${east}`
+    );
   }
 
   if (north < tileMatrixBoundingBoxMinNorth || north > tileMatrixBoundingBoxMaxNorth) {
-    throw new RangeError(`point's northing, ${north}, is out of range of tile matrix bounding box of tile matrix: ${tileMatrix.identifier.code}`);
+    throw new RangeError(
+      `point out of bounds of tile matrix ${tileMatrix.identifier.code} on north axis. bounds: [${tileMatrixBoundingBoxMinNorth},${tileMatrixBoundingBoxMaxNorth}], north value: ${north}`
+    );
   }
 }
 
@@ -79,8 +105,8 @@ export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix):
  * @param metatile the metatile size
  */
 export function validateMetatile(metatile: number): void {
-  if (metatile <= 0) {
-    throw new Error('metatile must be larger than 0');
+  if (metatile < 1 || !Number.isSafeInteger(metatile)) {
+    throw new Error('metatile must be an integer with a value of at least 1');
   }
 }
 
@@ -89,20 +115,22 @@ export function validateMetatile(metatile: number): void {
  * @param tileMatrix the tile matrix to validate
  */
 export function validateTileMatrix(tileMatrix: TileMatrix): void {
-  if (tileMatrix.matrixWidth < 1) {
-    throw new Error('width of tile matrix must be at least 1');
+  const { matrixHeight, matrixWidth, tileHeight, tileWidth } = tileMatrix;
+
+  if (matrixWidth < 1 && Number.isSafeInteger(matrixWidth)) {
+    throw new Error('width of tile matrix must be an integer with a value of at least 1');
   }
 
-  if (tileMatrix.matrixHeight < 1) {
-    throw new Error('height of tile matrix must be at least 1');
+  if (matrixHeight < 1 && Number.isSafeInteger(matrixHeight)) {
+    throw new Error('height of tile matrix must be an integer with a value of at least 1');
   }
 
-  if (tileMatrix.tileWidth < 1) {
-    throw new Error('tile width of a tile matrix must be at least 1');
+  if (tileWidth < 1 && Number.isSafeInteger(tileWidth)) {
+    throw new Error('tile width of a tile matrix must be an integer with a value of at least 1');
   }
 
-  if (tileMatrix.tileHeight < 1) {
-    throw new Error('tile height of a tile matrix must be at least 1');
+  if (tileHeight < 1 && Number.isSafeInteger(tileHeight)) {
+    throw new Error('tile height of a tile matrix must be an integer with a value of at least 1');
   }
 }
 
@@ -113,25 +141,13 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
  */
 export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
   const [minEast, minNorth, maxEast, maxNorth] = boundingBox.bBox;
-  const minPoint = new Point({ coordinates: [minEast, minNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
-  const maxPoint = new Point({ coordinates: [maxEast, maxNorth], coordRefSys: encodeToJSON(boundingBox.coordRefSys) });
 
   try {
-    validatePointByTileMatrix(minPoint, tileMatrix);
-    validatePointByTileMatrix(maxPoint, tileMatrix);
+    validatePositionByTileMatrix([minEast, minNorth], tileMatrix);
+    validatePositionByTileMatrix([maxEast, maxNorth], tileMatrix);
   } catch (err) {
     throw new RangeError(`bounding box is not within the tile matrix`);
   }
-}
-
-/**
- * Validates that the input `geometry` is a valid with respect to `tileMatrixSet`
- * @param geometry geometry
- * @param tileMatrix tile matrix
- */
-export function validateGeometryByTileMatrix<G extends GeoJSONGeometry>(geometry: Geometry<G>, tileMatrix: TileMatrix): void {
-  const bBox = geometry.bBox;
-  validateBBoxByTileMatrix(bBox, geometry.coordRefSys, tileMatrix);
 }
 
 /**
@@ -171,5 +187,21 @@ export function validateTileRangeByTileMatrix<T extends TileMatrixSet>(tileRange
 
   if (minTileRow < 0 || minTileRow > maxTileRow) {
     throw new RangeError("tile range's minimum row index is out of range of the tile matrix");
+  }
+
+  if (!Number.isSafeInteger(maxTileCol)) {
+    throw new Error('maximum col index must be an integer');
+  }
+
+  if (!Number.isSafeInteger(maxTileRow)) {
+    throw new Error('maximum row index must be an integer');
+  }
+
+  if (!Number.isSafeInteger(minTileCol)) {
+    throw new Error('minimum col index must be an integer');
+  }
+
+  if (!Number.isSafeInteger(minTileRow)) {
+    throw new Error('minimum row index must be an integer');
   }
 }

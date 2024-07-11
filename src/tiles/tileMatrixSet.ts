@@ -1,5 +1,5 @@
 import type { ArrayElement, Comparison } from '../types';
-import { validateCRS, validateTileMatrix } from '../validations/validations';
+import { validateTileMatrix } from '../validations/validations';
 import type {
   BoundingBox2D,
   CRS,
@@ -16,7 +16,6 @@ export class TileMatrixSet implements TileMatrixSetType {
   private readonly tileMatrixSet: TileMatrixSetType;
   public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRS(tileMatrixSetJSON.crs);
     this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
   }
 
@@ -173,7 +172,7 @@ export class TileMatrixSet implements TileMatrixSetType {
   private encodeToJSON(): TileMatrixSetJSON {
     const { crs, tileMatrices, boundingBox, description, identifier, keywords, title, ...otherProps } = this;
 
-    const crsJSON = typeof crs === 'object' && 'wkt' in crs ? { wkt: JSON.parse(crs.wkt) as object } : crs;
+    const crsJSON = typeof crs === 'object' && 'wkt' in crs ? { wkt: JSON.parse(crs.wkt) as Record<string, unknown> } : crs;
     const tileMatricesJSON = tileMatrices.map((tileMaxtrixJSON) => {
       const { identifier, ...otherProps } = tileMaxtrixJSON;
       return {

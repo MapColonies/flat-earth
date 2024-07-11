@@ -5,5 +5,5 @@ export function decodeFromJSON(coordRefSysJSON: ConcreteCoordRefSysJSON['coordRe
 }
 
 export function encodeToJSON(coordRefSys: ConcreteCoordRefSys['coordRefSys']): ConcreteCoordRefSysJSON['coordRefSys'] {
-  return typeof coordRefSys === 'object' && 'wkt' in coordRefSys ? { wkt: JSON.parse(coordRefSys.wkt) as object } : coordRefSys;
+  return typeof coordRefSys === 'object' && 'wkt' in coordRefSys ? { wkt: JSON.parse(coordRefSys.wkt) as Record<string, unknown> } : coordRefSys;
 }

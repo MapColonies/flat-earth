@@ -4,7 +4,7 @@ const baseConfig = require('./jest.config');
 module.exports = {
   ...baseConfig,
   displayName: 'web-unit-tests',
-  testEnvironment: 'jsdom',
+  testEnvironment: './tests/fixJSDOMEnvironment.ts',
   coverageThreshold: {
     global: {
       branches: 80,

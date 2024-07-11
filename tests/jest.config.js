@@ -27,4 +27,5 @@ module.exports = {
       statements: -10,
     },
   },
+  setupFilesAfterEnv: ['jest-extended/all'],
 };
