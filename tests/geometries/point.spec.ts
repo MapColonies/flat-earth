@@ -1,6 +1,6 @@
 /// <reference types="jest-extended" />
-import { deepStrictEqual } from 'node:assert/strict';
 import { fc, it } from '@fast-check/jest';
+import { strictCircularDeepEqual } from 'fast-equals';
 import { Point } from '../../src/geometries/point';
 import type { GeoJSONPoint, PointInput } from '../../src/geometries/types';
 import { TileMatrixSet } from '../../src/tiles/tileMatrixSet';
@@ -527,14 +527,7 @@ describe('Point', () => {
         const tileMatrixSetJSON = originTileMatrixSetJSON.chain((tileMatrixSetJSON) =>
           fc
             .oneof(fc.string(), fc.record({ uri: fc.string() }), fc.record({ referenceSystem: fc.object() }), fc.record({ wkt: fc.object() }))
-            .filter((crs) => {
-              try {
-                deepStrictEqual(crs, tileMatrixSetJSON.crs);
-              } catch (err) {
-                return true;
-              }
-              return false;
-            })
+            .filter((crs) => !strictCircularDeepEqual(crs, tileMatrixSetJSON.crs))
             .chain((crs) => {
               return fc.constant({ ...tileMatrixSetJSON, ...{ crs } });
             })
