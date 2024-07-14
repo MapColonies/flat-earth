@@ -1,4 +1,4 @@
-import { deepStrictEqual } from 'node:assert/strict';
+import { strictCircularDeepEqual } from 'fast-equals';
 import { type BBox, type Position } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
 import type { BoundingBox } from '../geometries/boundingBox';
@@ -48,9 +48,7 @@ export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
  * @param crs2 second CRS
  */
 export function validateCRSByOtherCRS<T extends CRSType | TileMatrixSetJSON['crs']>(crs1: T, crs2: T): void {
-  try {
-    deepStrictEqual(crs1, crs2);
-  } catch (err) {
+  if (!strictCircularDeepEqual(crs1, crs2)) {
     throw new Error('CRS mismatch');
   }
 }
