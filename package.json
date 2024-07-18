@@ -56,6 +56,7 @@
     "@turf/boolean-concave": "^6.5.0",
     "@turf/boolean-valid": "^6.5.0",
     "@turf/turf": "^7.0.0",
+    "fast-equals": "^5.0.1",
     "geographiclib-geodesic": "^2.0.0"
   },
   "directories": {
