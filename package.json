@@ -22,9 +22,10 @@
     "tiles"
   ],
   "scripts": {
-    "build:types": "tsc -p tsconfig.types.json",
-    "build:cjs": "tsc -p tsconfig.cjs.json && node postcjs.js",
-    "build:esm": "tsc -p tsconfig.esm.json && node postesm.js",
+    "alias": "tsc-alias",
+    "build:types": "tsc -p tsconfig.types.json && npm run alias -- -p tsconfig.types.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node postcjs.js && npm run alias -- -p tsconfig.cjs.json",
+    "build:esm": "tsc -p tsconfig.esm.json && node postesm.js && npm run alias -- -p tsconfig.esm.json",
     "build": "rimraf ./dist && npm run build:types && npm run build:cjs && npm run build:esm",
     "prepublish": "npm run build",
     "test": "npm run test:node && npm run test:web",
