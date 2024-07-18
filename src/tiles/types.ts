@@ -103,7 +103,7 @@ export type CRS =
       /**
        * A reference system data structure as defined in the MD_ReferenceSystem of the ISO 19115
        */
-      referenceSystem: object;
+      referenceSystem: Record<string, unknown>;
     };
 
 /**
@@ -308,7 +308,7 @@ export interface TileMatrixSetJSON
   /**
    * Coordinate Reference System (CRS)
    */
-  crs: Exclude<CRS, { wkt: string }> | { wkt: object }; // TODO: currently not strongly typed as defined here https://proj.org/en/latest/schemas/v0.6/projjson.schema.json. more info found on proj website https://proj.org/specifications/projjson.html
+  crs: Exclude<CRS, { wkt: string }> | { wkt: Record<string, unknown> }; // TODO: currently not strongly typed as defined here https://proj.org/en/latest/schemas/v0.6/projjson.schema.json. more info found on proj website https://proj.org/specifications/projjson.html
   /**
    * Minimum bounding rectangle surrounding the tile matrix set, in the supported CRS
    */
