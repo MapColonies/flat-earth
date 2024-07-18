@@ -2,7 +2,6 @@ import { strictCircularDeepEqual } from 'fast-equals';
 import { type BBox, type Position } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
 import type { BoundingBox } from '../geometries/boundingBox';
-import type { Geometry } from '../geometries/geometry';
 import { Point } from '../geometries/point';
 import type { CoordRefSysJSON } from '../geometries/types';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
