@@ -99,11 +99,11 @@ export class Tile<T extends TileMatrixSet> {
     const {
       tileIndex: { col: minTileCol },
       tileIndex: { row: minTileRow },
-    } = minTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, false, metatile);
+    } = minTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, 'none', metatile);
     const {
       tileIndex: { col: maxTileCol },
       tileIndex: { row: maxTileRow },
-    } = maxTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, true, metatile);
+    } = maxTilePoint.toTile(this.tileMatrixSet, targetTileMatrix.identifier.code, 'both', metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, this.tileMatrixSet, targetTileMatrix.identifier.code, metatile);
   }
