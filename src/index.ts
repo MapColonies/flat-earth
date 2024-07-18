@@ -1,10 +1,10 @@
-export { BoundingBox } from './geometries/boundingBox';
-export { GeometryCollection } from './geometries/geometryCollection';
-export { Line } from './geometries/line';
-export { Point } from './geometries/point';
-export { Polygon } from './geometries/polygon';
-export { area, distance, geodesicDistance, geometriesEqual } from './measurements/measurements';
-export { Tile } from './tiles/tile';
-export { TileMatrixSet } from './tiles/tileMatrixSet';
+export * from './geometries/boundingBox';
+export * from './geometries/geometryCollection';
+export * from './geometries/line';
+export * from './geometries/point';
+export * from './geometries/polygon';
+export * from './measurements/measurements';
+export * from './tiles/tile';
+export * from './tiles/tileMatrixSet';
 
-export * from './types';
+export type * from './types';
