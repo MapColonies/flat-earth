@@ -52,8 +52,6 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     return this.geoJSONGeometry.coordinates;
   }
 
-  // TODO: add function to merge adjacent TileMatrixLimits
-
   /**
    * Convert geometry to an iterator of tile matrix limits
    * @param tileMatrixSet tile matrix set
