@@ -121,11 +121,11 @@ export class BoundingBox extends Polygon {
     const {
       tileIndex: { col: minTileCol },
       tileIndex: { row: minTileRow },
-    } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false, metatile);
+    } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, 'none', metatile);
     const {
       tileIndex: { col: maxTileCol },
       tileIndex: { row: maxTileRow },
-    } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true, metatile);
+    } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, 'both', metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixSet, tileMatrixId, metatile);
   }
