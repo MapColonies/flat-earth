@@ -17,8 +17,9 @@
   },
   "license": "ISC",
   "keywords": [
-    "geospatial",
     "geodetic",
+    "geojson",
+    "geospatial",
     "tiles"
   ],
   "scripts": {
