@@ -5,7 +5,7 @@ import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles';
+import { tileIndexToPosition, tileMatrixToBBox } from './tiles';
 import type { TileIndex } from './types';
 
 /**
@@ -65,21 +65,8 @@ export class Tile<T extends TileMatrixSet> {
    * @returns point of the tile origin, determined by `cornerOfOrigin` property of the tile matrix
    */
   public toPoint(): Point {
-    const { col, row } = this.tileIndex;
-    const { metatile } = this;
-    const width = tileEffectiveWidth(this.tileMatrix) * metatile;
-    const height = tileEffectiveHeight(this.tileMatrix) * metatile;
-
-    const {
-      pointOfOrigin: [originEast, originNorth],
-      cornerOfOrigin = 'topLeft',
-    } = this.tileMatrix;
-
-    const east = originEast + col * width;
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    const north = originNorth + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
-
-    return new Point({ coordinates: [east, north], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
+    const position = tileIndexToPosition(this.tileIndex, this.tileMatrixSet, this.metatile);
+    return new Point({ coordinates: position, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
   }
 
   /**
