@@ -1,7 +1,7 @@
 import { Tile } from '../tiles/tile';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import { positionToTileIndex } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
+import { positionToTileIndex } from '../tiles/utilities';
 import type { ReverseIntersectionPolicy } from '../types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { BaseGeometry } from './baseGeometry';

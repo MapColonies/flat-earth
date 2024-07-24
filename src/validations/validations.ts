@@ -5,8 +5,8 @@ import type { BoundingBox } from '../geometries/boundingBox';
 import type { Point } from '../geometries/point';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
-import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSetJSON } from '../tiles/types';
+import { tileMatrixToBBox } from '../tiles/utilities';
 import type { ArrayElement, CoordRefSysJSON } from '../types';
 
 /**
