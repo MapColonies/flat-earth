@@ -1,16 +1,29 @@
 import type { BBox, Feature, Geometry, GeometryCollection, LineString, Point, Polygon } from 'geojson';
-import { CoordRefSysJSON } from '../types';
+import type { TileMatrixSet, TileMatrixSetJSON } from '../tiles/types';
+
+type NonOptional<Type> = {
+  [Property in keyof Type]-?: Type[Property];
+};
 
 /**
  * Geodetic longitude
  */
-
 export type Longitude = number;
+
 /**
  * Geodetic latitude
  */
-
 export type Latitude = number;
+
+export interface CoordRefSysJSON {
+  coordRefSys?: TileMatrixSetJSON['crs']; // TODO: change type according to - OGC Features and Geometries JSON - Part 1: Core
+}
+export interface CoordRefSys {
+  coordRefSys?: TileMatrixSet['crs']; // TODO: change type according to - OGC Features and Geometries JSON - Part 1: Core
+}
+
+export type ConcreteCoordRefSys = NonOptional<CoordRefSys>;
+export type ConcreteCoordRefSysJSON = NonOptional<CoordRefSysJSON>;
 
 export type GeoJSONGeometry = Geometry;
 export type GeoJSONBaseGeometry = Exclude<Geometry, GeometryCollection>;

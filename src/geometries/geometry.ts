@@ -4,9 +4,9 @@ import { decodeFromJSON, encodeToJSON } from '../crs/crs';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { positionToTileIndex, tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileIndex } from '../tiles/types';
-import type { ArrayElement, CoordRefSysJSON } from '../types';
+import type { ArrayElement } from '../utils/types';
 import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
-import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
+import type { CoordRefSysJSON, GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
 
 /**
  * Geometry class

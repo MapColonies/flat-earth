@@ -1,11 +1,10 @@
 import type { BBox, Position } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
-import type { CornerOfOriginCode, TileMatrixId, TileMatrixLimits } from '../tiles/types';
-import type { CoordRefSysJSON, ReverseIntersectionPolicy } from '../types';
+import type { CornerOfOriginCode, ReverseIntersectionPolicy, TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import { Geometry } from './geometry';
-import type { GeoJSONBaseGeometry } from './types';
+import type { CoordRefSysJSON, GeoJSONBaseGeometry } from './types';
 
 type RangeRelation = 'smaller' | 'in-range' | 'larger';
 
@@ -52,8 +51,6 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
   public get coordinates(): BG['coordinates'] {
     return this.geoJSONGeometry.coordinates;
   }
-
-  // TODO: add function to merge adjacent TileMatrixLimits
 
   /**
    * Convert geometry to an iterator of tile matrix limits

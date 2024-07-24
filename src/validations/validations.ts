@@ -2,12 +2,13 @@ import { strictCircularDeepEqual } from 'fast-equals';
 import { type BBox, type Position } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
 import type { BoundingBox } from '../geometries/boundingBox';
-import type { Point } from '../geometries/point';
+import { Point } from '../geometries/point';
+import type { CoordRefSysJSON } from '../geometries/types';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import { tileMatrixToBBox } from '../tiles/tiles';
 import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSetJSON } from '../tiles/types';
-import type { ArrayElement, CoordRefSysJSON } from '../types';
+import type { ArrayElement } from '../utils/types';
 
 /**
  * Validates that the input `bbox` is valid

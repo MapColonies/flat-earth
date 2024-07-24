@@ -1,8 +1,8 @@
 import type { BBox, Position } from 'geojson';
-import type { ArrayElement, ReverseIntersectionPolicy } from '../types';
+import type { ArrayElement } from '../utils/types';
 import { validatePositionByTileMatrix } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
-import type { TileIndex, TileMatrix, TileMatrixId } from './types';
+import type { ReverseIntersectionPolicy, TileIndex, TileMatrix, TileMatrixId } from './types';
 
 export function tileMatrixToBBox<T extends TileMatrixSet>(
   tileMatrix: ArrayElement<T['tileMatrices']>,

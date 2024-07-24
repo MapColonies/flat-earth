@@ -1,5 +1,8 @@
-import { ArrayElement } from '../types';
+import { ArrayElement } from '../utils/types';
 import { CORNER_OF_ORIGIN_CODE } from './constants';
+
+export type Comparison = 'equal' | 'closest' | 'lower' | 'higher';
+export type ReverseIntersectionPolicy = 'none' | 'both' | 'row' | 'col';
 
 /**
  * Tile index

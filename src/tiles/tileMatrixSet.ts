@@ -1,9 +1,10 @@
-import type { ArrayElement, Comparison } from '../types';
+import type { ArrayElement } from '../utils/types';
 import { validateTileMatrix } from '../validations/validations';
 import type {
   BoundingBox2D,
   CRS,
   CodeType,
+  Comparison,
   Keyword,
   LanguageString,
   TileMatrix,
