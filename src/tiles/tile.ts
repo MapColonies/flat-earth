@@ -3,7 +3,7 @@ import { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
 import { clampBBoxToBBox } from '../geometries/utilities';
 import type { ArrayElement } from '../types';
-import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
 import { positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles';
@@ -82,32 +82,38 @@ export class Tile<T extends TileMatrixSet> {
   }
 
   /**
-   * Converts tile to a tile range in any tile matrix
+   * Converts tile to a tile range in another tile matrix
    * This method will help find what tiles are needed to cover a given tile at a different tile matrix
-   * @param targetTileMatrix target tile matrix
+   * @param tileMatrixId target tile matrix identifier of `tileMatrixSet`
    * @returns tile range at the given tile matrix
    */
-  public toTileRange(targetTileMatrix: ArrayElement<T['tileMatrices']>): TileRange<T> {
-    validateTileMatrix(targetTileMatrix);
-    validateTileMatrixIdByTileMatrixSet(targetTileMatrix.identifier.code, this.tileMatrixSet);
+  public toTileRange(tileMatrixId: TileIndex<T>['tileMatrixId']): TileRange<T> {
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, this.tileMatrixSet);
+
+    const tileMatrix = this.tileMatrixSet.getTileMatrix(tileMatrixId);
+    if (!tileMatrix) {
+      throw new Error('tile matrix id is not part of the given tile matrix set');
+    }
+
+    const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
     const { metatile } = this;
     const [minEast, minNorth, maxEast, maxNorth] = this.toBoundingBox(true).bBox;
     const { col: minTileCol, row: minTileRow } = positionToTileIndex(
-      [minEast, minNorth],
+      [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
       this.tileMatrixSet,
-      targetTileMatrix.identifier.code,
+      tileMatrixId,
       'none',
       metatile
     );
     const { col: maxTileCol, row: maxTileRow } = positionToTileIndex(
-      [maxEast, maxNorth],
+      [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
       this.tileMatrixSet,
-      targetTileMatrix.identifier.code,
+      tileMatrixId,
       'both',
       metatile
     );
 
-    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, this.tileMatrixSet, targetTileMatrix.identifier.code, metatile);
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, this.tileMatrixSet, tileMatrixId, metatile);
   }
 }
