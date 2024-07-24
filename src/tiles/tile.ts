@@ -5,7 +5,7 @@ import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles';
+import { tileIndexToPosition, tileMatrixToBBox } from './tiles';
 import type { TileIndex } from './types';
 
 /**
@@ -48,10 +48,8 @@ export class Tile<T extends TileMatrixSet> {
    * @returns bounding box of the tile
    */
   public toBoundingBox(clamp = true): BoundingBox {
-    const {
-      coordinates: [east, north],
-    } = this.toPoint();
-    const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
+    const position = tileIndexToPosition(this.tileIndex, this.tileMatrixSet, this.metatile);
+    const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: position }, this.metatile, this.metatile);
     const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
     return clamp
       ? tileBoundingBox.clampToBoundingBox(
@@ -65,21 +63,8 @@ export class Tile<T extends TileMatrixSet> {
    * @returns point of the tile origin, determined by `cornerOfOrigin` property of the tile matrix
    */
   public toPoint(): Point {
-    const { col, row } = this.tileIndex;
-    const { metatile } = this;
-    const width = tileEffectiveWidth(this.tileMatrix) * metatile;
-    const height = tileEffectiveHeight(this.tileMatrix) * metatile;
-
-    const {
-      pointOfOrigin: [originEast, originNorth],
-      cornerOfOrigin = 'topLeft',
-    } = this.tileMatrix;
-
-    const east = originEast + col * width;
-    // eslint-disable-next-line @typescript-eslint/no-magic-numbers
-    const north = originNorth + (cornerOfOrigin === 'topLeft' ? -1 : 1) * row * height;
-
-    return new Point({ coordinates: [east, north], coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
+    const position = tileIndexToPosition(this.tileIndex, this.tileMatrixSet, this.metatile);
+    return new Point({ coordinates: position, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
   }
 
   /**
