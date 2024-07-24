@@ -1,8 +1,8 @@
 import { fc } from '@fast-check/jest';
 import type { BBox } from 'geojson';
 import { TileMatrixSet } from '../../../src/tiles/tileMatrixSet';
-import { tileMatrixToBBox } from '../../../src/tiles/tiles';
 import type { TileMatrixSetJSON } from '../../../src/tiles/types';
+import { tileMatrixToBBox } from '../../../src/tiles/utilities';
 
 export const generateTileMatrixToBBox = (
   tileMatrixSetJSON: fc.Arbitrary<TileMatrixSetJSON>,
