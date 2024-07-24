@@ -2,13 +2,13 @@ import { encodeToJSON } from '../crs/crs';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { TileRange } from '../tiles/tileRange';
 import { avoidNegativeZero, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
-import { clampValues } from '../utilities';
 import type { TileMatrixId } from '../tiles/types';
 import type { ArrayElement } from '../types';
 import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
 import { Point } from './point';
 import { Polygon } from './polygon';
 import type { BoundingBoxInput } from './types';
+import { clampBBoxToBBox } from './utilities';
 
 /**
  * Bounding box geometry class
@@ -44,18 +44,8 @@ export class BoundingBox extends Polygon {
    * @returns bounding box with extents clamped to those of `clampingBoundingBox`
    */
   public clampToBoundingBox(clampingBoundingBox: BoundingBox): BoundingBox {
-    const [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] =
-      clampingBoundingBox.bBox;
-
-    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
-
     return new BoundingBox({
-      bbox: [
-        clampValues(minEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
-        clampValues(minNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
-        clampValues(maxEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
-        clampValues(maxNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
-      ],
+      bbox: clampBBoxToBBox(this.bBox, clampingBoundingBox.bBox),
       coordRefSys: encodeToJSON(this.coordRefSys),
     });
   }

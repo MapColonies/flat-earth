@@ -1,6 +1,7 @@
 import { encodeToJSON } from '../crs/crs';
 import { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
+import { clampBBoxToBBox } from '../geometries/utilities';
 import type { ArrayElement } from '../types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
 import type { TileMatrixSet } from './tileMatrixSet';
@@ -52,12 +53,10 @@ export class Tile<T extends TileMatrixSet> {
       coordinates: [east, north],
     } = this.toPoint();
     const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
-    const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
-    return clamp
-      ? tileBoundingBox.clampToBoundingBox(
-          new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
-        )
-      : tileBoundingBox;
+    return new BoundingBox({
+      bbox: clamp ? clampBBoxToBBox(tileBBox, tileMatrixToBBox(this.tileMatrix)) : tileBBox,
+      coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
+    });
   }
 
   /**
