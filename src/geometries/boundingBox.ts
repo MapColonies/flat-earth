@@ -38,22 +38,22 @@ export class BoundingBox extends Polygon {
   }
 
   /**
-   * Clamps bounding box extent to that of another bounding box
-   * @param clampingBoundingBox bounding box to clamp to
-   * @returns bounding box with extents clamped to those of `clampingBoundingBox`
+   * Clips bounding box extent by that of another bounding box
+   * @param clippingBoundingBox bounding box to clip by
+   * @returns bounding box with extents clipped by those of `clippingBoundingBox`
    */
-  public clampToBoundingBox(clampingBoundingBox: BoundingBox): BoundingBox {
-    const [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] =
-      clampingBoundingBox.bBox;
+  public clipByBoundingBox(clippingBoundingBox: BoundingBox): BoundingBox {
+    const [clippingBoundingBoxMinEast, clippingBoundingBoxMinNorth, clippingBoundingBoxMaxEast, clippingBoundingBoxMaxNorth] =
+      clippingBoundingBox.bBox;
 
     const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
 
     return new BoundingBox({
       bbox: [
-        clampValues(minEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
-        clampValues(minNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
-        clampValues(maxEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
-        clampValues(maxNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
+        clampValues(minEast, clippingBoundingBoxMinEast, clippingBoundingBoxMaxEast),
+        clampValues(minNorth, clippingBoundingBoxMinNorth, clippingBoundingBoxMaxNorth),
+        clampValues(maxEast, clippingBoundingBoxMinEast, clippingBoundingBoxMaxEast),
+        clampValues(maxNorth, clippingBoundingBoxMinNorth, clippingBoundingBoxMaxNorth),
       ],
       coordRefSys: encodeToJSON(this.coordRefSys),
     });

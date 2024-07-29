@@ -54,7 +54,7 @@ export class Tile<T extends TileMatrixSet> {
     const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
     const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
     return clamp
-      ? tileBoundingBox.clampToBoundingBox(
+      ? tileBoundingBox.clipByBoundingBox(
           new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
         )
       : tileBoundingBox;

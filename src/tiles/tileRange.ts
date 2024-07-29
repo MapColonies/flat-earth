@@ -84,7 +84,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
     const tileRangeBoundingBox = new BoundingBox({ bbox: tileRangeBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
 
     return clamp
-      ? tileRangeBoundingBox.clampToBoundingBox(
+      ? tileRangeBoundingBox.clipByBoundingBox(
           new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
         )
       : tileRangeBoundingBox;
