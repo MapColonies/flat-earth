@@ -1,5 +1,5 @@
 import type { BBox, Position } from 'geojson';
-import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles';
+import { positionToTileIndex, reshapeBBoxToTileMatrix, tileEffectiveHeight, tileEffectiveWidth } from '../tiles';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { CornerOfOriginCode, ReverseIntersectionPolicy, TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
@@ -84,7 +84,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     const linearRingsSegments = this.toLinearRingsSegments();
 
-    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = clampBBoxToTileMatrix(
+    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = reshapeBBoxToTileMatrix(
       this.bBox,
       tileMatrixSet,
       tileMatrixId,

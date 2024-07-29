@@ -32,7 +32,7 @@ export function avoidNegativeZero(value: number): number {
   return value;
 }
 
-export function clampBBoxToTileMatrix<T extends TileMatrixSet>(bBox: BBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): BBox {
+export function reshapeBBoxToTileMatrix<T extends TileMatrixSet>(bBox: BBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): BBox {
   const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
   if (!tileMatrix) {
     throw new Error('tile matrix id is not part of the given tile matrix set');
