@@ -67,10 +67,10 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
 
   /**
    * Converts tile range into a bounding box
-   * @param clamp whether to clamp the output bounding box to the tile matrix's bounding box
+   * @param clip whether to clip the output bounding box by the tile matrix's bounding box
    * @returns bounding box
    */
-  public toBoundingBox(clamp = true): BoundingBox {
+  public toBoundingBox(clip = true): BoundingBox {
     const tile = new Tile({ col: this.minTileCol, row: this.minTileRow, tileMatrixId: this.tileMatrixId }, this.tileMatrixSet, this.metatile);
     const {
       coordinates: [east, north],
@@ -83,7 +83,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
     );
     const tileRangeBoundingBox = new BoundingBox({ bbox: tileRangeBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
 
-    return clamp
+    return clip
       ? tileRangeBoundingBox.clipByBoundingBox(
           new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
         )
