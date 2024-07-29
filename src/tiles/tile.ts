@@ -1,4 +1,5 @@
 import { encodeToJSON } from '../crs';
+import { clipByBBox } from '../geometries';
 import { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
 import type { ArrayElement } from '../utils/types';
@@ -44,20 +45,19 @@ export class Tile<T extends TileMatrixSet> {
 
   /**
    * Calculates a bounding box of a tile
-   * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
+   * @param clip a boolean whether to clip the calculated bounding box by the tile matrix's bounding box
    * @returns bounding box of the tile
    */
-  public toBoundingBox(clamp = true): BoundingBox {
+  public toBoundingBox(clip = true): BoundingBox {
     const {
       coordinates: [east, north],
     } = this.toPoint();
     const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
-    const tileBoundingBox = new BoundingBox({ bbox: tileBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
-    return clamp
-      ? tileBoundingBox.clipByBoundingBox(
-          new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
-        )
-      : tileBoundingBox;
+
+    return new BoundingBox({
+      bbox: clip ? clipByBBox(tileBBox, tileMatrixToBBox(this.tileMatrix)) : tileBBox,
+      coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
+    });
   }
 
   /**
