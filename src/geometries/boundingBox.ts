@@ -1,7 +1,7 @@
 import { encodeToJSON } from '../crs';
+import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { TileRange } from '../tiles/tileRange';
-import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
 import type { ArrayElement } from '../utils/types';
 import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations';

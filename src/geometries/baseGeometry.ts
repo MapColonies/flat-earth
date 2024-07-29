@@ -1,6 +1,6 @@
 import type { BBox, Position } from 'geojson';
+import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { CornerOfOriginCode, ReverseIntersectionPolicy, TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { Geometry } from './geometry';

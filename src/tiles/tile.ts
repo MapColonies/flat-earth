@@ -5,8 +5,8 @@ import type { ArrayElement } from '../utils/types';
 import { validateMetatile, validateTileMatrix, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { TileRange } from './tileRange';
-import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from './tiles';
 import type { TileIndex } from './types';
+import { tileEffectiveHeight, tileEffectiveWidth, tileMatrixToBBox } from '.';
 
 /**
  * Tile class that supports a metatile definition
