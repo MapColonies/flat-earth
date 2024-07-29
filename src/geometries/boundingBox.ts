@@ -1,4 +1,4 @@
-import { encodeToJSON } from '../crs/crs';
+import { encodeToJSON } from '../crs';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { TileRange } from '../tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
