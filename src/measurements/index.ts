@@ -15,7 +15,7 @@ const geod = Geodesic.WGS84;
  * @param from origin point
  * @param to destination point
  * @param options object specifying units for distance output
- * @returns distance in meters
+ * @returns distance between two points
  */
 export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number | undefined {
   // TODO: only a single distance function should exist for distance calculated on the surface of an ellipsoid
