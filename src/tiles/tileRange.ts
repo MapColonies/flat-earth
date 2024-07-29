@@ -1,4 +1,5 @@
 import { encodeToJSON } from '../crs';
+import { clipByBBox } from '../geometries';
 import { BoundingBox } from '../geometries/boundingBox';
 import type { ArrayElement } from '../utils/types';
 import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
@@ -81,12 +82,10 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
       (this.maxTileRow - this.minTileRow) * this.metatile + 1,
       (this.maxTileCol - this.minTileCol) * this.metatile + 1
     );
-    const tileRangeBoundingBox = new BoundingBox({ bbox: tileRangeBBox, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
 
-    return clip
-      ? tileRangeBoundingBox.clipByBoundingBox(
-          new BoundingBox({ bbox: tileMatrixToBBox(this.tileMatrix), coordRefSys: encodeToJSON(this.tileMatrixSet.crs) })
-        )
-      : tileRangeBoundingBox;
+    return new BoundingBox({
+      bbox: clip ? clipByBBox(tileRangeBBox, tileMatrixToBBox(this.tileMatrix)) : tileRangeBBox,
+      coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
+    });
   }
 }

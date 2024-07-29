@@ -1,5 +1,5 @@
 import { encodeToJSON } from '../crs';
-import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles';
+import { avoidNegativeZero, tileEffectiveHeight, tileEffectiveWidth } from '../tiles';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { TileRange } from '../tiles/tileRange';
 import type { TileMatrixId } from '../tiles/types';
@@ -8,6 +8,7 @@ import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatil
 import { Point } from './point';
 import { Polygon } from './polygon';
 import type { BoundingBoxInput } from './types';
+import { clipByBBox } from '.';
 
 /**
  * Bounding box geometry class
@@ -43,18 +44,8 @@ export class BoundingBox extends Polygon {
    * @returns bounding box with extents clipped by those of `clippingBoundingBox`
    */
   public clipByBoundingBox(clippingBoundingBox: BoundingBox): BoundingBox {
-    const [clippingBoundingBoxMinEast, clippingBoundingBoxMinNorth, clippingBoundingBoxMaxEast, clippingBoundingBoxMaxNorth] =
-      clippingBoundingBox.bBox;
-
-    const [minEast, minNorth, maxEast, maxNorth] = this.bBox;
-
     return new BoundingBox({
-      bbox: [
-        clampValues(minEast, clippingBoundingBoxMinEast, clippingBoundingBoxMaxEast),
-        clampValues(minNorth, clippingBoundingBoxMinNorth, clippingBoundingBoxMaxNorth),
-        clampValues(maxEast, clippingBoundingBoxMinEast, clippingBoundingBoxMaxEast),
-        clampValues(maxNorth, clippingBoundingBoxMinNorth, clippingBoundingBoxMaxNorth),
-      ],
+      bbox: clipByBBox(this.bBox, clippingBoundingBox.bBox),
       coordRefSys: encodeToJSON(this.coordRefSys),
     });
   }
