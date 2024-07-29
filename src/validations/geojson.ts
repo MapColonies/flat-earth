@@ -7,7 +7,7 @@ import type { Latitude, Longitude } from '../geometries/types';
 import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { ValidationIssue, ValidationIssueType, ValidationResult } from './classes';
-import { validatePointByTileMatrixSet } from './validations';
+import { validatePointByTileMatrixSet } from '.';
 
 const geometryTypes = ['Point', 'MultiPoint', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString', 'GeometryCollection'];
 

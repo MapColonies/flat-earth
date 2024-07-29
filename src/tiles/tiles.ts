@@ -1,6 +1,6 @@
 import type { BBox, Position } from 'geojson';
 import type { ArrayElement } from '../utils/types';
-import { validatePositionByTileMatrix } from '../validations/validations';
+import { validatePositionByTileMatrix } from '../validations';
 import type { TileMatrixSet } from './tileMatrixSet';
 import type { ReverseIntersectionPolicy, TileIndex, TileMatrix, TileMatrixId } from './types';
 

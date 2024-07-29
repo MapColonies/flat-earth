@@ -1,5 +1,5 @@
 import type { ArrayElement } from '../utils/types';
-import { validateTileMatrix } from '../validations/validations';
+import { validateTileMatrix } from '../validations';
 import type {
   BoundingBox2D,
   CRS,

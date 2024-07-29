@@ -1,7 +1,7 @@
 import { encodeToJSON } from '../crs/crs';
 import { BoundingBox } from '../geometries/boundingBox';
 import type { ArrayElement } from '../utils/types';
-import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import { tileMatrixToBBox } from './tiles';

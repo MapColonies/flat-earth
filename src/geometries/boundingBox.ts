@@ -4,7 +4,7 @@ import { TileRange } from '../tiles/tileRange';
 import { avoidNegativeZero, clampValues, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/tiles';
 import type { TileMatrixId } from '../tiles/types';
 import type { ArrayElement } from '../utils/types';
-import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
+import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations';
 import { Point } from './point';
 import { Polygon } from './polygon';
 import type { BoundingBoxInput } from './types';

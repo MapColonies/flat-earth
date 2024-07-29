@@ -5,7 +5,7 @@ import type { Geometry } from '../geometries/geometry';
 import type { Point } from '../geometries/point';
 import type { Polygon } from '../geometries/polygon';
 import type { GeoJSONGeometry } from '../geometries/types';
-import { validateCRSByOtherCRS } from '../validations/validations';
+import { validateCRSByOtherCRS } from '../validations';
 
 const geod = Geodesic.WGS84;
 
