@@ -1,9 +1,9 @@
 import type { BBox, Position } from 'geojson';
 import { DEFAULT_CRS } from '../constants';
 import { decodeFromJSON, encodeToJSON } from '../crs';
-import { positionToTileIndex, tileMatrixToBBox } from '../tiles';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { CRS as CRSType, TileIndex } from '../tiles/types';
+import { positionToTileIndex, tileMatrixToBBox } from '../tiles/utilities';
 import type { ArrayElement } from '../utils/types';
 import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations';
 import type { CoordRefSysJSON, GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
