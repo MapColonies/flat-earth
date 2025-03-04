@@ -77,18 +77,6 @@ export function clampPositionToTileMatrix<T extends TileMatrixSet>(
   return tileIndexToPosition(tileIndex, tileMatrixSet, metatile);
 }
 
-export function clampValue(value: number, minValue: number, maxValue: number): number {
-  if (value < minValue) {
-    return minValue;
-  }
-
-  if (value > maxValue) {
-    return maxValue;
-  }
-
-  return value;
-}
-
 export function positionToTileIndex<T extends TileMatrixSet>(
   position: Position,
   tileMatrixSet: T,

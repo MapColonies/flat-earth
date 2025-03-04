@@ -1,8 +1,8 @@
 import { encodeToJSON } from '../crs';
-import { avoidNegativeZero, tileEffectiveHeight, tileEffectiveWidth } from '../tiles';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import { TileRange } from '../tiles/tileRange';
 import type { TileMatrixId } from '../tiles/types';
+import { avoidNegativeZero, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/utilities';
 import type { ArrayElement } from '../utils/types';
 import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations';
 import { Point } from './point';
@@ -112,11 +112,11 @@ export class BoundingBox extends Polygon {
     const {
       tileIndex: { col: minTileCol },
       tileIndex: { row: minTileRow },
-    } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, false, metatile);
+    } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, 'none', metatile);
     const {
       tileIndex: { col: maxTileCol },
       tileIndex: { row: maxTileRow },
-    } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, true, metatile);
+    } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, 'both', metatile);
 
     return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixSet, tileMatrixId, metatile);
   }

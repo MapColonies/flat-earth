@@ -1,5 +1,5 @@
 import type { BBox } from 'geojson';
-import { clampValue } from '../tiles';
+import { clampValue } from '../utilities';
 
 export function clipByBBox(bBox: BBox, clippingBoundingBox: BBox): BBox {
   const [clippingBoundingBoxMinEast, clippingBoundingBoxMinNorth, clippingBoundingBoxMaxEast, clippingBoundingBoxMaxNorth] = clippingBoundingBox;

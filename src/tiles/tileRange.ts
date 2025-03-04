@@ -6,7 +6,7 @@ import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../valida
 import { Tile } from './tile';
 import type { TileMatrixSet } from './tileMatrixSet';
 import type { TileIndex, TileMatrixId, TileMatrixLimits } from './types';
-import { tileMatrixToBBox } from '.';
+import { tileMatrixToBBox } from './utilities';
 
 /**
  * Tile range class that supports a metatile definition

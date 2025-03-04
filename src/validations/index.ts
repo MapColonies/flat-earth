@@ -4,10 +4,10 @@ import { SUPPORTED_CRS } from '../constants';
 import type { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
 import type { CoordRefSysJSON } from '../geometries/types';
-import { tileMatrixToBBox } from '../tiles';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
 import type { TileRange } from '../tiles/tileRange';
 import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSetJSON } from '../tiles/types';
+import { tileMatrixToBBox } from '../tiles/utilities';
 import type { ArrayElement } from '../utils/types';
 
 /**
