@@ -1,5 +1,5 @@
 {
-  "name": "@map-colonies/flat-earth",
+  "name": "@map-colonies/geo-tools",
   "version": "1.0.0",
   "description": "Package for geospatial and map tiles calculations",
   "types": "dist/types/index.d.ts",
@@ -79,11 +79,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MapColonies/flat-earth.git"
+    "url": "git+https://github.com/MapColonies/geo-tools.git"
   },
   "author": "MapColonies",
   "bugs": {
-    "url": "https://github.com/MapColonies/flat-earth/issues"
+    "url": "https://github.com/MapColonies/geo-tools/issues"
   },
-  "homepage": "https://github.com/MapColonies/flat-earth#readme"
+  "homepage": "https://github.com/MapColonies/geo-tools#readme"
 }
