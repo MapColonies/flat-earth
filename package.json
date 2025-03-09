@@ -1,6 +1,6 @@
 {
   "name": "@map-colonies/geo-tools",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Package for geospatial and map tiles calculations",
   "types": "dist/types/index.d.ts",
   "main": "dist/cjs/index.js",
