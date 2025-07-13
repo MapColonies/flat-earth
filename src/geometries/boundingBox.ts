@@ -8,7 +8,7 @@ import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatil
 import { Point } from './point';
 import { Polygon } from './polygon';
 import type { BoundingBoxInput } from './types';
-import { clipByBBox } from '.';
+import { clampByBBox } from './utilities';
 
 /**
  * Bounding box geometry class
@@ -45,7 +45,7 @@ export class BoundingBox extends Polygon {
    */
   public clipByBoundingBox(clippingBoundingBox: BoundingBox): BoundingBox {
     return new BoundingBox({
-      bbox: clipByBBox(this.bBox, clippingBoundingBox.bBox),
+      bbox: clampByBBox(this.bBox, clippingBoundingBox.bBox),
       coordRefSys: encodeToJSON(this.coordRefSys),
     });
   }

@@ -1,5 +1,5 @@
 import { encodeToJSON } from '../crs';
-import { clipByBBox } from '../geometries';
+import { clampByBBox } from '../geometries/utilities';
 import { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
 import type { ArrayElement } from '../utils/types';
@@ -55,7 +55,7 @@ export class Tile<T extends TileMatrixSet> {
     const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
 
     return new BoundingBox({
-      bbox: clip ? clipByBBox(tileBBox, tileMatrixToBBox(this.tileMatrix)) : tileBBox,
+      bbox: clip ? clampByBBox(tileBBox, tileMatrixToBBox(this.tileMatrix)) : tileBBox,
       coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
     });
   }
