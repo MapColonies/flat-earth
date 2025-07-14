@@ -1,6 +1,6 @@
 import type { BBox, Position } from 'geojson';
 import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import type { CornerOfOriginCode, ReverseIntersectionPolicy, TileMatrixId, TileMatrixLimits } from '../tiles/types';
+import type { CornerOfOriginCode, TileEdgeInclusion, TileMatrixId, TileMatrixLimits } from '../tiles/types';
 import { positionToTileIndex, reshapeBBoxToTileMatrix, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/utilities';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { Geometry } from './geometry';
@@ -139,7 +139,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
         const max = Math.max(start, end);
         const [startRange, endRange] = isWide ? [min, max] : cornerOfOrigin === 'topLeft' ? [max, min] : [min, max];
 
-        const [startReverseIntersectionPolicy, endReverseIntersectionPolicy] = this.getRangeReverseIntersectionPolicy(
+        const [startTileEdgeInclusion, endTileEdgeInclusion] = this.getRangeTileEdgeInclusion(
           { start: startRange, end: endRange },
           isWide,
           cornerOfOrigin,
@@ -151,14 +151,14 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           isWide ? [startRange, range[0]] : [range[0], startRange],
           tileMatrixSet,
           tileMatrixId,
-          startReverseIntersectionPolicy,
+          startTileEdgeInclusion,
           metatile
         );
         const { col: endTileCol, row: endTileRow } = positionToTileIndex(
           isWide ? [endRange, range[0]] : [range[0], endRange],
           tileMatrixSet,
           tileMatrixId,
-          endReverseIntersectionPolicy,
+          endTileEdgeInclusion,
           metatile
         );
 
@@ -480,13 +480,13 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     };
   }
 
-  private getRangeReverseIntersectionPolicy(
+  private getRangeTileEdgeInclusion(
     { start: startRange, end: endRange }: NumericRange,
     isWide: boolean,
     cornerOfOrigin: CornerOfOriginCode,
     tileSize: number,
     [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth]: BBox
-  ): [Exclude<ReverseIntersectionPolicy, 'both'>, Exclude<ReverseIntersectionPolicy, 'both'>] {
+  ): [Exclude<TileEdgeInclusion, 'both'>, Exclude<TileEdgeInclusion, 'both'>] {
     const isOnMinBounds =
       startRange === endRange &&
       (isWide ? endRange === minBoundingBoxEast : cornerOfOrigin === 'topLeft' ? endRange === maxBoundingBoxNorth : endRange === minBoundingBoxNorth);
