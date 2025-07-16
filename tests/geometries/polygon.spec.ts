@@ -7,7 +7,7 @@ import { Polygon } from '../../src/geometries/polygon';
 import type { GeoJSONPolygon, PolygonInput } from '../../src/geometries/types';
 import { TileMatrixCollection } from '../../src/tiles/tileMatrixCollection';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from '../../src/tiles/tileMatrixSets/worldCRS84Quad';
-import type { TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../src/tiles/types';
+import type { TileMatrixLimits, TileMatrixSet, TileMatrixSetJSON } from '../../src/tiles/types';
 import { tileMatrixToBBox } from '../../src/tiles/utilities';
 import { generatePolygonInput } from './helpers/geometries';
 import { generateNonFinite, isSafeInteger } from './helpers/propertyTest';
@@ -908,7 +908,7 @@ describe('Polygon', () => {
           for (const value of generator) {
             expect(value).toBeDefined();
             expect(value).toEqual(
-              expect.objectContaining<TileMatrixLimits<TileMatrixSetType>>({
+              expect.objectContaining<TileMatrixLimits<TileMatrixSet>>({
                 tileMatrixId: expect.any(String) as string,
                 minTileRow: expect.any(Number) as number,
                 maxTileRow: expect.any(Number) as number,
@@ -916,13 +916,7 @@ describe('Polygon', () => {
                 maxTileCol: expect.any(Number) as number,
               })
             );
-            expect(value).toContainAllKeys<TileMatrixLimits<TileMatrixSetType>>([
-              'tileMatrixId',
-              'minTileRow',
-              'maxTileRow',
-              'minTileCol',
-              'maxTileCol',
-            ]);
+            expect(value).toContainAllKeys<TileMatrixLimits<TileMatrixSet>>(['tileMatrixId', 'minTileRow', 'maxTileRow', 'minTileCol', 'maxTileCol']);
             expect(value).toSatisfy<TileMatrixLimits<TileMatrixCollection> | undefined>(
               (value) =>
                 value !== undefined &&

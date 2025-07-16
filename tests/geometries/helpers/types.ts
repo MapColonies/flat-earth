@@ -3,7 +3,7 @@ import type { Point } from '../../../src/geometries/point';
 import type { Polygon } from '../../../src/geometries/polygon';
 import type { GeoJSONBaseGeometry, GeoJSONPoint } from '../../../src/geometries/types';
 import type { TileMatrixCollection } from '../../../src/tiles/tileMatrixCollection';
-import type { TileMatrixId, TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../../src/tiles/types';
+import type { TileMatrixId, TileMatrixLimits, TileMatrixSet, TileMatrixSetJSON } from '../../../src/tiles/types';
 import type { CoordRefSysJSON } from '../../../src/types';
 
 export interface ConstructorTestCase<T extends GeoJSONBaseGeometry> {
@@ -20,8 +20,8 @@ export interface BadConstructorTestCase<T extends GeoJSONBaseGeometry> extends C
 export interface ToTileMatrixLimitsTestCase<T extends GeoJSONBaseGeometry> {
   case: string;
   coordinates: T['coordinates'];
-  expected: T extends GeoJSONPoint ? TileMatrixLimits<TileMatrixSetType> : TileMatrixLimits<TileMatrixSetType>[];
-  tileMatrixId: TileMatrixId<TileMatrixSetType>;
+  expected: T extends GeoJSONPoint ? TileMatrixLimits<TileMatrixSet> : TileMatrixLimits<TileMatrixSet>[];
+  tileMatrixId: TileMatrixId<TileMatrixSet>;
   tileMatrixSetJSON: TileMatrixSetJSON;
   coordRefSys?: CoordRefSysJSON['coordRefSys'];
   metatile?: number;

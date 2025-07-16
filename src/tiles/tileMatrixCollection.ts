@@ -11,11 +11,10 @@ import type {
   TileMatrixId,
   TileMatrixSet,
   TileMatrixSetJSON,
-  TileMatrixSet as TileMatrixSetType,
 } from './types';
 
-export class TileMatrixCollection implements TileMatrixSetType {
-  private readonly tileMatrixSet: TileMatrixSetType;
+export class TileMatrixCollection implements TileMatrixSet {
+  private readonly tileMatrixSet: TileMatrixSet;
   public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
     // validateTileMatrixSetJSON(tileMatrixSetJSON); // TODO: missing implementation
     this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
@@ -132,7 +131,7 @@ export class TileMatrixCollection implements TileMatrixSetType {
     return tileMatrixId;
   }
 
-  private decodeFromJSON(tileMatrixSetJSON: TileMatrixSetJSON): TileMatrixSetType {
+  private decodeFromJSON(tileMatrixSetJSON: TileMatrixSetJSON): TileMatrixSet {
     const {
       crs: crsJSON,
       tileMatrices: tileMatricesJSON,
