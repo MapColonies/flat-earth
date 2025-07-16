@@ -1,5 +1,5 @@
 import { Tile } from '../tiles/tile';
-import type { TileMatrixSet } from '../tiles/tileMatrixSet';
+import type { TileMatrixCollection } from '../tiles/tileMatrixCollection';
 import type { TileEdgeInclusion, TileMatrixId } from '../tiles/types';
 import { positionToTileIndex } from '../tiles/utilities';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
@@ -20,24 +20,24 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
 
   /**
    * Calculates a tile for east, north and tile matrix
-   * @param tileMatrixSet tile matrix set which the calculated tile belongs to
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param tileMatrixCollection tile matrix collection which the calculated tile belongs to
+   * @param tileMatrixId tile matrix identifier of `tileMatrixCollection`
    * @param tileEdgeInclusion behavior selection for tile edge inclusion (in cases that the position is on the edge of the (meta)tile)
    * @param metatile size of a metatile
    * @returns tile within the tile matrix
    */
-  public toTile<T extends TileMatrixSet>(
-    tileMatrixSet: T,
+  public toTile<T extends TileMatrixCollection>(
+    tileMatrixCollection: T,
     tileMatrixId: TileMatrixId<T>,
     tileEdgeInclusion: TileEdgeInclusion,
     metatile = 1
   ): Tile<T> {
     validateMetatile(metatile);
-    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
-    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
+    // validateTileMatrixSet(tileMatrixCollection); // TODO: missing implementation
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixCollection.crs);
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixCollection);
 
-    const { col, row } = positionToTileIndex(this.coordinates, tileMatrixSet, tileMatrixId, tileEdgeInclusion, metatile);
-    return new Tile({ col, row, tileMatrixId }, tileMatrixSet, metatile);
+    const { col, row } = positionToTileIndex(this.coordinates, tileMatrixCollection, tileMatrixId, tileEdgeInclusion, metatile);
+    return new Tile({ col, row, tileMatrixId }, tileMatrixCollection, metatile);
   }
 }

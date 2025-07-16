@@ -1,10 +1,10 @@
 import { encodeToJSON } from '../crs';
-import { clampByBBox } from '../geometries/utilities';
 import { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
+import { clampByBBox } from '../geometries/utilities';
 import type { ArrayElement } from '../utils/types';
 import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
-import type { TileMatrixSet } from './tileMatrixSet';
+import type { TileMatrixCollection } from './tileMatrixCollection';
 import { TileRange } from './tileRange';
 import type { TileIndex } from './types';
 import { positionToTileIndex, tileIndexToPosition, tileMatrixToBBox } from './utilities';
@@ -12,28 +12,28 @@ import { positionToTileIndex, tileIndexToPosition, tileMatrixToBBox } from './ut
 /**
  * Tile class that supports a metatile definition
  */
-export class Tile<T extends TileMatrixSet> {
+export class Tile<T extends TileMatrixCollection> {
   private readonly tileMatrix: ArrayElement<T['tileMatrices']>;
 
   /**
    * Tile constructor
    * @param tileIndex tile index
-   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixCollection tile matrix collection
    * @param metatile size of a metatile
    */
   public constructor(
     public readonly tileIndex: TileIndex<T>,
-    private readonly tileMatrixSet: T,
+    private readonly tileMatrixCollection: T,
     public readonly metatile = 1
   ) {
     const { col, row, tileMatrixId } = tileIndex;
     validateMetatile(metatile);
-    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
+    // validateTileMatrixSet(tileMatrixCollection); // TODO: missing implementation
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixCollection);
 
-    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+    const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
     if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
+      throw new Error('tile matrix id is not part of the given tile matrix collection');
     }
 
     if (col < 0 || row < 0 || col >= Math.ceil(tileMatrix.matrixWidth / metatile) || row >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
@@ -56,7 +56,7 @@ export class Tile<T extends TileMatrixSet> {
 
     return new BoundingBox({
       bbox: clip ? clampByBBox(tileBBox, tileMatrixToBBox(this.tileMatrix)) : tileBBox,
-      coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
+      coordRefSys: encodeToJSON(this.tileMatrixCollection.crs),
     });
   }
 
@@ -65,22 +65,22 @@ export class Tile<T extends TileMatrixSet> {
    * @returns point of the tile origin, determined by `cornerOfOrigin` property of the tile matrix
    */
   public toPoint(): Point {
-    const position = tileIndexToPosition(this.tileIndex, this.tileMatrixSet, this.metatile);
-    return new Point({ coordinates: position, coordRefSys: encodeToJSON(this.tileMatrixSet.crs) });
+    const position = tileIndexToPosition(this.tileIndex, this.tileMatrixCollection, this.metatile);
+    return new Point({ coordinates: position, coordRefSys: encodeToJSON(this.tileMatrixCollection.crs) });
   }
 
   /**
    * Converts tile to a tile range in another tile matrix
    * This method will help find what tiles are needed to cover a given tile at a different tile matrix
-   * @param tileMatrixId target tile matrix identifier of `tileMatrixSet`
+   * @param tileMatrixId target tile matrix identifier of `tileMatrixCollection`
    * @returns tile range at the given tile matrix
    */
   public toTileRange(tileMatrixId: TileIndex<T>['tileMatrixId']): TileRange<T> {
-    validateTileMatrixIdByTileMatrixSet(tileMatrixId, this.tileMatrixSet);
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, this.tileMatrixCollection);
 
-    const tileMatrix = this.tileMatrixSet.getTileMatrix(tileMatrixId);
+    const tileMatrix = this.tileMatrixCollection.getTileMatrix(tileMatrixId);
     if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
+      throw new Error('tile matrix id is not part of the given tile matrix collection');
     }
 
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
@@ -89,19 +89,19 @@ export class Tile<T extends TileMatrixSet> {
     const [minEast, minNorth, maxEast, maxNorth] = this.toBoundingBox(true).bBox;
     const { col: minTileCol, row: minTileRow } = positionToTileIndex(
       [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
-      this.tileMatrixSet,
+      this.tileMatrixCollection,
       tileMatrixId,
       'none',
       metatile
     );
     const { col: maxTileCol, row: maxTileRow } = positionToTileIndex(
       [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
-      this.tileMatrixSet,
+      this.tileMatrixCollection,
       tileMatrixId,
       'both',
       metatile
     );
 
-    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, this.tileMatrixSet, tileMatrixId, metatile);
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, this.tileMatrixCollection, tileMatrixId, metatile);
   }
 }

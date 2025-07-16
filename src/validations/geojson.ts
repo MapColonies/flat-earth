@@ -4,8 +4,8 @@ import type { Feature, FeatureCollection, Geometry, LineString, MultiLineString,
 import { encodeToJSON } from '../crs';
 import { Point } from '../geometries/point';
 import type { Latitude, Longitude } from '../geometries/types';
-import { TILEMATRIXSET_WORLD_CRS84_QUAD } from '../tiles/constants';
-import type { TileMatrixSet } from '../tiles/tileMatrixSet';
+import { TILEMATRIXCOLLECTION_WORLD_CRS84_QUAD } from '../tiles/constants';
+import type { TileMatrixSet } from '../tiles/types';
 import { ValidationIssue, ValidationIssueType, ValidationResult } from './classes';
 import { validatePointByTileMatrixSet } from '.';
 
@@ -184,7 +184,10 @@ export function validateGeoJsonTypes(geojson: string, types: string[]): Validati
  * @param geojson
  * @param tileMatrixSet
  */
-export function validateGeoJsonInTileMatrixSet(geojson: string, tileMatrixSet: TileMatrixSet = TILEMATRIXSET_WORLD_CRS84_QUAD): ValidationResult {
+export function validateGeoJsonInTileMatrixSet(
+  geojson: string,
+  tileMatrixSet: TileMatrixSet = TILEMATRIXCOLLECTION_WORLD_CRS84_QUAD
+): ValidationResult {
   const geoJsonObject = JSON.parse(geojson) as FeatureCollection | Geometry;
 
   if (geoJsonObject.type === 'FeatureCollection') {

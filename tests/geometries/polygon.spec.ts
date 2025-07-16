@@ -5,7 +5,7 @@ import type { BBox, Position } from 'geojson';
 import { SUPPORTED_CRS } from '../../src/constants';
 import { Polygon } from '../../src/geometries/polygon';
 import type { GeoJSONPolygon, PolygonInput } from '../../src/geometries/types';
-import { TileMatrixSet } from '../../src/tiles/tileMatrixSet';
+import { TileMatrixCollection } from '../../src/tiles/tileMatrixCollection';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from '../../src/tiles/tileMatrixSets/worldCRS84Quad';
 import type { TileMatrixLimits, TileMatrixSetJSON, TileMatrixSet as TileMatrixSetType } from '../../src/tiles/types';
 import { tileMatrixToBBox } from '../../src/tiles/utilities';
@@ -838,9 +838,9 @@ describe('Polygon', () => {
       'should yield a tile matrix limits for tiles intersected by the polygon and then complete $case',
       ({ coordinates, coordRefSys, tileMatrixSetJSON, tileMatrixId, metatile, expected }) => {
         const polygon = new Polygon({ coordinates, coordRefSys: coordRefSys ?? tileMatrixSetJSON.crs });
-        const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
+        const tileMatrixCollection = new TileMatrixCollection(tileMatrixSetJSON);
 
-        const generator = polygon.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+        const generator = polygon.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);
 
         let index = 0;
         for (const value of generator) {
@@ -854,9 +854,9 @@ describe('Polygon', () => {
 
     it.each(badTestCases)('should throw an error $case', ({ coordinates, coordRefSys, tileMatrixSetJSON, tileMatrixId, metatile, expected }) => {
       const polygon = new Polygon({ coordinates, coordRefSys: coordRefSys ?? tileMatrixSetJSON.crs });
-      const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
+      const tileMatrixCollection = new TileMatrixCollection(tileMatrixSetJSON);
 
-      const generator = polygon.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+      const generator = polygon.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);
 
       expect(() => {
         generator.next();
@@ -875,18 +875,18 @@ describe('Polygon', () => {
           };
         })
         .chain(({ tileMatrixId, tileMatrixSetJSON }) => {
-          const tileMatrixSet = new TileMatrixSet(tileMatrixSetJSON);
+          const tileMatrixCollection = new TileMatrixCollection(tileMatrixSetJSON);
           const bBox = tileMatrixId.map((tileMatrixId) => {
-            const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+            const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
             if (!tileMatrix) {
-              throw new Error('tile matrix id is not part of the given tile matrix set');
+              throw new Error('tile matrix id is not part of the given tile matrix collection');
             }
             return tileMatrixToBBox(tileMatrix);
           });
 
           return fc.record({
             tileMatrixId,
-            tileMatrixSet: fc.constant(tileMatrixSet),
+            tileMatrixCollection: fc.constant(tileMatrixCollection),
             metatile: fc.integer({ min: 1 }),
             geometry: generatePolygonInput({ bBox }).chain((lineInput) =>
               fc.constant(new Polygon({ ...lineInput, ...{ coordRefSys: tileMatrixSetJSON.crs } }))
@@ -896,14 +896,14 @@ describe('Polygon', () => {
 
       it('should yield a tile matrix limits and finally complete for a polygon that is completely within the tile matrix bounding box', () => {
         const arbitraries = [toTileMatrixLimitsArgs] as const;
-        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Polygon>) => {
-          const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixCollection }: ToTileMatrixLimitsArgs<Polygon>) => {
+          const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
           if (!tileMatrix) {
-            throw new Error('tile matrix id is not part of the given tile matrix set');
+            throw new Error('tile matrix id is not part of the given tile matrix collection');
           }
           const { matrixHeight, matrixWidth } = tileMatrix;
 
-          const generator = polygon.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+          const generator = polygon.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);
 
           for (const value of generator) {
             expect(value).toBeDefined();
@@ -923,7 +923,7 @@ describe('Polygon', () => {
               'minTileCol',
               'maxTileCol',
             ]);
-            expect(value).toSatisfy<TileMatrixLimits<TileMatrixSet> | undefined>(
+            expect(value).toSatisfy<TileMatrixLimits<TileMatrixCollection> | undefined>(
               (value) =>
                 value !== undefined &&
                 isSafeInteger(value.minTileCol, { max: value.maxTileCol }) &&
@@ -944,8 +944,8 @@ describe('Polygon', () => {
             return fc.constant({ ...args, metatile });
           }),
         ] as const;
-        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Polygon>) => {
-          const generator = polygon.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixCollection }: ToTileMatrixLimitsArgs<Polygon>) => {
+          const generator = polygon.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);
 
           expect(() => {
             generator.next();
@@ -954,7 +954,7 @@ describe('Polygon', () => {
         fc.assert(fc.property(...arbitraries, predicate));
       });
 
-      it('should throw an error if CRS of geometry does not match tile matrix set CRS', () => {
+      it('should throw an error if CRS of geometry does not match tile matrix collection CRS', () => {
         const originTileMatrixSetJSON = fc.constantFrom(...tileMatrixSetJSONs);
         const crs = fc.option(
           originTileMatrixSetJSON.map((tileMatrixSetJSON) => tileMatrixSetJSON.crs),
@@ -972,16 +972,16 @@ describe('Polygon', () => {
         const arbitraries = [
           fc
             .tuple(toTileMatrixLimitsArgs, polygonInput, tileMatrixSetJSON, crs)
-            .chain(([{ geometry: _, tileMatrixSet: _tileMatrixSet, ...args }, polygonInput, tileMatrixSetJSON, crs]) =>
+            .chain(([{ geometry: _, tileMatrixCollection: _tileMatrixCollection, ...args }, polygonInput, tileMatrixSetJSON, crs]) =>
               fc.constant({
                 ...args,
-                tileMatrixSet: new TileMatrixSet(tileMatrixSetJSON),
+                tileMatrixCollection: new TileMatrixCollection(tileMatrixSetJSON),
                 geometry: new Polygon({ ...polygonInput, ...{ coordRefSys: crs } }),
               })
             ),
         ] as const;
-        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Polygon>) => {
-          const generator = polygon.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixCollection }: ToTileMatrixLimitsArgs<Polygon>) => {
+          const generator = polygon.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);
 
           expect(() => {
             generator.next();
@@ -992,15 +992,15 @@ describe('Polygon', () => {
 
       it('should throw an error if tile matrix identifier is not part of tile matrix set', () => {
         const arbitraries = [
-          toTileMatrixLimitsArgs.chain(({ tileMatrixSet, tileMatrixId, ...args }) =>
+          toTileMatrixLimitsArgs.chain(({ tileMatrixCollection, tileMatrixId, ...args }) =>
             fc
               .string()
-              .filter((identifier) => tileMatrixSet.tileMatrices.every(({ identifier: { code } }) => code !== identifier))
-              .chain((tileMatrixId) => fc.constant({ ...args, tileMatrixSet, tileMatrixId }))
+              .filter((identifier) => tileMatrixCollection.tileMatrices.every(({ identifier: { code } }) => code !== identifier))
+              .chain((tileMatrixId) => fc.constant({ ...args, tileMatrixCollection, tileMatrixId }))
           ),
         ] as const;
-        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Polygon>) => {
-          const generator = polygon.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixCollection }: ToTileMatrixLimitsArgs<Polygon>) => {
+          const generator = polygon.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);
 
           expect(() => {
             generator.next();
@@ -1072,16 +1072,16 @@ describe('Polygon', () => {
         const arbitraries = [
           fc
             .tuple(toTileMatrixLimitsArgs, polygonInput, tileMatrixSetJSON, crs)
-            .chain(([{ geometry: _, tileMatrixSet: _tileMatrixSet, ...args }, polygonInput, tileMatrixSetJSON, crs]) =>
+            .chain(([{ geometry: _, tileMatrixCollection: _tileMatrixCollection, ...args }, polygonInput, tileMatrixSetJSON, crs]) =>
               fc.constant({
                 ...args,
-                tileMatrixSet: new TileMatrixSet(tileMatrixSetJSON),
+                tileMatrixCollection: new TileMatrixCollection(tileMatrixSetJSON),
                 geometry: new Polygon({ ...polygonInput, ...{ coordRefSys: crs } }),
               })
             ),
         ] as const;
-        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixSet }: ToTileMatrixLimitsArgs<Polygon>) => {
-          const generator = polygon.toTileMatrixLimits(tileMatrixSet, tileMatrixId, metatile);
+        const predicate = ({ geometry: polygon, metatile, tileMatrixId, tileMatrixCollection }: ToTileMatrixLimitsArgs<Polygon>) => {
+          const generator = polygon.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);
 
           expect(() => {
             generator.next();

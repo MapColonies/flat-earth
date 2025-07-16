@@ -4,9 +4,9 @@ import { SUPPORTED_CRS } from '../constants';
 import type { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
 import type { CoordRefSysJSON } from '../geometries/types';
-import type { TileMatrixSet } from '../tiles/tileMatrixSet';
+import type { TileMatrixCollection } from '../tiles/tileMatrixCollection';
 import type { TileRange } from '../tiles/tileRange';
-import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSetJSON } from '../tiles/types';
+import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSet, TileMatrixSetJSON } from '../tiles/types';
 import { tileMatrixToBBox } from '../tiles/utilities';
 import type { ArrayElement } from '../utils/types';
 
@@ -165,7 +165,10 @@ export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(til
  * @param tileRange tile range to validate
  * @param tileMatrix tile matrix to validate against
  */
-export function validateTileRangeByTileMatrix<T extends TileMatrixSet>(tileRange: TileRange<T>, tileMatrix: ArrayElement<T['tileMatrices']>): void {
+export function validateTileRangeByTileMatrix<T extends TileMatrixCollection>(
+  tileRange: TileRange<T>,
+  tileMatrix: ArrayElement<T['tileMatrices']>
+): void {
   const { maxTileCol, maxTileRow, metatile, minTileCol, minTileRow } = tileRange;
 
   if (tileRange.tileMatrixId !== tileMatrix.identifier.code) {

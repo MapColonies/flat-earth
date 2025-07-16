@@ -5,6 +5,6 @@ export * from './geometries/point';
 export * from './geometries/polygon';
 export * from './measurements';
 export * from './tiles/tile';
-export * from './tiles/tileMatrixSet';
+export * from './tiles/tileMatrixCollection';
 
 export type * from './types';

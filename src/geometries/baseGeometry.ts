@@ -1,6 +1,6 @@
 import type { BBox, Position } from 'geojson';
-import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import type { CornerOfOriginCode, TileEdgeInclusion, TileMatrixId, TileMatrixLimits } from '../tiles/types';
+import type { TileMatrixCollection } from '../tiles/tileMatrixCollection';
+import type { CornerOfOriginCode, TileEdgeInclusion, TileMatrixId, TileMatrixLimits, TileMatrixSet } from '../tiles/types';
 import { positionToTileIndex, reshapeBBoxToTileMatrix, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/utilities';
 import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { Geometry } from './geometry';
@@ -54,29 +54,29 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
   /**
    * Convert geometry to an iterator of tile matrix limits
-   * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param tileMatrixCollection tile matrix collection
+   * @param tileMatrixId tile matrix identifier of `tileMatrixCollection`
    * @param metatile size of a metatile
    * @returns generator function of tile matrix limits containing the geometry
    */
-  public *toTileMatrixLimits<T extends TileMatrixSet>(
-    tileMatrixSet: T,
+  public *toTileMatrixLimits<T extends TileMatrixCollection>(
+    tileMatrixCollection: T,
     tileMatrixId: TileMatrixId<T>,
     metatile = 1
   ): Generator<TileMatrixLimits<T>, undefined> {
     validateMetatile(metatile);
-    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
-    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
-    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
+    // validateTileMatrixSet(tileMatrixCollection); // TODO: missing implementation
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixCollection.crs);
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixCollection);
 
-    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
+    const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
     if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
+      throw new Error('tile matrix id is not part of the given tile matrix collection');
     }
 
     if (this.geoJSONGeometry.type === 'Point') {
       const [minEast, minNorth] = this.bBox;
-      const { col, row } = positionToTileIndex([minEast, minNorth], tileMatrixSet, tileMatrixId, 'none', metatile);
+      const { col, row } = positionToTileIndex([minEast, minNorth], tileMatrixCollection, tileMatrixId, 'none', metatile);
 
       yield { tileMatrixId, minTileRow: row, maxTileRow: row, minTileCol: col, maxTileCol: col };
       return;
@@ -86,7 +86,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = reshapeBBoxToTileMatrix(
       this.bBox,
-      tileMatrixSet,
+      tileMatrixCollection,
       tileMatrixId,
       metatile
     );
@@ -149,14 +149,14 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
         const { col: startTileCol, row: startTileRow } = positionToTileIndex(
           isWide ? [startRange, range[0]] : [range[0], startRange],
-          tileMatrixSet,
+          tileMatrixCollection,
           tileMatrixId,
           startTileEdgeInclusion,
           metatile
         );
         const { col: endTileCol, row: endTileRow } = positionToTileIndex(
           isWide ? [endRange, range[0]] : [range[0], endRange],
-          tileMatrixSet,
+          tileMatrixCollection,
           tileMatrixId,
           endTileEdgeInclusion,
           metatile

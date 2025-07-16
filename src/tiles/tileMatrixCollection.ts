@@ -9,14 +9,15 @@ import type {
   LanguageString,
   TileMatrix,
   TileMatrixId,
+  TileMatrixSet,
   TileMatrixSetJSON,
   TileMatrixSet as TileMatrixSetType,
 } from './types';
 
-export class TileMatrixSet implements TileMatrixSetType {
+export class TileMatrixCollection implements TileMatrixSetType {
   private readonly tileMatrixSet: TileMatrixSetType;
   public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
-    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    // validateTileMatrixSetJSON(tileMatrixSetJSON); // TODO: missing implementation
     this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
   }
 
@@ -65,9 +66,9 @@ export class TileMatrixSet implements TileMatrixSetType {
   }
 
   /**
-   * Extracts a tile matrix from a tile matrix set
+   * Extracts a tile matrix from a tile matrix collection
    * @param tileMatrixId tile matrix identifier
-   * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
+   * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixCollection`
    */
   public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> | undefined {
     return this.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
@@ -79,7 +80,7 @@ export class TileMatrixSet implements TileMatrixSetType {
   }
 
   /**
-   * Finds the matching tile matrix in tile matrix set to input `tileMatrix` based on the selected comparison method
+   * Finds the matching tile matrix in tile matrix collection to input `tileMatrix` based on the selected comparison method
    * @param tileMatrix target tile matrix
    * @param comparison comparison method
    * @returns matching tile matrix or undefined when matching scale could not be found
