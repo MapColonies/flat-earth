@@ -12,6 +12,7 @@ import type {
   TileMatrixSet,
   TileMatrixSetJSON,
 } from './types';
+import { getTileMatrix } from './utilities';
 
 export class TileMatrixCollection implements TileMatrixSet {
   private readonly tileMatrixSet: TileMatrixSet;
@@ -70,12 +71,7 @@ export class TileMatrixCollection implements TileMatrixSet {
    * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixCollection`
    */
   public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> | undefined {
-    return this.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
-      const {
-        identifier: { code: comparedTileMatrixId },
-      } = tileMatrix;
-      return comparedTileMatrixId === tileMatrixId;
-    });
+    return getTileMatrix(this.tileMatrixSet, tileMatrixId);
   }
 
   /**

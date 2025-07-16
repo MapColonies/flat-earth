@@ -1,8 +1,7 @@
 import type { BBox, Position } from 'geojson';
 import { DEFAULT_CRS } from '../constants';
 import { decodeFromJSON, encodeToJSON } from '../crs';
-import type { TileMatrixCollection } from '../tiles/tileMatrixCollection';
-import type { CRS as CRSType, TileIndex } from '../tiles/types';
+import type { CRS as CRSType, TileIndex, TileMatrixSet } from '../tiles/types';
 import { positionToTileIndex, tileMatrixToBBox } from '../tiles/utilities';
 import type { ArrayElement } from '../utils/types';
 import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations';
@@ -56,15 +55,15 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
 
   /**
    * Find the tile index of minimal bounding tile containing the bounding box
-   * @param tileMatrixCollection tile matrix collection for the containing tile lookup
+   * @param tileMatrixSet tile matrix set for the containing tile lookup
    * @param metatile size of a metatile
    * @returns tile index of a tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
    */
-  public minimalBoundingTileIndex<T extends TileMatrixCollection>(tileMatrixCollection: T, metatile = 1): TileIndex<T> | null {
+  public minimalBoundingTileIndex<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): TileIndex<T> | null {
     validateMetatile(metatile);
-    validateCRSByOtherCRS(this.coordRefSys, tileMatrixCollection.crs);
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
-    const possibleBoundingTiles = tileMatrixCollection.tileMatrices.map((tileMatrix) => {
+    const possibleBoundingTiles = tileMatrixSet.tileMatrices.map((tileMatrix) => {
       const tileMatrixBoundingBox = tileMatrixToBBox(tileMatrix);
 
       const [boundingBoxMinEast, boundingBoxMinNorth, boundingBoxMaxEast, boundingBoxMaxNorth] = this.bBox;
@@ -87,14 +86,14 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
 
       const { col: minTileCol, row: minTileRow } = positionToTileIndex(
         [boundingBoxMinEast, cornerOfOrigin === 'topLeft' ? boundingBoxMaxNorth : boundingBoxMinNorth],
-        tileMatrixCollection,
+        tileMatrixSet,
         tileMatrixId,
         'none',
         metatile
       );
       const { col: maxTileCol, row: maxTileRow } = positionToTileIndex(
         [boundingBoxMaxEast, cornerOfOrigin === 'topLeft' ? boundingBoxMinNorth : boundingBoxMaxNorth],
-        tileMatrixCollection,
+        tileMatrixSet,
         tileMatrixId,
         'none',
         metatile

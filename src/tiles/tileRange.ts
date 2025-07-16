@@ -4,14 +4,13 @@ import { clampByBBox } from '../geometries/utilities';
 import type { ArrayElement } from '../utils/types';
 import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { Tile } from './tile';
-import type { TileMatrixCollection } from './tileMatrixCollection';
-import type { TileIndex, TileMatrixId, TileMatrixLimits } from './types';
-import { tileMatrixToBBox } from './utilities';
+import type { TileIndex, TileMatrixId, TileMatrixLimits, TileMatrixSet } from './types';
+import { getTileMatrix, tileMatrixToBBox } from './utilities';
 
 /**
  * Tile range class that supports a metatile definition
  */
-export class TileRange<T extends TileMatrixCollection> implements TileMatrixLimits<T> {
+export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
   private readonly tileMatrix: ArrayElement<T['tileMatrices']>;
 
   /**
@@ -20,8 +19,8 @@ export class TileRange<T extends TileMatrixCollection> implements TileMatrixLimi
    * @param minTileRow  minimum tile row
    * @param maxTileCol maximum tile col
    * @param maxTileRow maximum tile row
-   * @param tileMatrixCollection tile matrix collection
-   * @param tileMatrixId tile matrix identifier of `tileMatrixCollection`
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
    * @param metatile size of a metatile
    */
   public constructor(
@@ -29,15 +28,15 @@ export class TileRange<T extends TileMatrixCollection> implements TileMatrixLimi
     public readonly minTileRow: number,
     public readonly maxTileCol: number,
     public readonly maxTileRow: number,
-    private readonly tileMatrixCollection: T,
+    private readonly tileMatrixSet: T,
     public readonly tileMatrixId: TileMatrixId<T>,
     public readonly metatile = 1
   ) {
     validateMetatile(metatile);
-    // validateTileMatrixSet(tileMatrixCollection); // TODO: missing implementation
-    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixCollection);
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
-    const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
+    const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
     if (!tileMatrix) {
       throw new Error('tile matrix id is not part of the given tile matrix collection');
     }
@@ -72,7 +71,7 @@ export class TileRange<T extends TileMatrixCollection> implements TileMatrixLimi
    * @returns bounding box
    */
   public toBoundingBox(clip = true): BoundingBox {
-    const tile = new Tile({ col: this.minTileCol, row: this.minTileRow, tileMatrixId: this.tileMatrixId }, this.tileMatrixCollection, this.metatile);
+    const tile = new Tile({ col: this.minTileCol, row: this.minTileRow, tileMatrixId: this.tileMatrixId }, this.tileMatrixSet, this.metatile);
     const {
       coordinates: [east, north],
     } = tile.toPoint();
@@ -85,7 +84,7 @@ export class TileRange<T extends TileMatrixCollection> implements TileMatrixLimi
 
     return new BoundingBox({
       bbox: clip ? clampByBBox(tileRangeBBox, tileMatrixToBBox(this.tileMatrix)) : tileRangeBBox,
-      coordRefSys: encodeToJSON(this.tileMatrixCollection.crs),
+      coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
     });
   }
 }

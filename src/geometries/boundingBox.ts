@@ -1,8 +1,7 @@
 import { encodeToJSON } from '../crs';
-import type { TileMatrixCollection } from '../tiles/tileMatrixCollection';
 import { TileRange } from '../tiles/tileRange';
 import type { TileMatrixId, TileMatrixSet } from '../tiles/types';
-import { avoidNegativeZero, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/utilities';
+import { avoidNegativeZero, getTileMatrix, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/utilities';
 import type { ArrayElement } from '../utils/types';
 import { validateBoundingBoxByTileMatrix, validateCRSByOtherCRS, validateMetatile } from '../validations';
 import { Point } from './point';
@@ -52,16 +51,16 @@ export class BoundingBox extends Polygon {
 
   /**
    * Expands bounding box to the containing tile matrix
-   * @param tileMatrixCollection tile matrix collection
-   * @param tileMatrixId tile matrix identifier of `tileMatrixCollection`
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
    * @returns bounding box that contains the bunding box instance snapped to the tile matrix tiles
    */
-  public expandToTileMatrixCells<T extends TileMatrixCollection>(tileMatrixCollection: T, tileMatrixId: TileMatrixId<T>): BoundingBox {
+  public expandToTileMatrixCells<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>): BoundingBox {
     // TODO: consider metatile
-    // validateTileMatrixSet(tileMatrixCollection); // TODO: missing implementation
-    validateCRSByOtherCRS(this.coordRefSys, tileMatrixCollection.crs);
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
-    const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
+    const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
     if (!tileMatrix) {
       throw new Error('tile matrix id is not part of the given tile matrix collection');
     }
@@ -80,17 +79,17 @@ export class BoundingBox extends Polygon {
 
   /**
    * Calculates tile range that covers the bounding box
-   * @param tileMatrixCollection tile matrix collection
-   * @param tileMatrixId tile matrix identifier of `tileMatrixCollection`
+   * @param tileMatrixSet tile matrix set
+   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
    * @param metatile size of a metatile
    * @returns tile range that covers the bounding box instance
    */
-  public toTileRange<T extends TileMatrixCollection>(tileMatrixCollection: T, tileMatrixId: TileMatrixId<T>, metatile = 1): TileRange<T> {
+  public toTileRange<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): TileRange<T> {
     validateMetatile(metatile);
-    // validateTileMatrixSet(tileMatrixCollection); // TODO: missing implementation
-    validateCRSByOtherCRS(this.coordRefSys, tileMatrixCollection.crs);
+    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
-    const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
+    const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
     if (!tileMatrix) {
       throw new Error('tile matrix id is not part of the given tile matrix collection');
     }
@@ -112,13 +111,13 @@ export class BoundingBox extends Polygon {
     const {
       tileIndex: { col: minTileCol },
       tileIndex: { row: minTileRow },
-    } = minTilePoint.toTile(tileMatrixCollection, tileMatrixId, 'none', metatile);
+    } = minTilePoint.toTile(tileMatrixSet, tileMatrixId, 'none', metatile);
     const {
       tileIndex: { col: maxTileCol },
       tileIndex: { row: maxTileRow },
-    } = maxTilePoint.toTile(tileMatrixCollection, tileMatrixId, 'both', metatile);
+    } = maxTilePoint.toTile(tileMatrixSet, tileMatrixId, 'both', metatile);
 
-    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixCollection, tileMatrixId, metatile);
+    return new TileRange(minTileCol, minTileRow, maxTileCol, maxTileRow, tileMatrixSet, tileMatrixId, metatile);
   }
 
   private snapMinPointToTileMatrixCell<T extends TileMatrixSet>(tileMatrix: ArrayElement<T['tileMatrices']>): Point {

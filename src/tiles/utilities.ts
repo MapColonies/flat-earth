@@ -1,7 +1,6 @@
 import type { BBox, Position } from 'geojson';
 import type { ArrayElement } from '../utils/types';
 import { validatePositionByTileMatrix } from '../validations';
-import type { TileMatrixCollection } from './tileMatrixCollection';
 import type { TileEdgeInclusion, TileIndex, TileMatrix, TileMatrixId, TileMatrixSet } from './types';
 
 export function tileMatrixToBBox<T extends TileMatrixSet>(
@@ -32,13 +31,20 @@ export function avoidNegativeZero(value: number): number {
   return value;
 }
 
-export function reshapeBBoxToTileMatrix<T extends TileMatrixCollection>(
-  bBox: BBox,
-  tileMatrixCollection: T,
-  tileMatrixId: TileMatrixId<T>,
-  metatile = 1
-): BBox {
-  const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
+export function getTileMatrix<T extends TileMatrixSet>(
+  tileMatrixSet: TileMatrixSet,
+  tileMatrixId: TileMatrixId<T>
+): ArrayElement<T['tileMatrices']> | undefined {
+  return tileMatrixSet.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
+    const {
+      identifier: { code: comparedTileMatrixId },
+    } = tileMatrix;
+    return comparedTileMatrixId === tileMatrixId;
+  });
+}
+
+export function reshapeBBoxToTileMatrix<T extends TileMatrixSet>(bBox: BBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): BBox {
+  const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
   if (!tileMatrix) {
     throw new Error('tile matrix id is not part of the given tile matrix collection');
   }
@@ -48,20 +54,20 @@ export function reshapeBBoxToTileMatrix<T extends TileMatrixCollection>(
   const [minEast, minNorth, maxEast, maxNorth] = bBox;
   const tileIndexMin = positionToTileIndex(
     [minEast, cornerOfOrigin === 'topLeft' ? maxNorth : minNorth],
-    tileMatrixCollection,
+    tileMatrixSet,
     tileMatrixId,
     'none',
     metatile
   );
-  const minPosition = tileIndexToPosition(tileIndexMin, tileMatrixCollection, metatile);
+  const minPosition = tileIndexToPosition(tileIndexMin, tileMatrixSet, metatile);
   const tileIndexMax = positionToTileIndex(
     [maxEast, cornerOfOrigin === 'topLeft' ? minNorth : maxNorth],
-    tileMatrixCollection,
+    tileMatrixSet,
     tileMatrixId,
     'both',
     metatile
   );
-  const maxPosition = tileIndexToPosition(tileIndexMax, tileMatrixCollection, metatile);
+  const maxPosition = tileIndexToPosition(tileIndexMax, tileMatrixSet, metatile);
 
   return [
     minPosition[0],
@@ -71,25 +77,25 @@ export function reshapeBBoxToTileMatrix<T extends TileMatrixCollection>(
   ];
 }
 
-export function clampPositionToTileMatrix<T extends TileMatrixCollection>(
+export function clampPositionToTileMatrix<T extends TileMatrixSet>(
   position: Position,
-  tileMatrixCollection: T,
+  tileMatrixSet: T,
   tileMatrixId: TileMatrixId<T>,
   tileEdgeInclusion: TileEdgeInclusion,
   metatile = 1
 ): Position {
-  const tileIndex = positionToTileIndex(position, tileMatrixCollection, tileMatrixId, tileEdgeInclusion, metatile);
-  return tileIndexToPosition(tileIndex, tileMatrixCollection, metatile);
+  const tileIndex = positionToTileIndex(position, tileMatrixSet, tileMatrixId, tileEdgeInclusion, metatile);
+  return tileIndexToPosition(tileIndex, tileMatrixSet, metatile);
 }
 
-export function positionToTileIndex<T extends TileMatrixCollection>(
+export function positionToTileIndex<T extends TileMatrixSet>(
   position: Position,
-  tileMatrixCollection: T,
+  tileMatrixSet: T,
   tileMatrixId: TileMatrixId<T>,
   tileEdgeInclusion: TileEdgeInclusion = 'none',
   metatile = 1
 ): TileIndex<T> {
-  const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
+  const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
   if (!tileMatrix) {
     throw new Error('tile matrix id is not part of the given tile matrix collection');
   }
@@ -166,10 +172,10 @@ export function tileEffectiveWidth(tileMatrix: TileMatrix): number {
   return cellSize * tileWidth;
 }
 
-export function tileIndexToPosition<T extends TileMatrixCollection>(tileIndex: TileIndex<T>, tileMatrixCollection: T, metatile = 1): Position {
+export function tileIndexToPosition<T extends TileMatrixSet>(tileIndex: TileIndex<T>, tileMatrixSet: T, metatile = 1): Position {
   const { col, row, tileMatrixId } = tileIndex;
 
-  const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
+  const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
   if (!tileMatrix) {
     throw new Error('tile matrix id is not part of the given tile matrix collection');
   }
