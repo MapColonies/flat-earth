@@ -1,10 +1,9 @@
 import type { Line } from '../../../src/geometries/line';
 import type { Point } from '../../../src/geometries/point';
 import type { Polygon } from '../../../src/geometries/polygon';
-import type { GeoJSONBaseGeometry, GeoJSONPoint } from '../../../src/geometries/types';
+import type { CoordRefSysJSON, GeoJSONBaseGeometry, GeoJSONPoint } from '../../../src/geometries/types';
 import type { TileMatrixCollection } from '../../../src/tiles/tileMatrixCollection';
 import type { TileMatrixId, TileMatrixLimits, TileMatrixSet, TileMatrixSetJSON } from '../../../src/tiles/types';
-import type { CoordRefSysJSON } from '../../../src/types';
 
 export interface ConstructorTestCase<T extends GeoJSONBaseGeometry> {
   case: string;
