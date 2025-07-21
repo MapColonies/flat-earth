@@ -346,7 +346,7 @@ describe('Point', () => {
         coordinates: [180.1, -90.1],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '24',
-        expected: new Error('tile matrix id is not part of the given tile matrix set'),
+        expected: new Error('tile matrix id is not part of the given tile matrix collection'),
       },
       {
         case: 'for a point outside the tile matrix bounding box with low scale tile matrix',
@@ -556,7 +556,7 @@ describe('Point', () => {
 
           expect(() => {
             generator.next();
-          }).toThrow(new Error('tile matrix id is not part of the given tile matrix set'));
+          }).toThrow(new Error('tile matrix id is not part of the given tile matrix collection'));
         };
         fc.assert(fc.property(...arbitraries, predicate));
       });
