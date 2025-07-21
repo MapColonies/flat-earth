@@ -6,7 +6,7 @@ import { Point } from '../geometries/point';
 import type { CoordRefSysJSON } from '../geometries/types';
 import type { TileRange } from '../tiles/tileRange';
 import type { CRS as CRSType, TileMatrix, TileMatrixId, TileMatrixSet, TileMatrixSetJSON } from '../tiles/types';
-import { tileMatrixToBBox } from '../tiles/utilities';
+import { getTileMatrix, tileMatrixToBBox } from '../tiles/utilities';
 import type { ArrayElement } from '../utils/types';
 
 /**
@@ -154,9 +154,7 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
  * @param tileMatrixSet the tile matrix set to validate `tileMatrixId` against
  */
 export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): void {
-  if (tileMatrixSet.tileMatrices.findIndex(({ identifier: { code: comparedTileMatrixId } }) => comparedTileMatrixId === tileMatrixId) < 0) {
-    throw new Error('tile matrix id is not part of the given tile matrix set');
-  }
+  getTileMatrix(tileMatrixSet, tileMatrixId);
 }
 
 /**

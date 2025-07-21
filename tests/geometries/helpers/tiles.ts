@@ -11,9 +11,6 @@ export const generateTileMatrixToBBox = (
   return fc.tuple(tileMatrixSetJSON, tileMatrixId).map(([tileMatrixSetJSON, tileMatrixId]) => {
     const tileMatrixCollection = new TileMatrixCollection(tileMatrixSetJSON);
     const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix collection');
-    }
     return tileMatrixToBBox(tileMatrix);
   });
 };

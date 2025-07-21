@@ -31,23 +31,30 @@ export function avoidNegativeZero(value: number): number {
   return value;
 }
 
-export function getTileMatrix<T extends TileMatrixSet>(
-  tileMatrixSet: TileMatrixSet,
-  tileMatrixId: TileMatrixId<T>
-): ArrayElement<T['tileMatrices']> | undefined {
-  return tileMatrixSet.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
+/**
+ * Get tile matrix
+ * @param tileMatrixSet tile matrix set
+ * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+ * @returns Tile matrix set
+ * @throws {@link Error}
+ * This exception is thrown if the `tileMatrixId` is not found in `tileMatrixSet`.
+ *
+ */
+export function getTileMatrix<T extends TileMatrixSet>(tileMatrixSet: TileMatrixSet, tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> {
+  const tileMatrix = tileMatrixSet.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
     const {
       identifier: { code: comparedTileMatrixId },
     } = tileMatrix;
     return comparedTileMatrixId === tileMatrixId;
   });
+  if (!tileMatrix) {
+    throw new Error('tile matrix id is not part of the given tile matrix collection');
+  }
+  return tileMatrix;
 }
 
 export function reshapeBBoxToTileMatrix<T extends TileMatrixSet>(bBox: BBox, tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): BBox {
   const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-  if (!tileMatrix) {
-    throw new Error('tile matrix id is not part of the given tile matrix collection');
-  }
 
   const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 
@@ -96,9 +103,7 @@ export function positionToTileIndex<T extends TileMatrixSet>(
   metatile = 1
 ): TileIndex<T> {
   const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-  if (!tileMatrix) {
-    throw new Error('tile matrix id is not part of the given tile matrix collection');
-  }
+
   validatePositionByTileMatrix(position, tileMatrix);
 
   const [east, north] = position;
@@ -176,9 +181,6 @@ export function tileIndexToPosition<T extends TileMatrixSet>(tileIndex: TileInde
   const { col, row, tileMatrixId } = tileIndex;
 
   const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-  if (!tileMatrix) {
-    throw new Error('tile matrix id is not part of the given tile matrix collection');
-  }
 
   const width = tileEffectiveWidth(tileMatrix) * metatile;
   const height = tileEffectiveHeight(tileMatrix) * metatile;

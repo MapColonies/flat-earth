@@ -31,9 +31,6 @@ export class Tile<T extends TileMatrixSet> {
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
     const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix collection');
-    }
 
     if (col < 0 || row < 0 || col >= Math.ceil(tileMatrix.matrixWidth / metatile) || row >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
       throw new RangeError('tile indices must be non-negative integers larger than 0 and less than tile matrix size (considering metatile size)');
@@ -78,9 +75,6 @@ export class Tile<T extends TileMatrixSet> {
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, this.tileMatrixSet);
 
     const tileMatrix = getTileMatrix(this.tileMatrixSet, tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix collection');
-    }
 
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 

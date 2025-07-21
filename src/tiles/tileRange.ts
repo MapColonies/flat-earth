@@ -37,9 +37,6 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
     const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix collection');
-    }
 
     if (minTileCol < 0 || minTileRow < 0) {
       throw new Error('min tile indices must be non-negative integers');

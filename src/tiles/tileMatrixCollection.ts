@@ -69,8 +69,10 @@ export class TileMatrixCollection implements TileMatrixSet {
    * Extracts a tile matrix from a tile matrix collection
    * @param tileMatrixId tile matrix identifier
    * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixCollection`
+   * @throws {@link Error}
+   * This exception is thrown if the `tileMatrixId` is not found in `tileMatrixSet`.
    */
-  public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> | undefined {
+  public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> {
     return getTileMatrix(this.tileMatrixSet, tileMatrixId);
   }
 

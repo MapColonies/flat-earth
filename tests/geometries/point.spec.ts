@@ -441,9 +441,6 @@ describe('Point', () => {
           const tileMatrixCollection = new TileMatrixCollection(tileMatrixSetJSON);
           const bBox = tileMatrixId.map((tileMatrixId) => {
             const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
-            if (!tileMatrix) {
-              throw new Error('tile matrix id is not part of the given tile matrix collection');
-            }
             return tileMatrixToBBox(tileMatrix);
           });
 
@@ -461,9 +458,6 @@ describe('Point', () => {
         const arbitraries = [toTileMatrixLimitsArgs] as const;
         const predicate = ({ geometry: point, metatile, tileMatrixId, tileMatrixCollection }: ToTileMatrixLimitsArgs<Point>) => {
           const tileMatrix = tileMatrixCollection.getTileMatrix(tileMatrixId);
-          if (!tileMatrix) {
-            throw new Error('tile matrix id is not part of the given tile matrix collection');
-          }
           const { matrixHeight, matrixWidth } = tileMatrix;
 
           const generator = point.toTileMatrixLimits(tileMatrixCollection, tileMatrixId, metatile);

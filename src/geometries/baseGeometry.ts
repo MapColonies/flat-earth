@@ -69,9 +69,6 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
     const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix collection');
-    }
 
     if (this.geoJSONGeometry.type === 'Point') {
       const [minEast, minNorth] = this.bBox;

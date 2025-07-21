@@ -61,9 +61,6 @@ export class BoundingBox extends Polygon {
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix collection');
-    }
 
     validateBoundingBoxByTileMatrix(this, tileMatrix);
 
@@ -90,9 +87,6 @@ export class BoundingBox extends Polygon {
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
 
     const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix collection');
-    }
 
     validateBoundingBoxByTileMatrix(this, tileMatrix);
 
