@@ -50,7 +50,7 @@
     "@types/geojson": "7946.0.14",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.14.2",
-    "eslint": "^8.57.0",
+    "eslint": "^9.19.0",
     "eslint-plugin-jest-extended": "^2.4.0",
     "fast-check": "^3.19.0",
     "husky": "^9.0.10",
