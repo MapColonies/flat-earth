@@ -51,6 +51,7 @@
     "@types/jest": "^29.5.11",
     "@types/node": "^20.14.2",
     "eslint": "^9.19.0",
+    "eslint-plugin-explicit-exceptions": "^0.13.3",
     "eslint-plugin-jest": "^28.11.0",
     "eslint-plugin-jest-extended": "^3.0.0",
     "eslint-plugin-jsdoc": "^56.1.2",
