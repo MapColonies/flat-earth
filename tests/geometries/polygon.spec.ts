@@ -5,6 +5,7 @@ import type { BBox, Position } from 'geojson';
 import { SUPPORTED_CRS } from '../../src/constants';
 import { Polygon } from '../../src/geometries/polygon';
 import type { GeoJSONPolygon, PolygonInput } from '../../src/geometries/types';
+import { TileMatrixNotFoundError } from '../../src/tiles/errors';
 import { TileMatrixCollection } from '../../src/tiles/tileMatrixCollection';
 import { TILEMATRIXSETJSON_WORLD_CRS84_QUAD } from '../../src/tiles/tileMatrixSets/worldCRS84Quad';
 import type { TileMatrixLimits, TileMatrixSet, TileMatrixSetJSON } from '../../src/tiles/types';
@@ -731,7 +732,7 @@ describe('Polygon', () => {
         ],
         tileMatrixSetJSON: TILEMATRIXSETJSON_WORLD_CRS84_QUAD,
         tileMatrixId: '24',
-        expected: new Error('tile matrix id is not part of the given tile matrix collection'),
+        expected: new TileMatrixNotFoundError(),
       },
       {
         case: 'for a polygon vertex outside the tile matrix bounding box with low scale tile matrix',
@@ -992,7 +993,7 @@ describe('Polygon', () => {
 
           expect(() => {
             generator.next();
-          }).toThrow(new Error('tile matrix id is not part of the given tile matrix collection'));
+          }).toThrow(new TileMatrixNotFoundError());
         };
         fc.assert(fc.property(...arbitraries, predicate));
       });

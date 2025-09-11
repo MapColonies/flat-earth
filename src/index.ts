@@ -7,6 +7,7 @@ export * from './geometries/point';
 export * from './geometries/polygon';
 export * from './measurements';
 export { CORNER_OF_ORIGIN_CODE } from './tiles/constants';
+export * from './tiles/errors';
 export * from './tiles/tile';
 export * from './tiles/tileMatrixCollection';
 export * from './tiles/tileRange';

@@ -1,6 +1,7 @@
 import type { BBox, Position } from 'geojson';
 import type { ArrayElement } from '../utils/types';
 import { validatePositionByTileMatrix } from '../validations';
+import { TileMatrixNotFoundError } from './errors';
 import type { TileEdgeInclusion, TileIndex, TileMatrix, TileMatrixId, TileMatrixSet } from './types';
 
 export function tileMatrixToBBox<T extends TileMatrixSet>(
@@ -36,9 +37,7 @@ export function avoidNegativeZero(value: number): number {
  * @param tileMatrixSet tile matrix set
  * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
  * @returns Tile matrix set
- * @throws {@link Error}
- * This exception is thrown if the `tileMatrixId` is not found in `tileMatrixSet`.
- *
+ * @throws {@link TileMatrixNotFoundError} This exception is thrown if the `tileMatrixId` is not found in `tileMatrixSet`.
  */
 export function getTileMatrix<T extends TileMatrixSet>(tileMatrixSet: TileMatrixSet, tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> {
   const tileMatrix = tileMatrixSet.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
@@ -48,7 +47,7 @@ export function getTileMatrix<T extends TileMatrixSet>(tileMatrixSet: TileMatrix
     return comparedTileMatrixId === tileMatrixId;
   });
   if (!tileMatrix) {
-    throw new Error('tile matrix id is not part of the given tile matrix collection');
+    throw new TileMatrixNotFoundError();
   }
   return tileMatrix;
 }
