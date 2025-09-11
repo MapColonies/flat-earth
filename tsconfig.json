@@ -13,5 +13,6 @@
     "resolveFullPaths": true,
     "verbose": false,
   },
-  "include": ["src/**/*.ts"],
+
+  "include": ["src", "tests"],
 }
