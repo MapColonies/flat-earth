@@ -1,5 +1,5 @@
 import { strictCircularDeepEqual } from 'fast-equals';
-import { type BBox, type Position } from 'geojson';
+import type { BBox, Position } from 'geojson';
 import { SUPPORTED_CRS } from '../constants';
 import type { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
