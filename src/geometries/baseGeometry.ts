@@ -126,6 +126,9 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           mergedRanges = this.mergeOverlappingRanges(...crossingBoundingRanges, ...nonCrossingBoundingRanges);
           break;
         }
+        case 'MultiLineString':
+        case 'MultiPoint':
+        case 'MultiPolygon':
         default:
           throw new Error('unsupported geometry type');
       }
@@ -269,6 +272,10 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
       case 'Polygon':
         linearRings = this.geoJSONGeometry.coordinates;
         break;
+      case 'MultiLineString':
+      case 'MultiPoint':
+      case 'MultiPolygon':
+      case 'Point':
       default:
         throw new Error('unsupported geometry type');
     }

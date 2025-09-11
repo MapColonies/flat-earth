@@ -181,7 +181,7 @@ export class TileMatrixCollection implements TileMatrixSet {
     });
     const keywordsJSON = keywords
       ?.flatMap((keyword) => (keyword.keyword ? keyword.keyword.map((keyword) => keyword.value) : undefined))
-      ?.filter((keyword): keyword is string => typeof keyword === 'string');
+      .filter((keyword): keyword is string => typeof keyword === 'string');
 
     return {
       crs: crsJSON,
