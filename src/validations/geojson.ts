@@ -204,21 +204,21 @@ export function validateGeoJsonInTileMatrixSet(
 }
 
 /**
- * Validates that the input `geojson` has less than or equal `numberOfVertices`
+ * Validates that the input `geojson` has less than or equal `maxNumberOfVertices`
  * @param geojson
- * @param numberOfVertices
+ * @param maxNumberOfVertices
  */
-export function validateNumberOfVertices(geojson: string, numberOfVertices: number): ValidationResult {
+export function validateNumberOfVertices(geojson: string, maxNumberOfVertices: number): ValidationResult {
   const geoJsonObject = JSON.parse(geojson) as FeatureCollection | Geometry;
   if (geoJsonObject.type === 'FeatureCollection') {
     for (const feature of geoJsonObject.features) {
-      const validationResult = innerValidateNumberOfVertices(feature.geometry, numberOfVertices);
+      const validationResult = innerValidateNumberOfVertices(feature.geometry, maxNumberOfVertices);
       if (!validationResult.isValid) {
         return validationResult;
       }
     }
   } else {
-    return innerValidateNumberOfVertices(geoJsonObject, numberOfVertices);
+    return innerValidateNumberOfVertices(geoJsonObject, maxNumberOfVertices);
   }
   return new ValidationResult(true);
 }
