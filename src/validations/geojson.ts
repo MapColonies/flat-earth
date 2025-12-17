@@ -108,7 +108,7 @@ function innerValidateNumberOfVertices(geometry: Geometry, numberOfVertices: num
 
 /**
  * Validates that the input `geojson` is valid based on the RFC 7946 GeoJSON specification
- * @param geojson the geojson to validate
+ * @param geojson - the geojson to validate
  */
 export function validateGeoJson(geojson: string): ValidationResult {
   const validationIssues: ValidationIssue[] = [];
@@ -143,7 +143,7 @@ export function validateGeoJson(geojson: string): ValidationResult {
 
 /**
  * Validates that the input `geojson` does not self intersect
- * @param geojson
+ * @param geojson - the geojson to validate
  */
 export function validateGeoJsonSelfIntersect(geojson: string): ValidationResult {
   const geoJsonObject = JSON.parse(geojson) as Feature<Polygon | MultiPolygon | LineString | MultiLineString>;
@@ -156,8 +156,8 @@ export function validateGeoJsonSelfIntersect(geojson: string): ValidationResult 
 
 /**
  * Validates that the input `geojson` is one of the `types`
- * @param geojson
- * @param types
+ * @param geojson - the geojson to validate
+ * @param types - supported geojson types
  */
 export function validateGeoJsonTypes(geojson: string, types: string[]): ValidationResult {
   if (types.length === 0 || types.some((type) => !geometryTypes.includes(type))) {
@@ -181,8 +181,8 @@ export function validateGeoJsonTypes(geojson: string, types: string[]): Validati
 
 /**
  * Validates that the input `geojson` is inside the `tileMatrixSet`
- * @param geojson
- * @param tileMatrixSet
+ * @param geojson - the geojson to validate
+ * @param tileMatrixSet - tile matrix set
  */
 export function validateGeoJsonInTileMatrixSet(
   geojson: string,
@@ -205,8 +205,8 @@ export function validateGeoJsonInTileMatrixSet(
 
 /**
  * Validates that the input `geojson` has less than or equal `maxNumberOfVertices`
- * @param geojson
- * @param maxNumberOfVertices
+ * @param geojson - the geojson to validate
+ * @param maxNumberOfVertices - max number of vertices
  */
 export function validateNumberOfVertices(geojson: string, maxNumberOfVertices: number): ValidationResult {
   const geoJsonObject = JSON.parse(geojson) as FeatureCollection | Geometry;

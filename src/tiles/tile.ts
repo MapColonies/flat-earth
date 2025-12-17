@@ -16,9 +16,9 @@ export class Tile<T extends TileMatrixSet> {
 
   /**
    * Tile constructor
-   * @param tileIndex tile index
-   * @param tileMatrixSet tile matrix set
-   * @param metatile size of a metatile
+   * @param tileIndex - tile index
+   * @param tileMatrixSet - tile matrix set
+   * @param metatile - size of a metatile
    */
   public constructor(
     public readonly tileIndex: TileIndex<T>,
@@ -41,7 +41,7 @@ export class Tile<T extends TileMatrixSet> {
 
   /**
    * Calculates a bounding box of a tile
-   * @param clip a boolean whether to clip the calculated bounding box by the tile matrix's bounding box
+   * @param clip - boolean value whether to clip the calculated bounding box by the tile matrix's bounding box
    * @returns bounding box of the tile
    */
   public toBoundingBox(clip = true): BoundingBox {
@@ -68,7 +68,7 @@ export class Tile<T extends TileMatrixSet> {
   /**
    * Converts tile to a tile range in another tile matrix
    * This method will help find what tiles are needed to cover a given tile at a different tile matrix
-   * @param tileMatrixId target tile matrix identifier of `tileMatrixSet`
+   * @param tileMatrixId - target tile matrix identifier of `tileMatrixSet`
    * @returns tile range at the given tile matrix
    */
   public toTileRange(tileMatrixId: TileIndex<T>['tileMatrixId']): TileRange<T> {

@@ -67,7 +67,7 @@ export class TileMatrixCollection implements TileMatrixSet {
 
   /**
    * Extracts a tile matrix from a tile matrix collection
-   * @param tileMatrixId tile matrix identifier
+   * @param tileMatrixId - tile matrix identifier
    * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixCollection`
    * @throws {@link Error}
    * This exception is thrown if the `tileMatrixId` is not found in `tileMatrixSet`.
@@ -78,8 +78,8 @@ export class TileMatrixCollection implements TileMatrixSet {
 
   /**
    * Finds the matching tile matrix in tile matrix collection to input `tileMatrix` based on the selected comparison method
-   * @param tileMatrix target tile matrix
-   * @param comparison comparison method
+   * @param tileMatrix - target tile matrix
+   * @param comparison - comparison method
    * @returns matching tile matrix or undefined when matching scale could not be found
    */
   public findMatchingTileMatrix<T extends TileMatrixSet>(tileMatrix: TileMatrix, comparison: Comparison = 'equal'): TileMatrixId<T> | undefined {

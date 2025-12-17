@@ -34,8 +34,8 @@ export function avoidNegativeZero(value: number): number {
 
 /**
  * Get tile matrix
- * @param tileMatrixSet tile matrix set
- * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+ * @param tileMatrixSet - tile matrix set
+ * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
  * @returns Tile matrix set
  * @throws {@link TileMatrixNotFoundError} This exception is thrown if the `tileMatrixId` is not found in `tileMatrixSet`.
  */

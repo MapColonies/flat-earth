@@ -11,7 +11,7 @@ import type { GeoJSONPoint, PointInput } from './types';
 export class Point extends BaseGeometry<GeoJSONPoint> {
   /**
    * Point geometry constructor
-   * @param point GeoJSON point and CRS
+   * @param point - GeoJSON point and CRS
    */
   public constructor(point: PointInput) {
     super({ ...point, type: 'Point' });
@@ -19,10 +19,10 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
 
   /**
    * Calculates a tile for east, north and tile matrix
-   * @param tileMatrixSet tile matrix set which the calculated tile belongs to
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
-   * @param tileEdgeInclusion behavior selection for tile edge inclusion (in cases that the position is on the edge of the (meta)tile)
-   * @param metatile size of a metatile
+   * @param tileMatrixSet - tile matrix set which the calculated tile belongs to
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
+   * @param tileEdgeInclusion - behavior selection for tile edge inclusion (in cases that the position is on the edge of the (meta)tile)
+   * @param metatile - size of a metatile
    * @returns tile within the tile matrix
    */
   public toTile<T extends TileMatrixSet>(

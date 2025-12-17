@@ -38,7 +38,7 @@ interface NumericRange {
 export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geometry<BG> {
   /**
    * Base geometry constructor
-   * @param geometry GeoJSON geometry and CRS
+   * @param geometry - GeoJSON geometry and CRS
    */
   protected constructor(geometry: BG & CoordRefSysJSON) {
     super(geometry);
@@ -53,9 +53,9 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
   /**
    * Convert geometry to an iterator of tile matrix limits
-   * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
-   * @param metatile size of a metatile
+   * @param tileMatrixSet - tile matrix set
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
+   * @param metatile - size of a metatile
    * @returns generator function of tile matrix limits containing the geometry
    */
   public *toTileMatrixLimits<T extends TileMatrixSet>(

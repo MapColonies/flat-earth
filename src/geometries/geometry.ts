@@ -19,7 +19,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
 
   /**
    * Geometry constructor
-   * @param geometry GeoJSON geometry
+   * @param geometry - GeoJSON geometry
    */
   protected constructor(geometry: G & CoordRefSysJSON) {
     this.geoJSONGeometry = geometry;
@@ -55,8 +55,8 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
 
   /**
    * Find the tile index of minimal bounding tile containing the bounding box
-   * @param tileMatrixSet tile matrix set for the containing tile lookup
-   * @param metatile size of a metatile
+   * @param tileMatrixSet - tile matrix set for the containing tile lookup
+   * @param metatile - size of a metatile
    * @returns tile index of a tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
    */
   public minimalBoundingTileIndex<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): TileIndex<T> | null {

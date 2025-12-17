@@ -15,13 +15,13 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
 
   /**
    * Tile range constructor
-   * @param minTileCol minimum tile col
-   * @param minTileRow  minimum tile row
-   * @param maxTileCol maximum tile col
-   * @param maxTileRow maximum tile row
-   * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
-   * @param metatile size of a metatile
+   * @param minTileCol - minimum tile col
+   * @param minTileRow -  minimum tile row
+   * @param maxTileCol - maximum tile col
+   * @param maxTileRow - maximum tile row
+   * @param tileMatrixSet - tile matrix set
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
+   * @param metatile - size of a metatile
    */
   public constructor(
     public readonly minTileCol: number,
@@ -64,7 +64,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
 
   /**
    * Converts tile range into a bounding box
-   * @param clip whether to clip the output bounding box by the tile matrix's bounding box
+   * @param clip - whether to clip the output bounding box by the tile matrix's bounding box
    * @returns bounding box
    */
   public toBoundingBox(clip = true): BoundingBox {

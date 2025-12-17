@@ -8,7 +8,7 @@ import { Geometry } from './geometry';
 export class GeometryCollection extends Geometry<GeoJSONGeometryCollection> {
   /**
    * Geometry collection constructor
-   * @param geometryCollection GeoJSON geometry collection and CRS
+   * @param geometryCollection - GeoJSON geometry collection and CRS
    */
   public constructor(geometryCollection: GeometryCollectionInput) {
     super({ ...geometryCollection, type: 'GeometryCollection' });

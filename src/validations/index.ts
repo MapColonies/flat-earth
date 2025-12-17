@@ -11,7 +11,7 @@ import type { ArrayElement } from '../utils/types';
 
 /**
  * Validates that the input `bbox` is valid
- * @param bbox BBox to validate
+ * @param bbox - BBox to validate
  */
 export function validateBBox(bbox: BBox): void {
   const [, minNorth, , maxNorth] = bbox;
@@ -23,7 +23,7 @@ export function validateBBox(bbox: BBox): void {
 
 /**
  * Validates that the input `coordRefSys` is valid
- * @param coordRefSys CRS to validate
+ * @param coordRefSys - CRS to validate
  */
 export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
   // currently only the default CRS (OGC:CRS84) is supported
@@ -44,8 +44,8 @@ export function validateCRS(coordRefSys: CoordRefSysJSON['coordRefSys']): void {
 
 /**
  * Validates that the input `crs1` equals `crs2`
- * @param crs1 first CRS
- * @param crs2 second CRS
+ * @param crs1 - first CRS
+ * @param crs2 - second CRS
  */
 export function validateCRSByOtherCRS<T extends CRSType | TileMatrixSetJSON['crs']>(crs1: T, crs2: T): void {
   if (!strictCircularDeepEqual(crs1, crs2)) {
@@ -55,8 +55,8 @@ export function validateCRSByOtherCRS<T extends CRSType | TileMatrixSetJSON['crs
 
 /**
  * Validates that the input `point` is valid with respect to `tileMatrixSet`
- * @param point point to validate
- * @param tileMatrixSet tile matrix set to validate `point` against
+ * @param point - point to validate
+ * @param tileMatrixSet - tile matrix set to validate `point` against
  */
 export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMatrixSet): void {
   const { tileMatrices } = tileMatrixSet;
@@ -68,8 +68,8 @@ export function validatePointByTileMatrixSet(point: Point, tileMatrixSet: TileMa
 
 /**
  * Validates that the input `point` is valid with respect to `tileMatrix`
- * @param point point to validate
- * @param tileMatrix tile matrix to validate `point` against
+ * @param point - point to validate
+ * @param tileMatrix - tile matrix to validate `point` against
  */
 export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix): void {
   validatePositionByTileMatrix(point.coordinates, tileMatrix);
@@ -77,8 +77,8 @@ export function validatePointByTileMatrix(point: Point, tileMatrix: TileMatrix):
 
 /**
  * Validates that the input `position` is valid with respect to `tileMatrix`
- * @param position position to validate
- * @param tileMatrix tile matrix to validate `position` against
+ * @param position - position to validate
+ * @param tileMatrix - tile matrix to validate `position` against
  */
 export function validatePositionByTileMatrix(position: Position, tileMatrix: TileMatrix): void {
   const [east, north] = position;
@@ -100,7 +100,7 @@ export function validatePositionByTileMatrix(position: Position, tileMatrix: Til
 
 /**
  * Validates that the input `metatile` is valid
- * @param metatile the metatile size
+ * @param metatile - the metatile size
  */
 export function validateMetatile(metatile: number): void {
   if (metatile < 1 || !Number.isSafeInteger(metatile)) {
@@ -110,7 +110,7 @@ export function validateMetatile(metatile: number): void {
 
 /**
  * Validates that the input `tileMatrix` is valid
- * @param tileMatrix the tile matrix to validate
+ * @param tileMatrix - the tile matrix to validate
  */
 export function validateTileMatrix(tileMatrix: TileMatrix): void {
   const { matrixHeight, matrixWidth, tileHeight, tileWidth } = tileMatrix;
@@ -134,8 +134,8 @@ export function validateTileMatrix(tileMatrix: TileMatrix): void {
 
 /**
  * Validates that the input `boundingBox` is a valid bounding box with respect to `tileMatrix`
- * @param boundingBox bounding box
- * @param tileMatrix tile matrix to validate against
+ * @param boundingBox - bounding box
+ * @param tileMatrix - tile matrix to validate against
  */
 export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMatrix: TileMatrix): void {
   const [minEast, minNorth, maxEast, maxNorth] = boundingBox.bBox;
@@ -150,8 +150,8 @@ export function validateBoundingBoxByTileMatrix(boundingBox: BoundingBox, tileMa
 
 /**
  * Validates that the input `tileMatrixId` is valid with respect to `tileMatrixSet`
- * @param tileMatrixId tile matrix identifier to validate
- * @param tileMatrixSet the tile matrix set to validate `tileMatrixId` against
+ * @param tileMatrixId - tile matrix identifier to validate
+ * @param tileMatrixSet - the tile matrix set to validate `tileMatrixId` against
  */
 export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>, tileMatrixSet: T): void {
   getTileMatrix(tileMatrixSet, tileMatrixId);
@@ -159,8 +159,8 @@ export function validateTileMatrixIdByTileMatrixSet<T extends TileMatrixSet>(til
 
 /**
  * Validates that the input `tileRange` is valid with respect to `tileMatrix`
- * @param tileRange tile range to validate
- * @param tileMatrix tile matrix to validate against
+ * @param tileRange - tile range to validate
+ * @param tileMatrix - tile matrix to validate against
  */
 export function validateTileRangeByTileMatrix<T extends TileMatrixSet>(tileRange: TileRange<T>, tileMatrix: ArrayElement<T['tileMatrices']>): void {
   const { maxTileCol, maxTileRow, metatile, minTileCol, minTileRow } = tileRange;

@@ -15,7 +15,7 @@ import { clampByBBox } from './utilities';
 export class BoundingBox extends Polygon {
   /**
    * Bounding box geometry constructor
-   * @param boundingBox GeoJSON BBox and CRS
+   * @param boundingBox - GeoJSON BBox and CRS
    */
   public constructor(boundingBox: BoundingBoxInput) {
     const {
@@ -39,7 +39,7 @@ export class BoundingBox extends Polygon {
 
   /**
    * Clips bounding box extent by that of another bounding box
-   * @param clippingBoundingBox bounding box to clip by
+   * @param clippingBoundingBox - bounding box to clip by
    * @returns bounding box with extents clipped by those of `clippingBoundingBox`
    */
   public clipByBoundingBox(clippingBoundingBox: BoundingBox): BoundingBox {
@@ -51,8 +51,8 @@ export class BoundingBox extends Polygon {
 
   /**
    * Expands bounding box to the containing tile matrix
-   * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
+   * @param tileMatrixSet - tile matrix set
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
    * @returns bounding box that contains the bunding box instance snapped to the tile matrix tiles
    */
   public expandToTileMatrixCells<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>): BoundingBox {
@@ -76,9 +76,9 @@ export class BoundingBox extends Polygon {
 
   /**
    * Calculates tile range that covers the bounding box
-   * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
-   * @param metatile size of a metatile
+   * @param tileMatrixSet - tile matrix set
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
+   * @param metatile - size of a metatile
    * @returns tile range that covers the bounding box instance
    */
   public toTileRange<T extends TileMatrixSet>(tileMatrixSet: T, tileMatrixId: TileMatrixId<T>, metatile = 1): TileRange<T> {

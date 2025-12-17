@@ -12,9 +12,9 @@ const geod = Geodesic.WGS84;
  * Calculates the distance between two {@link Point|points} in meters
  * Using the haversine formula, using this formula you may get a slight difference in the distance between two points
  * up to 0.5% of the actual distance.
- * @param from origin point
- * @param to destination point
- * @param options object specifying units for distance output
+ * @param from - origin point
+ * @param to - destination point
+ * @param options - object specifying units for distance output
  * @returns distance between two points
  */
 export function distance(from: Point, to: Point, options: { units?: Units } = { units: 'meters' }): number | undefined {
@@ -36,8 +36,8 @@ export function distance(from: Point, to: Point, options: { units?: Units } = { 
 /**
  * Calculates the distance between two {@link Point|points} in meters using the inverse geodesic formula (more accurate than haversine)
  * Using this formula you may get a slight difference in the distance between two points
- * @param from origin point
- * @param to destination point
+ * @param from - origin point
+ * @param to - destination point
  * @returns distance in meters
  */
 export function geodesicDistance(from: Point, to: Point): number | undefined {
@@ -56,8 +56,8 @@ export function geodesicDistance(from: Point, to: Point): number | undefined {
 
 /**
  * Check if two geometries are equal
- * @param geometry1
- * @param geometry2
+ * @param geometry1 - first geometry
+ * @param geometry2 - second geometry
  * @returns true/false if two geometries are equal
  */
 export function geometriesEqual<G extends GeoJSONGeometry, T extends G>(geometry1: Geometry<G>, geometry2: Geometry<T>): boolean {
