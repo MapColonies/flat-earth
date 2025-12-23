@@ -47,6 +47,7 @@
     "@fast-check/jest": "^1.8.2",
     "@map-colonies/eslint-config": "^6.0.0",
     "@map-colonies/prettier-config": "0.0.1",
+    "@microsoft/api-extractor": "^7.55.2",
     "@types/geojson": "7946.0.14",
     "@types/jest": "^29.5.11",
     "@types/node": "^24.3.1",
