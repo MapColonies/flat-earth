@@ -1,12 +1,11 @@
-import { encodeToJSON } from '../crs/crs';
+import { encodeToJSON } from '../crs';
 import { BoundingBox } from '../geometries/boundingBox';
-import { clampBBoxToBBox } from '../geometries/utilities';
-import type { ArrayElement } from '../types';
-import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import { clampByBBox } from '../geometries/utilities';
+import type { ArrayElement } from '../utils/types';
+import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { Tile } from './tile';
-import type { TileMatrixSet } from './tileMatrixSet';
-import type { TileIndex, TileMatrixId, TileMatrixLimits } from './types';
-import { tileMatrixToBBox } from './utilities';
+import type { TileIndex, TileMatrixId, TileMatrixLimits, TileMatrixSet } from './types';
+import { getTileMatrix, tileMatrixToBBox } from './utilities';
 
 /**
  * Tile range class that supports a metatile definition
@@ -16,13 +15,13 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
 
   /**
    * Tile range constructor
-   * @param minTileCol minimum tile col
-   * @param minTileRow  minimum tile row
-   * @param maxTileCol maximum tile col
-   * @param maxTileRow maximum tile row
-   * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
-   * @param metatile size of a metatile
+   * @param minTileCol - minimum tile col
+   * @param minTileRow -  minimum tile row
+   * @param maxTileCol - maximum tile col
+   * @param maxTileRow - maximum tile row
+   * @param tileMatrixSet - tile matrix set
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
+   * @param metatile - size of a metatile
    */
   public constructor(
     public readonly minTileCol: number,
@@ -37,10 +36,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
-    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
-    }
+    const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
 
     if (minTileCol < 0 || minTileRow < 0) {
       throw new Error('min tile indices must be non-negative integers');
@@ -68,10 +64,10 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
 
   /**
    * Converts tile range into a bounding box
-   * @param clamp whether to clamp the output bounding box to the tile matrix's bounding box
+   * @param clip - whether to clip the output bounding box by the tile matrix's bounding box
    * @returns bounding box
    */
-  public toBoundingBox(clamp = true): BoundingBox {
+  public toBoundingBox(clip = true): BoundingBox {
     const tile = new Tile({ col: this.minTileCol, row: this.minTileRow, tileMatrixId: this.tileMatrixId }, this.tileMatrixSet, this.metatile);
     const {
       coordinates: [east, north],
@@ -84,7 +80,7 @@ export class TileRange<T extends TileMatrixSet> implements TileMatrixLimits<T> {
     );
 
     return new BoundingBox({
-      bbox: clamp ? clampBBoxToBBox(tileRangeBBox, tileMatrixToBBox(this.tileMatrix)) : tileRangeBBox,
+      bbox: clip ? clampByBBox(tileRangeBBox, tileMatrixToBBox(this.tileMatrix)) : tileRangeBBox,
       coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
     });
   }

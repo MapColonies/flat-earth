@@ -1,13 +1,12 @@
-import { encodeToJSON } from '../crs/crs';
+import { encodeToJSON } from '../crs';
 import { BoundingBox } from '../geometries/boundingBox';
 import { Point } from '../geometries/point';
-import { clampBBoxToBBox } from '../geometries/utilities';
-import type { ArrayElement } from '../types';
-import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
-import type { TileMatrixSet } from './tileMatrixSet';
+import { clampByBBox } from '../geometries/utilities';
+import type { ArrayElement } from '../utils/types';
+import { validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { TileRange } from './tileRange';
-import type { TileIndex } from './types';
-import { positionToTileIndex, tileIndexToPosition, tileMatrixToBBox } from './utilities';
+import type { TileIndex, TileMatrixSet } from './types';
+import { getTileMatrix, positionToTileIndex, tileIndexToPosition, tileMatrixToBBox } from './utilities';
 
 /**
  * Tile class that supports a metatile definition
@@ -17,9 +16,9 @@ export class Tile<T extends TileMatrixSet> {
 
   /**
    * Tile constructor
-   * @param tileIndex tile index
-   * @param tileMatrixSet tile matrix set
-   * @param metatile size of a metatile
+   * @param tileIndex - tile index
+   * @param tileMatrixSet - tile matrix set
+   * @param metatile - size of a metatile
    */
   public constructor(
     public readonly tileIndex: TileIndex<T>,
@@ -31,10 +30,7 @@ export class Tile<T extends TileMatrixSet> {
     // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
-    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
-    }
+    const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
 
     if (col < 0 || row < 0 || col >= Math.ceil(tileMatrix.matrixWidth / metatile) || row >= Math.ceil(tileMatrix.matrixHeight / metatile)) {
       throw new RangeError('tile indices must be non-negative integers larger than 0 and less than tile matrix size (considering metatile size)');
@@ -45,16 +41,17 @@ export class Tile<T extends TileMatrixSet> {
 
   /**
    * Calculates a bounding box of a tile
-   * @param clamp a boolean whether to clamp the calculated bounding box to the tile matrix's bounding box
+   * @param clip - boolean value whether to clip the calculated bounding box by the tile matrix's bounding box
    * @returns bounding box of the tile
    */
-  public toBoundingBox(clamp = true): BoundingBox {
+  public toBoundingBox(clip = true): BoundingBox {
     const {
       coordinates: [east, north],
     } = this.toPoint();
     const tileBBox = tileMatrixToBBox({ ...this.tileMatrix, pointOfOrigin: [east, north] }, this.metatile, this.metatile);
+
     return new BoundingBox({
-      bbox: clamp ? clampBBoxToBBox(tileBBox, tileMatrixToBBox(this.tileMatrix)) : tileBBox,
+      bbox: clip ? clampByBBox(tileBBox, tileMatrixToBBox(this.tileMatrix)) : tileBBox,
       coordRefSys: encodeToJSON(this.tileMatrixSet.crs),
     });
   }
@@ -71,16 +68,13 @@ export class Tile<T extends TileMatrixSet> {
   /**
    * Converts tile to a tile range in another tile matrix
    * This method will help find what tiles are needed to cover a given tile at a different tile matrix
-   * @param tileMatrixId target tile matrix identifier of `tileMatrixSet`
+   * @param tileMatrixId - target tile matrix identifier of `tileMatrixSet`
    * @returns tile range at the given tile matrix
    */
   public toTileRange(tileMatrixId: TileIndex<T>['tileMatrixId']): TileRange<T> {
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, this.tileMatrixSet);
 
-    const tileMatrix = this.tileMatrixSet.getTileMatrix(tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
-    }
+    const tileMatrix = getTileMatrix(this.tileMatrixSet, tileMatrixId);
 
     const { cornerOfOrigin = 'topLeft' } = tileMatrix;
 

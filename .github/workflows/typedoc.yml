@@ -13,7 +13,6 @@ on:
 permissions:
   contents: read
   pages: write
-  actions: read
   id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
@@ -40,9 +39,9 @@ jobs:
       - name: Install TS Project dependencies
         run: npm ci
       - name: build docs
-        run: npm run typedoc
+        run: npx typedoc
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

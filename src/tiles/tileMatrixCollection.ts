@@ -1,21 +1,23 @@
-import type { ArrayElement, Comparison } from '../types';
-import { validateTileMatrix } from '../validations/validations';
+import type { ArrayElement } from '../utils/types';
+import { validateTileMatrix } from '../validations';
 import type {
   BoundingBox2D,
   CRS,
   CodeType,
+  Comparison,
   Keyword,
   LanguageString,
   TileMatrix,
   TileMatrixId,
+  TileMatrixSet,
   TileMatrixSetJSON,
-  TileMatrixSet as TileMatrixSetType,
 } from './types';
+import { getTileMatrix } from './utilities';
 
-export class TileMatrixSet implements TileMatrixSetType {
-  private readonly tileMatrixSet: TileMatrixSetType;
+export class TileMatrixCollection implements TileMatrixSet {
+  private readonly tileMatrixSet: TileMatrixSet;
   public constructor(tileMatrixSetJSON: TileMatrixSetJSON) {
-    // validateTileMatrixSet(tileMatrixSet); // TODO: missing implementation
+    // validateTileMatrixSetJSON(tileMatrixSetJSON); // TODO: missing implementation
     this.tileMatrixSet = this.decodeFromJSON(tileMatrixSetJSON);
   }
 
@@ -64,23 +66,20 @@ export class TileMatrixSet implements TileMatrixSetType {
   }
 
   /**
-   * Extracts a tile matrix from a tile matrix set
-   * @param tileMatrixId tile matrix identifier
-   * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixSet`
+   * Extracts a tile matrix from a tile matrix collection
+   * @param tileMatrixId - tile matrix identifier
+   * @returns tile matrix or `undefined` if `identifier` was not found in `tileMatrixCollection`
+   * @throws {@link Error}
+   * This exception is thrown if the `tileMatrixId` is not found in `tileMatrixSet`.
    */
-  public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> | undefined {
-    return this.tileMatrices.find<ArrayElement<T['tileMatrices']>>((tileMatrix): tileMatrix is ArrayElement<T['tileMatrices']> => {
-      const {
-        identifier: { code: comparedTileMatrixId },
-      } = tileMatrix;
-      return comparedTileMatrixId === tileMatrixId;
-    });
+  public getTileMatrix<T extends TileMatrixSet>(tileMatrixId: TileMatrixId<T>): ArrayElement<T['tileMatrices']> {
+    return getTileMatrix(this.tileMatrixSet, tileMatrixId);
   }
 
   /**
-   * Finds the matching tile matrix in tile matrix set to input `tileMatrix` based on the selected comparison method
-   * @param tileMatrix target tile matrix
-   * @param comparison comparison method
+   * Finds the matching tile matrix in tile matrix collection to input `tileMatrix` based on the selected comparison method
+   * @param tileMatrix - target tile matrix
+   * @param comparison - comparison method
    * @returns matching tile matrix or undefined when matching scale could not be found
    */
   public findMatchingTileMatrix<T extends TileMatrixSet>(tileMatrix: TileMatrix, comparison: Comparison = 'equal'): TileMatrixId<T> | undefined {
@@ -130,7 +129,7 @@ export class TileMatrixSet implements TileMatrixSetType {
     return tileMatrixId;
   }
 
-  private decodeFromJSON(tileMatrixSetJSON: TileMatrixSetJSON): TileMatrixSetType {
+  private decodeFromJSON(tileMatrixSetJSON: TileMatrixSetJSON): TileMatrixSet {
     const {
       crs: crsJSON,
       tileMatrices: tileMatricesJSON,
@@ -182,7 +181,7 @@ export class TileMatrixSet implements TileMatrixSetType {
     });
     const keywordsJSON = keywords
       ?.flatMap((keyword) => (keyword.keyword ? keyword.keyword.map((keyword) => keyword.value) : undefined))
-      ?.filter((keyword): keyword is string => typeof keyword === 'string');
+      .filter((keyword): keyword is string => typeof keyword === 'string');
 
     return {
       crs: crsJSON,

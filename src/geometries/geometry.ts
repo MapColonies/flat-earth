@@ -1,12 +1,11 @@
 import type { BBox, Position } from 'geojson';
 import { DEFAULT_CRS } from '../constants';
-import { decodeFromJSON, encodeToJSON } from '../crs/crs';
-import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import type { CRS as CRSType, TileIndex } from '../tiles/types';
+import { decodeFromJSON, encodeToJSON } from '../crs';
+import type { CRS as CRSType, TileIndex, TileMatrixSet } from '../tiles/types';
 import { positionToTileIndex, tileMatrixToBBox } from '../tiles/utilities';
-import type { ArrayElement, CoordRefSysJSON } from '../types';
-import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations/validations';
-import type { GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
+import type { ArrayElement } from '../utils/types';
+import { validateCRS, validateCRSByOtherCRS, validateMetatile } from '../validations';
+import type { CoordRefSysJSON, GeoJSONBaseGeometry, GeoJSONGeometry, JSONFGFeature } from './types';
 
 /**
  * Geometry class
@@ -20,7 +19,7 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
 
   /**
    * Geometry constructor
-   * @param geometry GeoJSON geometry
+   * @param geometry - GeoJSON geometry
    */
   protected constructor(geometry: G & CoordRefSysJSON) {
     this.geoJSONGeometry = geometry;
@@ -56,8 +55,8 @@ export abstract class Geometry<G extends GeoJSONGeometry> {
 
   /**
    * Find the tile index of minimal bounding tile containing the bounding box
-   * @param tileMatrixSet tile matrix set for the containing tile lookup
-   * @param metatile size of a metatile
+   * @param tileMatrixSet - tile matrix set for the containing tile lookup
+   * @param metatile - size of a metatile
    * @returns tile index of a tile that fully contains the bounding box in a single tile or null if it could not be fully contained in any tile
    */
   public minimalBoundingTileIndex<T extends TileMatrixSet>(tileMatrixSet: T, metatile = 1): TileIndex<T> | null {

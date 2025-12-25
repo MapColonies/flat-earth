@@ -1,15 +1,15 @@
 import type { BBox } from 'geojson';
-import { clampValues } from '../utilities';
+import { clampValue } from '../utilities';
 
-export function clampBBoxToBBox(inputBBox: BBox, clampingBBox: BBox): BBox {
+export function clampByBBox(bBox: BBox, clampingBBox: BBox): BBox {
   const [clampingBoundingBoxMinEast, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxEast, clampingBoundingBoxMaxNorth] = clampingBBox;
 
-  const [minEast, minNorth, maxEast, maxNorth] = inputBBox;
+  const [minEast, minNorth, maxEast, maxNorth] = bBox;
 
   return [
-    clampValues(minEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
-    clampValues(minNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
-    clampValues(maxEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
-    clampValues(maxNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
+    clampValue(minEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
+    clampValue(minNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
+    clampValue(maxEast, clampingBoundingBoxMinEast, clampingBoundingBoxMaxEast),
+    clampValue(maxNorth, clampingBoundingBoxMinNorth, clampingBoundingBoxMaxNorth),
   ];
 }

@@ -7,7 +7,7 @@ import { BaseGeometry } from './baseGeometry';
 export class Line extends BaseGeometry<GeoJSONLineString> {
   /**
    * Line geometry constructor
-   * @param lineString GeoJSON linestring and CRS
+   * @param lineString - GeoJSON linestring and CRS
    */
   public constructor(lineString: LineStringInput) {
     super({ ...lineString, type: 'LineString' });

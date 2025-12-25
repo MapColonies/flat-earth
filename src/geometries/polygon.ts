@@ -7,7 +7,7 @@ import { BaseGeometry } from './baseGeometry';
 export class Polygon extends BaseGeometry<GeoJSONPolygon> {
   /**
    * Polygon geometry constructor
-   * @param polygon GeoJSON polygon and CRS
+   * @param polygon - GeoJSON polygon and CRS
    */
   public constructor(polygon: PolygonInput) {
     super({ ...polygon, type: 'Polygon' });

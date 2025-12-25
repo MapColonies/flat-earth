@@ -1,11 +1,9 @@
 import type { BBox, Position } from 'geojson';
-import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import type { CornerOfOriginCode, TileMatrixId, TileMatrixLimits } from '../tiles/types';
-import { clampBBoxToTileMatrix, positionToTileIndex, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/utilities';
-import type { CoordRefSysJSON, ReverseIntersectionPolicy } from '../types';
-import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import type { CornerOfOriginCode, TileEdgeInclusion, TileMatrixId, TileMatrixLimits, TileMatrixSet } from '../tiles/types';
+import { getTileMatrix, positionToTileIndex, reshapeBBoxToTileMatrix, tileEffectiveHeight, tileEffectiveWidth } from '../tiles/utilities';
+import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { Geometry } from './geometry';
-import type { GeoJSONBaseGeometry } from './types';
+import type { CoordRefSysJSON, GeoJSONBaseGeometry } from './types';
 
 type RangeRelation = 'smaller' | 'in-range' | 'larger';
 
@@ -40,7 +38,7 @@ interface NumericRange {
 export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geometry<BG> {
   /**
    * Base geometry constructor
-   * @param geometry GeoJSON geometry and CRS
+   * @param geometry - GeoJSON geometry and CRS
    */
   protected constructor(geometry: BG & CoordRefSysJSON) {
     super(geometry);
@@ -53,13 +51,11 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     return this.geoJSONGeometry.coordinates;
   }
 
-  // TODO: add function to merge adjacent TileMatrixLimits
-
   /**
    * Convert geometry to an iterator of tile matrix limits
-   * @param tileMatrixSet tile matrix set
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
-   * @param metatile size of a metatile
+   * @param tileMatrixSet - tile matrix set
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
+   * @param metatile - size of a metatile
    * @returns generator function of tile matrix limits containing the geometry
    */
   public *toTileMatrixLimits<T extends TileMatrixSet>(
@@ -72,10 +68,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
-    const tileMatrix = tileMatrixSet.getTileMatrix(tileMatrixId);
-    if (!tileMatrix) {
-      throw new Error('tile matrix id is not part of the given tile matrix set');
-    }
+    const tileMatrix = getTileMatrix(tileMatrixSet, tileMatrixId);
 
     if (this.geoJSONGeometry.type === 'Point') {
       const [minEast, minNorth] = this.bBox;
@@ -87,7 +80,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
 
     const linearRingsSegments = this.toLinearRingsSegments();
 
-    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = clampBBoxToTileMatrix(
+    const [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth] = reshapeBBoxToTileMatrix(
       this.bBox,
       tileMatrixSet,
       tileMatrixId,
@@ -133,6 +126,9 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           mergedRanges = this.mergeOverlappingRanges(...crossingBoundingRanges, ...nonCrossingBoundingRanges);
           break;
         }
+        case 'MultiLineString':
+        case 'MultiPoint':
+        case 'MultiPolygon':
         default:
           throw new Error('unsupported geometry type');
       }
@@ -142,7 +138,7 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
         const max = Math.max(start, end);
         const [startRange, endRange] = isWide ? [min, max] : cornerOfOrigin === 'topLeft' ? [max, min] : [min, max];
 
-        const [startReverseIntersectionPolicy, endReverseIntersectionPolicy] = this.getRangeReverseIntersectionPolicy(
+        const [startTileEdgeInclusion, endTileEdgeInclusion] = this.getRangeTileEdgeInclusion(
           { start: startRange, end: endRange },
           isWide,
           cornerOfOrigin,
@@ -154,14 +150,14 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
           isWide ? [startRange, range[0]] : [range[0], startRange],
           tileMatrixSet,
           tileMatrixId,
-          startReverseIntersectionPolicy,
+          startTileEdgeInclusion,
           metatile
         );
         const { col: endTileCol, row: endTileRow } = positionToTileIndex(
           isWide ? [endRange, range[0]] : [range[0], endRange],
           tileMatrixSet,
           tileMatrixId,
-          endReverseIntersectionPolicy,
+          endTileEdgeInclusion,
           metatile
         );
 
@@ -276,6 +272,10 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
       case 'Polygon':
         linearRings = this.geoJSONGeometry.coordinates;
         break;
+      case 'MultiLineString':
+      case 'MultiPoint':
+      case 'MultiPolygon':
+      case 'Point':
       default:
         throw new Error('unsupported geometry type');
     }
@@ -483,13 +483,13 @@ export abstract class BaseGeometry<BG extends GeoJSONBaseGeometry> extends Geome
     };
   }
 
-  private getRangeReverseIntersectionPolicy(
+  private getRangeTileEdgeInclusion(
     { start: startRange, end: endRange }: NumericRange,
     isWide: boolean,
     cornerOfOrigin: CornerOfOriginCode,
     tileSize: number,
     [minBoundingBoxEast, minBoundingBoxNorth, maxBoundingBoxEast, maxBoundingBoxNorth]: BBox
-  ): [Exclude<ReverseIntersectionPolicy, 'both'>, Exclude<ReverseIntersectionPolicy, 'both'>] {
+  ): [Exclude<TileEdgeInclusion, 'both'>, Exclude<TileEdgeInclusion, 'both'>] {
     const isOnMinBounds =
       startRange === endRange &&
       (isWide ? endRange === minBoundingBoxEast : cornerOfOrigin === 'topLeft' ? endRange === maxBoundingBoxNorth : endRange === minBoundingBoxNorth);

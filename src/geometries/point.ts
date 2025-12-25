@@ -1,9 +1,7 @@
 import { Tile } from '../tiles/tile';
-import type { TileMatrixSet } from '../tiles/tileMatrixSet';
-import type { TileMatrixId } from '../tiles/types';
+import type { TileEdgeInclusion, TileMatrixId, TileMatrixSet } from '../tiles/types';
 import { positionToTileIndex } from '../tiles/utilities';
-import type { ReverseIntersectionPolicy } from '../types';
-import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations/validations';
+import { validateCRSByOtherCRS, validateMetatile, validateTileMatrixIdByTileMatrixSet } from '../validations';
 import { BaseGeometry } from './baseGeometry';
 import type { GeoJSONPoint, PointInput } from './types';
 
@@ -13,7 +11,7 @@ import type { GeoJSONPoint, PointInput } from './types';
 export class Point extends BaseGeometry<GeoJSONPoint> {
   /**
    * Point geometry constructor
-   * @param point GeoJSON point and CRS
+   * @param point - GeoJSON point and CRS
    */
   public constructor(point: PointInput) {
     super({ ...point, type: 'Point' });
@@ -21,16 +19,16 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
 
   /**
    * Calculates a tile for east, north and tile matrix
-   * @param tileMatrixSet tile matrix set which the calculated tile belongs to
-   * @param tileMatrixId tile matrix identifier of `tileMatrixSet`
-   * @param reverseIntersectionPolicy behavior selection for the intersection policy (in cases that the position is on the edge of the (meta)tile)
-   * @param metatile size of a metatile
+   * @param tileMatrixSet - tile matrix set which the calculated tile belongs to
+   * @param tileMatrixId - tile matrix identifier of `tileMatrixSet`
+   * @param tileEdgeInclusion - behavior selection for tile edge inclusion (in cases that the position is on the edge of the (meta)tile)
+   * @param metatile - size of a metatile
    * @returns tile within the tile matrix
    */
   public toTile<T extends TileMatrixSet>(
     tileMatrixSet: T,
     tileMatrixId: TileMatrixId<T>,
-    reverseIntersectionPolicy: ReverseIntersectionPolicy,
+    tileEdgeInclusion: TileEdgeInclusion,
     metatile = 1
   ): Tile<T> {
     validateMetatile(metatile);
@@ -38,7 +36,7 @@ export class Point extends BaseGeometry<GeoJSONPoint> {
     validateCRSByOtherCRS(this.coordRefSys, tileMatrixSet.crs);
     validateTileMatrixIdByTileMatrixSet(tileMatrixId, tileMatrixSet);
 
-    const { col, row } = positionToTileIndex(this.coordinates, tileMatrixSet, tileMatrixId, reverseIntersectionPolicy, metatile);
+    const { col, row } = positionToTileIndex(this.coordinates, tileMatrixSet, tileMatrixId, tileEdgeInclusion, metatile);
     return new Tile({ col, row, tileMatrixId }, tileMatrixSet, metatile);
   }
 }
